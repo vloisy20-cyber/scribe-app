@@ -2820,6 +2820,151 @@ with tab_factures:
                 key="download_csv",
             )
 
+        # ── 9. Bilan annuel ──
+        _annual_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>'
+        st.html(f"""
+        <div style="{_sec}">
+            <div style="{_ico}">{svg_img(_annual_svg)}</div>
+            <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Bilan annuel</h2>
+        </div>
+        """)
+
+        _available_years = sorted(_tx_all["date"].dt.year.dropna().unique().astype(int).tolist(), reverse=True)
+        if _available_years:
+            _sel_year = st.selectbox("Annee", _available_years, key="bilan_year")
+            _year_tx = _tx_all[_tx_all["date"].dt.year == _sel_year].copy()
+
+            if not _year_tx.empty:
+                _year_total = _year_tx["amount"].sum()
+                _year_count = len(_year_tx)
+                _year_avg_month = _year_total / max(_year_tx["date"].dt.month.nunique(), 1)
+
+                # Revenus annuels depuis fiches de paie
+                _payslips_annual = load_payslips()
+                _year_revenue = 0.0
+                if not _payslips_annual.empty:
+                    _payslips_annual["salaire_net"] = pd.to_numeric(_payslips_annual["salaire_net"], errors="coerce")
+                    _last_salary = _payslips_annual.dropna(subset=["salaire_net"]).sort_values("date_ajout")
+                    if not _last_salary.empty:
+                        _nb_months = _year_tx["date"].dt.month.nunique()
+                        _year_revenue = _last_salary.iloc[-1]["salaire_net"] * _nb_months
+
+                _year_epargne = _year_revenue - _year_total if _year_revenue > 0 else 0
+                _ep_color = "#22c55e" if _year_epargne >= 0 else "#ef4444"
+                _ep_sign = "+" if _year_epargne >= 0 else ""
+
+                # Mois le plus cher
+                _month_sums = _year_tx.groupby(_year_tx["date"].dt.month)["amount"].sum()
+                _most_expensive_month_num = _month_sums.idxmax()
+                _month_names_fr = {1:"Janvier",2:"Fevrier",3:"Mars",4:"Avril",5:"Mai",6:"Juin",7:"Juillet",8:"Aout",9:"Septembre",10:"Octobre",11:"Novembre",12:"Decembre"}
+                _most_expensive_month = _month_names_fr.get(int(_most_expensive_month_num), "?")
+                _most_expensive_amount = _month_sums.max()
+
+                # Catégorie la plus dépensée
+                _cat_sums = _year_tx.groupby("auto_category")["amount"].sum().sort_values(ascending=False)
+                _top_cat = _cat_sums.index[0] if len(_cat_sums) > 0 else "?"
+                _top_cat_amount = _cat_sums.iloc[0] if len(_cat_sums) > 0 else 0
+                _top_cat_icon = TRANSACTION_CATEGORIES.get(_top_cat, {}).get("icon", "📦")
+
+                # Stat boxes
+                st.html(f"""
+                <div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+                  <div style="display:flex; gap:12px; margin-bottom:14px;">
+                    <div style="flex:1; background:{_card}; border:1px solid {_border}; border-radius:14px; padding:18px 16px; text-align:center;">
+                      <div style="font-size:26px; font-weight:800; color:#ef4444;">{_year_total:,.2f} EUR</div>
+                      <div style="font-size:11px; color:{_text3}; text-transform:uppercase; letter-spacing:.04em; margin-top:4px;">Total depense</div>
+                    </div>
+                    <div style="flex:1; background:{_card}; border:1px solid {_border}; border-radius:14px; padding:18px 16px; text-align:center;">
+                      <div style="font-size:26px; font-weight:800; color:{_th['accent_text']};">{_year_count}</div>
+                      <div style="font-size:11px; color:{_text3}; text-transform:uppercase; letter-spacing:.04em; margin-top:4px;">Transactions</div>
+                    </div>
+                    <div style="flex:1; background:{_card}; border:1px solid {_border}; border-radius:14px; padding:18px 16px; text-align:center;">
+                      <div style="font-size:26px; font-weight:800; color:#f59e0b;">{_year_avg_month:,.2f} EUR</div>
+                      <div style="font-size:11px; color:{_text3}; text-transform:uppercase; letter-spacing:.04em; margin-top:4px;">Moyenne / mois</div>
+                    </div>
+                  </div>
+                """)
+
+                if _year_revenue > 0:
+                    st.html(f"""
+                  <div style="display:flex; gap:12px; margin-bottom:14px; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+                    <div style="flex:1; background:{_card}; border:1px solid {_border}; border-radius:14px; padding:18px 16px; text-align:center;">
+                      <div style="font-size:26px; font-weight:800; color:#22c55e;">{_year_revenue:,.2f} EUR</div>
+                      <div style="font-size:11px; color:{_text3}; text-transform:uppercase; letter-spacing:.04em; margin-top:4px;">Revenus estimes</div>
+                    </div>
+                    <div style="flex:1; background:{_card}; border:1px solid {_border}; border-radius:14px; padding:18px 16px; text-align:center;">
+                      <div style="font-size:26px; font-weight:800; color:{_ep_color};">{_ep_sign}{_year_epargne:,.2f} EUR</div>
+                      <div style="font-size:11px; color:{_text3}; text-transform:uppercase; letter-spacing:.04em; margin-top:4px;">Epargne estimee</div>
+                    </div>
+                  </div>
+                    """)
+
+                # Highlights
+                st.html(f"""
+                <div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+                  <div style="display:flex; gap:12px; margin-bottom:20px;">
+                    <div style="flex:1; background:{_card}; border:1px solid {_border}; border-radius:14px; padding:18px 16px;">
+                      <div style="font-size:12px; color:{_text3}; margin-bottom:6px;">Mois le plus cher</div>
+                      <div style="font-size:18px; font-weight:700; color:{_text1};">📅 {_most_expensive_month}</div>
+                      <div style="font-size:14px; color:#ef4444; font-weight:600;">{_most_expensive_amount:,.2f} EUR</div>
+                    </div>
+                    <div style="flex:1; background:{_card}; border:1px solid {_border}; border-radius:14px; padding:18px 16px;">
+                      <div style="font-size:12px; color:{_text3}; margin-bottom:6px;">Categorie n1</div>
+                      <div style="font-size:18px; font-weight:700; color:{_text1};">{_top_cat_icon} {_top_cat}</div>
+                      <div style="font-size:14px; color:#f59e0b; font-weight:600;">{_top_cat_amount:,.2f} EUR</div>
+                    </div>
+                  </div>
+                </div>
+                """)
+
+                # Graphique mensuel de l'année
+                _monthly_year = _year_tx.groupby(_year_tx["date"].dt.month)["amount"].sum().reset_index()
+                _monthly_year.columns = ["Mois", "Montant"]
+                _monthly_year["Mois_nom"] = _monthly_year["Mois"].map(_month_names_fr)
+
+                import altair as alt
+                _bar_year = alt.Chart(_monthly_year).mark_bar(
+                    cornerRadiusTopLeft=6, cornerRadiusTopRight=6,
+                    color=_th["accent_mid"]
+                ).encode(
+                    x=alt.X("Mois_nom:N", sort=list(_month_names_fr.values()), title=None,
+                            axis=alt.Axis(labelAngle=-45, labelColor=_text3)),
+                    y=alt.Y("Montant:Q", title=None, axis=alt.Axis(labelColor=_text3)),
+                    tooltip=[
+                        alt.Tooltip("Mois_nom:N", title="Mois"),
+                        alt.Tooltip("Montant:Q", title="Depenses", format=",.2f"),
+                    ],
+                ).properties(height=250, title=f"Depenses mensuelles {_sel_year}")
+
+                st.altair_chart(_bar_year, use_container_width=True)
+
+                # Top 5 catégories en barres
+                _top5_cats = _cat_sums.head(5).reset_index()
+                _top5_cats.columns = ["Categorie", "Montant"]
+                _top5_cats["Icon"] = _top5_cats["Categorie"].apply(
+                    lambda c: TRANSACTION_CATEGORIES.get(c, {}).get("icon", "📦") + " " + c
+                )
+                _cat_colors = {
+                    cat: info["color"] for cat, info in TRANSACTION_CATEGORIES.items()
+                }
+
+                _bar_cats = alt.Chart(_top5_cats).mark_bar(
+                    cornerRadiusTopLeft=6, cornerRadiusTopRight=6,
+                ).encode(
+                    x=alt.X("Montant:Q", title=None, axis=alt.Axis(labelColor=_text3)),
+                    y=alt.Y("Icon:N", sort="-x", title=None, axis=alt.Axis(labelColor=_text1)),
+                    color=alt.Color("Categorie:N", scale=alt.Scale(
+                        domain=list(_cat_colors.keys()),
+                        range=list(_cat_colors.values())
+                    ), legend=None),
+                    tooltip=[
+                        alt.Tooltip("Categorie:N", title="Categorie"),
+                        alt.Tooltip("Montant:Q", title="Total", format=",.2f"),
+                    ],
+                ).properties(height=200, title=f"Top 5 categories {_sel_year}")
+
+                st.altair_chart(_bar_cats, use_container_width=True)
+
     elif tx_df.empty:
         st.caption("Importe un CSV ou connecte ta banque pour commencer le suivi.")
 
