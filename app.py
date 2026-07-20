@@ -1746,7 +1746,7 @@ def detect_subscriptions(tx_df: pd.DataFrame) -> pd.DataFrame:
 # Interface — Top bar & Parametres
 # --------------------------------------------------------------------------
 
-_bar_left, _bar_right = st.columns([5, 2])
+_bar_left, _bar_mid, _bar_right = st.columns([5, 1, 2])
 with _bar_left:
     st.html(f"""
     <div style="display:flex; align-items:center; gap:20px; padding:24px 0 8px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
@@ -1758,6 +1758,14 @@ with _bar_left:
         </div>
     </div>
     """)
+with _bar_mid:
+    st.html("<div style='height:28px;'></div>")
+    if st.button("Accueil", key="back_to_welcome"):
+        st.session_state.onboarded = False
+        _prefs = _load_user_prefs()
+        _prefs["onboarded"] = False
+        _save_user_prefs(_prefs)
+        st.rerun()
 with _bar_right:
     _sw_items = ""
     for _sn, _sd in ACCENT_THEMES.items():
