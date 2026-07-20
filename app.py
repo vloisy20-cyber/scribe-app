@@ -683,7 +683,15 @@ st.markdown(f"""
   ._container_gzau3_1,
   [data-testid="baseButton-header"],
   div[class*="stApp"] > header,
-  iframe[title="streamlit_app_badge"] {{
+  iframe[title="streamlit_app_badge"],
+  div[data-testid="collapsedControl"],
+  .reportview-container .main footer,
+  div.embeddedAppMetaInfoBar_container__DxxL1,
+  div[class*="embeddedAppMetaInfoBar"],
+  div[class*="StatusWidget"],
+  button[kind="header"],
+  div[class*="stAppDeployButton"],
+  section[data-testid="stSidebar"] button[kind="header"] {{
     display: none !important;
     visibility: hidden !important;
     height: 0 !important;
@@ -691,6 +699,17 @@ st.markdown(f"""
     overflow: hidden !important;
     position: absolute !important;
     top: -9999px !important;
+  }}
+  /* ─── Forcer suppression badge coin bas-droite ─── */
+  div[class*="viewerBadge"],
+  div[class*="Badge"],
+  a[href*="streamlit.io"],
+  div.stApp > div:last-child > div:last-child > a,
+  .stApp iframe {{
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
   }}
   [data-testid="stAppViewContainer"],
   [data-testid="stMain"],
