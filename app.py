@@ -635,16 +635,18 @@ if not st.session_state.onboarded:
     _logo_big_img = svg_img(_logo_big, 80, 80)
 
     st.html(f"""
-    <div id="ob-scene" style="position:relative; max-width:640px; margin:0 auto; min-height:70vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:system-ui,-apple-system,'Segoe UI',sans-serif; overflow:hidden; padding-top:0;">
+    <div id="ob-scene" style="position:relative; max-width:640px; margin:0 auto; display:flex; flex-direction:column; align-items:center; font-family:system-ui,-apple-system,'Segoe UI',sans-serif; overflow:hidden; padding:40px 0 20px 0;">
 
-      <!-- Particules flottantes -->
       <style>
+        /* ── Animations ── */
         @keyframes float1 {{ 0%,100% {{ transform: translate(0,0) scale(1); opacity:0.4; }} 25% {{ transform: translate(60px,-80px) scale(1.2); opacity:0.7; }} 50% {{ transform: translate(-30px,-140px) scale(0.8); opacity:0.3; }} 75% {{ transform: translate(40px,-60px) scale(1.1); opacity:0.6; }} }}
         @keyframes float2 {{ 0%,100% {{ transform: translate(0,0) scale(1); opacity:0.3; }} 33% {{ transform: translate(-70px,-100px) scale(1.3); opacity:0.6; }} 66% {{ transform: translate(50px,-50px) scale(0.9); opacity:0.4; }} }}
         @keyframes float3 {{ 0%,100% {{ transform: translate(0,0) scale(0.8); opacity:0.2; }} 50% {{ transform: translate(80px,-120px) scale(1.4); opacity:0.5; }} }}
         @keyframes float4 {{ 0%,100% {{ transform: translate(0,0); opacity:0.3; }} 40% {{ transform: translate(-50px,-90px); opacity:0.6; }} 80% {{ transform: translate(30px,-150px); opacity:0.2; }} }}
         @keyframes float5 {{ 0%,100% {{ transform: translate(0,0) rotate(0deg); opacity:0.2; }} 50% {{ transform: translate(-60px,-110px) rotate(180deg); opacity:0.5; }} }}
-
+        @keyframes blobDrift1 {{ 0%,100% {{ transform: translate(0,0) scale(1); }} 33% {{ transform: translate(40px,-30px) scale(1.1); }} 66% {{ transform: translate(-20px,20px) scale(0.95); }} }}
+        @keyframes blobDrift2 {{ 0%,100% {{ transform: translate(0,0) scale(1); }} 50% {{ transform: translate(-50px,40px) scale(1.15); }} }}
+        @keyframes blobDrift3 {{ 0%,100% {{ transform: translate(0,0) scale(1.05); }} 40% {{ transform: translate(30px,50px) scale(0.9); }} 80% {{ transform: translate(-40px,-20px) scale(1.1); }} }}
         @keyframes pulseGlow {{
           0%,100% {{ box-shadow: 0 0 20px {_th["accent_mid"]}33, 0 0 60px {_th["accent_dark"]}22; }}
           50% {{ box-shadow: 0 0 40px {_th["accent_mid"]}55, 0 0 100px {_th["accent_dark"]}44; }}
@@ -661,189 +663,154 @@ if not st.session_state.onboarded:
           0% {{ opacity:0; transform: translateY(30px) scale(0.95); }}
           100% {{ opacity:1; transform: translateY(0) scale(1); }}
         }}
-        @keyframes orbitRing {{
-          0% {{ transform: rotate(0deg); }}
-          100% {{ transform: rotate(360deg); }}
-        }}
-        @keyframes shimmerText {{
-          0% {{ background-position: -200% center; }}
-          100% {{ background-position: 200% center; }}
-        }}
-        @keyframes breathe {{
-          0%,100% {{ transform: scale(1); }}
-          50% {{ transform: scale(1.05); }}
-        }}
+        @keyframes orbitRing {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
+        @keyframes shimmerText {{ 0% {{ background-position: -200% center; }} 100% {{ background-position: 200% center; }} }}
+        @keyframes breathe {{ 0%,100% {{ transform: scale(1); }} 50% {{ transform: scale(1.05); }} }}
+        @keyframes barGrow {{ 0% {{ width: 0%; }} 100% {{ width: var(--bar-w); }} }}
+        @keyframes fadeUp {{ 0% {{ opacity:0; transform: translateY(20px); }} 100% {{ opacity:1; transform: translateY(0); }} }}
+        @keyframes countUp {{ 0% {{ opacity:0; transform: scale(0.5); filter: blur(4px); }} 100% {{ opacity:1; transform: scale(1); filter: blur(0); }} }}
+        @keyframes phonePop {{ 0% {{ opacity:0; transform: translateY(40px) scale(0.9); }} 100% {{ opacity:1; transform: translateY(0) scale(1); }} }}
+        @keyframes lineTrace {{ 0% {{ stroke-dashoffset: 200; }} 100% {{ stroke-dashoffset: 0; }} }}
 
-        .particle {{
+        /* ── Blobs lumineux (fond) ── */
+        .ob-blob {{
           position: absolute;
           border-radius: 50%;
+          filter: blur(80px);
           pointer-events: none;
+          z-index: 0;
         }}
-        .p1 {{ width:6px; height:6px; background:{_th["accent_light"]}; top:20%; left:10%; animation: float1 8s ease-in-out infinite; }}
-        .p2 {{ width:4px; height:4px; background:{_th["accent_mid"]}; top:60%; left:80%; animation: float2 10s ease-in-out infinite; }}
-        .p3 {{ width:8px; height:8px; background:{_th["accent_pale"]}; top:70%; left:20%; animation: float3 12s ease-in-out infinite; }}
-        .p4 {{ width:3px; height:3px; background:{_th["accent_text"]}; top:30%; left:70%; animation: float4 9s ease-in-out infinite; }}
-        .p5 {{ width:5px; height:5px; background:{_th["accent_light"]}; top:80%; left:50%; animation: float5 11s ease-in-out infinite; }}
-        .p6 {{ width:4px; height:4px; background:{_th["accent_mid"]}; top:15%; left:60%; animation: float2 7s ease-in-out infinite 1s; }}
-        .p7 {{ width:6px; height:6px; background:{_th["accent_pale"]}; top:50%; left:90%; animation: float1 13s ease-in-out infinite 2s; }}
-        .p8 {{ width:3px; height:3px; background:{_th["accent_text"]}; top:85%; left:35%; animation: float3 9s ease-in-out infinite 0.5s; }}
+        .ob-blob1 {{ width:300px; height:300px; background: {_th["accent_dark"]}25; top:-5%; left:-15%; animation: blobDrift1 15s ease-in-out infinite; }}
+        .ob-blob2 {{ width:250px; height:250px; background: {_th["accent_mid"]}20; bottom:10%; right:-10%; animation: blobDrift2 18s ease-in-out infinite; }}
+        .ob-blob3 {{ width:200px; height:200px; background: {_th["accent_pale"]}18; top:40%; left:60%; animation: blobDrift3 20s ease-in-out infinite; }}
 
-        .ob-orbit {{
-          position: absolute;
-          width: 200px; height: 200px;
-          border: 1px solid {_th["accent_mid"]}15;
-          border-radius: 50%;
-          animation: orbitRing 20s linear infinite;
-        }}
-        .ob-orbit2 {{
-          position: absolute;
-          width: 300px; height: 300px;
-          border: 1px solid {_th["accent_dark"]}10;
-          border-radius: 50%;
-          animation: orbitRing 30s linear infinite reverse;
-        }}
-        .ob-orbit::after {{
-          content: '';
-          position: absolute;
-          width: 8px; height: 8px;
-          background: {_th["accent_light"]};
-          border-radius: 50%;
-          top: -4px; left: 50%;
-          box-shadow: 0 0 12px {_th["accent_light"]}88;
-        }}
-        .ob-orbit2::after {{
-          content: '';
-          position: absolute;
-          width: 5px; height: 5px;
-          background: {_th["accent_pale"]};
-          border-radius: 50%;
-          bottom: -3px; right: 20%;
-          box-shadow: 0 0 8px {_th["accent_pale"]}66;
-        }}
+        /* ── Particules ── */
+        .particle {{ position: absolute; border-radius: 50%; pointer-events: none; z-index:1; }}
+        .p1 {{ width:6px; height:6px; background:{_th["accent_light"]}; top:15%; left:8%; animation: float1 8s ease-in-out infinite; }}
+        .p2 {{ width:4px; height:4px; background:{_th["accent_mid"]}; top:55%; left:85%; animation: float2 10s ease-in-out infinite; }}
+        .p3 {{ width:8px; height:8px; background:{_th["accent_pale"]}; top:65%; left:15%; animation: float3 12s ease-in-out infinite; }}
+        .p4 {{ width:3px; height:3px; background:{_th["accent_text"]}; top:25%; left:75%; animation: float4 9s ease-in-out infinite; }}
+        .p5 {{ width:5px; height:5px; background:{_th["accent_light"]}; top:75%; left:45%; animation: float5 11s ease-in-out infinite; }}
+        .p6 {{ width:4px; height:4px; background:{_th["accent_mid"]}; top:10%; left:55%; animation: float2 7s ease-in-out infinite 1s; }}
+        .p7 {{ width:6px; height:6px; background:{_th["accent_pale"]}; top:45%; left:92%; animation: float1 13s ease-in-out infinite 2s; }}
+        .p8 {{ width:3px; height:3px; background:{_th["accent_text"]}; top:80%; left:30%; animation: float3 9s ease-in-out infinite 0.5s; }}
+        .p9 {{ width:5px; height:5px; background:{_th["accent_light"]}; top:35%; left:3%; animation: float4 14s ease-in-out infinite 3s; }}
+        .p10 {{ width:7px; height:7px; background:{_th["accent_mid"]}; top:90%; left:70%; animation: float5 10s ease-in-out infinite 1.5s; }}
 
-        .ob-logo-wrap {{
-          position: relative;
-          animation: breathe 4s ease-in-out infinite, titleGlow 1s ease 0.2s both;
-          z-index: 2;
-        }}
-        .ob-logo-inner {{
-          border-radius: 24px;
-          animation: pulseGlow 3s ease-in-out infinite;
-          padding: 4px;
-        }}
-        .ob-logo-ring {{
-          position: absolute;
-          inset: -16px;
-          border: 2px solid {_th["accent_mid"]}22;
-          border-radius: 32px;
-          animation: breathe 4s ease-in-out infinite 0.5s;
-        }}
+        /* ── Orbites ── */
+        .ob-orbit {{ position:absolute; width:200px; height:200px; border:1px solid {_th["accent_mid"]}15; border-radius:50%; animation:orbitRing 20s linear infinite; z-index:1; }}
+        .ob-orbit2 {{ position:absolute; width:300px; height:300px; border:1px solid {_th["accent_dark"]}10; border-radius:50%; animation:orbitRing 30s linear infinite reverse; z-index:1; }}
+        .ob-orbit::after {{ content:''; position:absolute; width:8px; height:8px; background:{_th["accent_light"]}; border-radius:50%; top:-4px; left:50%; box-shadow:0 0 12px {_th["accent_light"]}88; }}
+        .ob-orbit2::after {{ content:''; position:absolute; width:5px; height:5px; background:{_th["accent_pale"]}; border-radius:50%; bottom:-3px; right:20%; box-shadow:0 0 8px {_th["accent_pale"]}66; }}
 
-        .ob-title {{
-          font-size: 52px;
-          font-weight: 900;
-          letter-spacing: -0.04em;
-          margin: 24px 0 0 0;
-          background: linear-gradient(135deg, {_th["accent_light"]}, #ffffff, {_th["accent_pale"]}, {_th["accent_light"]});
-          background-size: 300% auto;
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          animation: titleGlow 0.8s ease 0.4s both, shimmerText 4s linear infinite;
-          z-index: 2;
-          position: relative;
+        /* ── Logo ── */
+        .ob-logo-wrap {{ position:relative; animation: breathe 4s ease-in-out infinite, titleGlow 1s ease 0.2s both; z-index:2; }}
+        .ob-logo-inner {{ border-radius:24px; animation: pulseGlow 3s ease-in-out infinite; padding:4px; }}
+        .ob-logo-ring {{ position:absolute; inset:-16px; border:2px solid {_th["accent_mid"]}22; border-radius:32px; animation: breathe 4s ease-in-out infinite 0.5s; }}
+
+        /* ── Titre ── */
+        .ob-title {{ font-size:52px; font-weight:900; letter-spacing:-0.04em; margin:20px 0 0 0; background:linear-gradient(135deg, {_th["accent_light"]}, #ffffff, {_th["accent_pale"]}, {_th["accent_light"]}); background-size:300% auto; -webkit-background-clip:text; -webkit-text-fill-color:transparent; animation: titleGlow 0.8s ease 0.4s both, shimmerText 4s linear infinite; z-index:2; position:relative; }}
+        .ob-sub {{ font-size:17px; color:{_text3}; margin:10px 0 28px 0; line-height:1.6; animation: subtitleIn 0.8s ease 0.7s both; z-index:2; position:relative; text-align:center; }}
+
+        /* ── Apercu telephone ── */
+        .ob-phone {{ z-index:2; position:relative; animation: phonePop 0.9s ease 0.5s both; margin-bottom:28px; }}
+        .ob-phone-frame {{
+          width:220px; height:160px;
+          background: rgba(255,255,255,0.04);
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 20px;
+          padding: 16px;
+          backdrop-filter: blur(20px);
+          box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 40px {_th["accent_dark"]}22;
+          position:relative;
+          overflow:hidden;
         }}
-        .ob-sub {{
-          font-size: 17px;
-          color: {_text3};
-          margin: 12px 0 24px 0;
-          line-height: 1.6;
-          animation: subtitleIn 0.8s ease 0.7s both;
-          z-index: 2;
-          position: relative;
+        .ob-phone-notch {{ width:50px; height:4px; background:rgba(255,255,255,0.15); border-radius:4px; margin:0 auto 12px auto; }}
+        .ob-phone-row {{ display:flex; gap:6px; align-items:flex-end; height:60px; margin-bottom:8px; }}
+        .ob-phone-bar {{
+          flex:1;
+          border-radius: 4px 4px 0 0;
+          animation: barGrow 1.2s ease forwards;
+          animation-delay: var(--bar-delay);
+          width:0;
+        }}
+        .ob-phone-stat {{ display:flex; justify-content:space-between; gap:8px; }}
+        .ob-phone-stat-item {{
+          flex:1;
+          background: rgba(255,255,255,0.06);
+          border-radius: 8px;
+          padding: 6px 4px;
           text-align: center;
         }}
+        .ob-phone-stat-val {{ font-size:13px; font-weight:800; color:#fff; }}
+        .ob-phone-stat-lbl {{ font-size:8px; color:{_text3}; margin-top:2px; }}
+        .ob-phone-line {{ position:absolute; bottom:40px; left:16px; right:16px; }}
 
-        .ob-features {{
-          display: flex;
-          gap: 14px;
-          width: 100%;
-          z-index: 2;
-          position: relative;
-          overflow-x: auto;
-          -webkit-overflow-scrolling: touch;
-          scroll-snap-type: x mandatory;
-          padding-bottom: 12px;
-          scrollbar-width: none;
-        }}
-        .ob-features::-webkit-scrollbar {{ display: none; }}
+        /* ── Features ── */
+        .ob-features {{ display:flex; gap:14px; width:100%; z-index:2; position:relative; overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x mandatory; padding-bottom:12px; scrollbar-width:none; }}
+        .ob-features::-webkit-scrollbar {{ display:none; }}
         .ob-feat {{
-          flex: 0 0 auto;
-          width: calc(25% - 11px);
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.07);
-          border-radius: 18px;
-          padding: 24px 16px;
-          text-align: center;
-          backdrop-filter: blur(16px);
-          transition: all 0.4s cubic-bezier(.4,0,.2,1);
-          scroll-snap-align: start;
+          flex:0 0 auto; width:calc(25% - 11px);
+          background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07);
+          border-radius:18px; padding:24px 16px; text-align:center;
+          backdrop-filter:blur(16px); transition:all 0.4s cubic-bezier(.4,0,.2,1);
+          scroll-snap-align:start;
         }}
-        @media (max-width: 600px) {{
-          .ob-features {{
-            gap: 10px;
-            padding-left: 4px;
-            padding-right: 4px;
-          }}
-          .ob-feat {{
-            width: 140px;
-            min-width: 140px;
-            padding: 20px 12px;
-          }}
-          .ob-title {{
-            font-size: 38px !important;
-          }}
-          .ob-sub {{
-            font-size: 15px !important;
-          }}
-        }}
-        .ob-feat:hover {{
-          background: rgba(255,255,255,0.08);
-          border-color: {_th["accent_mid"]}44;
-          transform: translateY(-6px);
-          box-shadow: 0 12px 40px {_th["accent_dark"]}33;
-        }}
-        .ob-feat-icon {{
-          font-size: 28px;
-          margin-bottom: 10px;
-          display: block;
-          filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
-        }}
-        .ob-feat-title {{
-          font-weight: 700;
-          color: #ffffff;
-          font-size: 14px;
-          margin-bottom: 6px;
-        }}
-        .ob-feat-desc {{
-          color: {_text3};
-          font-size: 12px;
-          line-height: 1.4;
-        }}
+        .ob-feat:hover {{ background:rgba(255,255,255,0.08); border-color:{_th["accent_mid"]}44; transform:translateY(-6px); box-shadow:0 12px 40px {_th["accent_dark"]}33; }}
+        .ob-feat-icon {{ font-size:28px; margin-bottom:10px; display:block; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3)); }}
+        .ob-feat-title {{ font-weight:700; color:#ffffff; font-size:14px; margin-bottom:6px; }}
+        .ob-feat-desc {{ color:{_text3}; font-size:12px; line-height:1.4; }}
         .ob-feat:nth-child(1) {{ animation: featureSlide 0.7s ease 0.9s both; }}
         .ob-feat:nth-child(2) {{ animation: featureSlide 0.7s ease 1.1s both; }}
         .ob-feat:nth-child(3) {{ animation: featureSlide 0.7s ease 1.3s both; }}
         .ob-feat:nth-child(4) {{ animation: featureSlide 0.7s ease 1.5s both; }}
+
+        /* ── Stats animees ── */
+        .ob-stats {{ display:flex; gap:20px; width:100%; z-index:2; position:relative; margin-top:20px; }}
+        .ob-stat {{
+          flex:1; text-align:center; padding:16px 8px;
+          background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05);
+          border-radius:14px;
+        }}
+        .ob-stat:nth-child(1) {{ animation: fadeUp 0.6s ease 1.7s both; }}
+        .ob-stat:nth-child(2) {{ animation: fadeUp 0.6s ease 1.9s both; }}
+        .ob-stat:nth-child(3) {{ animation: fadeUp 0.6s ease 2.1s both; }}
+        .ob-stat-val {{
+          font-size:28px; font-weight:900;
+          background: linear-gradient(135deg, {_th["accent_light"]}, {_th["accent_pale"]});
+          -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+          animation: countUp 0.8s ease var(--stat-delay) both;
+        }}
+        .ob-stat-lbl {{ font-size:12px; color:{_text3}; margin-top:4px; }}
+
+        /* ── Responsive mobile ── */
+        @media (max-width: 600px) {{
+          .ob-features {{ gap:10px; padding-left:4px; padding-right:4px; }}
+          .ob-feat {{ width:140px; min-width:140px; padding:20px 12px; }}
+          .ob-title {{ font-size:38px !important; }}
+          .ob-sub {{ font-size:15px !important; }}
+          .ob-phone-frame {{ width:180px; height:140px; padding:12px; }}
+          .ob-stats {{ gap:10px; }}
+          .ob-stat-val {{ font-size:22px; }}
+          .ob-stat {{ padding:12px 4px; }}
+        }}
       </style>
+
+      <!-- Blobs lumineux -->
+      <div class="ob-blob ob-blob1"></div>
+      <div class="ob-blob ob-blob2"></div>
+      <div class="ob-blob ob-blob3"></div>
 
       <!-- Particules -->
       <div class="particle p1"></div><div class="particle p2"></div>
       <div class="particle p3"></div><div class="particle p4"></div>
       <div class="particle p5"></div><div class="particle p6"></div>
       <div class="particle p7"></div><div class="particle p8"></div>
+      <div class="particle p9"></div><div class="particle p10"></div>
 
       <!-- Orbites -->
-      <div class="ob-orbit" style="top:calc(50% - 100px); left:calc(50% - 100px);"></div>
-      <div class="ob-orbit2" style="top:calc(50% - 150px); left:calc(50% - 150px);"></div>
+      <div class="ob-orbit" style="top:8%; left:calc(50% - 100px);"></div>
+      <div class="ob-orbit2" style="top:3%; left:calc(50% - 150px);"></div>
 
       <!-- Logo avec glow -->
       <div class="ob-logo-wrap">
@@ -854,6 +821,39 @@ if not st.session_state.onboarded:
       <!-- Titre -->
       <h1 class="ob-title">Scribe</h1>
       <p class="ob-sub">Tes finances perso sous controle.<br>Analyse tes depenses, suis tes abonnements,<br>et garde le controle — tout reste en local.</p>
+
+      <!-- Apercu mini-dashboard -->
+      <div class="ob-phone">
+        <div class="ob-phone-frame">
+          <div class="ob-phone-notch"></div>
+          <div class="ob-phone-row">
+            <div class="ob-phone-bar" style="--bar-w:55%; --bar-delay:1s; height:55%; background:linear-gradient(180deg,{_th["accent_light"]},{_th["accent_mid"]});"></div>
+            <div class="ob-phone-bar" style="--bar-w:80%; --bar-delay:1.2s; height:80%; background:linear-gradient(180deg,{_th["accent_pale"]},{_th["accent_mid"]});"></div>
+            <div class="ob-phone-bar" style="--bar-w:40%; --bar-delay:1.4s; height:40%; background:linear-gradient(180deg,{_th["accent_light"]},{_th["accent_dark"]});"></div>
+            <div class="ob-phone-bar" style="--bar-w:95%; --bar-delay:1.6s; height:95%; background:linear-gradient(180deg,{_th["accent_mid"]},{_th["accent_light"]});"></div>
+            <div class="ob-phone-bar" style="--bar-w:65%; --bar-delay:1.8s; height:65%; background:linear-gradient(180deg,{_th["accent_pale"]},{_th["accent_dark"]});"></div>
+          </div>
+          <div class="ob-phone-stat">
+            <div class="ob-phone-stat-item">
+              <div class="ob-phone-stat-val" style="color:{_th["accent_light"]}">+2.4k</div>
+              <div class="ob-phone-stat-lbl">Revenus</div>
+            </div>
+            <div class="ob-phone-stat-item">
+              <div class="ob-phone-stat-val" style="color:#ef4444">-1.8k</div>
+              <div class="ob-phone-stat-lbl">Depenses</div>
+            </div>
+            <div class="ob-phone-stat-item">
+              <div class="ob-phone-stat-val" style="color:#22c55e">+620</div>
+              <div class="ob-phone-stat-lbl">Epargne</div>
+            </div>
+          </div>
+          <!-- Ligne de tendance SVG -->
+          <svg class="ob-phone-line" height="20" viewBox="0 0 190 20" fill="none">
+            <path d="M0 18 Q30 2 60 12 T120 6 T190 10" stroke="{_th["accent_light"]}" stroke-width="1.5" fill="none" stroke-dasharray="200" style="animation: lineTrace 2s ease 1.5s forwards;"/>
+            <path d="M0 18 Q30 2 60 12 T120 6 T190 10" stroke="{_th["accent_light"]}22" stroke-width="6" fill="none"/>
+          </svg>
+        </div>
+      </div>
 
       <!-- Features -->
       <div class="ob-features">
@@ -876,6 +876,22 @@ if not st.session_state.onboarded:
           <span class="ob-feat-icon">🔒</span>
           <div class="ob-feat-title">100% Local</div>
           <div class="ob-feat-desc">Tes donnees restent sur ton appareil</div>
+        </div>
+      </div>
+
+      <!-- Stats animees -->
+      <div class="ob-stats">
+        <div class="ob-stat">
+          <div class="ob-stat-val" style="--stat-delay:1.8s">100%</div>
+          <div class="ob-stat-lbl">Gratuit</div>
+        </div>
+        <div class="ob-stat">
+          <div class="ob-stat-val" style="--stat-delay:2s">0</div>
+          <div class="ob-stat-lbl">Donnees partagees</div>
+        </div>
+        <div class="ob-stat">
+          <div class="ob-stat-val" style="--stat-delay:2.2s">1 clic</div>
+          <div class="ob-stat-lbl">Pour analyser</div>
         </div>
       </div>
     </div>
