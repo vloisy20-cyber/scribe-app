@@ -1759,163 +1759,17 @@ with _bar_left:
     </div>
     """)
 with _bar_right:
-    # Petits boutons alignés en haut à droite
-    _r1, _r2 = st.columns(2)
-    with _r1:
-        st.html("<div style='height:28px;'></div>")
-        _theme_names = list(ACCENT_THEMES.keys())
-        _cur_idx = _theme_names.index(st.session_state.accent_theme)
-        _theme_icons = {"Bleu nuit": "🔵", "Emeraude": "🟢", "Violet": "🟣", "Corail": "🟠", "Rose": "🩷", "Or": "🟡"}
-        _theme_options = [f"{_theme_icons.get(n, '●')} {n}" for n in _theme_names]
-        _sel_theme_full = st.selectbox("Theme", _theme_options, index=_cur_idx, label_visibility="collapsed", key="theme_select")
-        _sel_theme = _sel_theme_full.split(" ", 1)[1] if " " in _sel_theme_full else _sel_theme_full
-        if _sel_theme != st.session_state.accent_theme:
-            st.session_state.accent_theme = _sel_theme
-            st.rerun()
-    with _r2:
-        st.html("<div style='height:28px;'></div>")
-        mode_label = "☀️ Clair" if _dark else "🌙 Sombre"
-        if st.button(mode_label, key="toggle_mode"):
-            st.session_state.dark_mode = not _dark
-            st.rerun()
-    # Bouton accueil discret
-    if st.button("↩ Accueil", key="back_to_welcome", type="tertiary", use_container_width=True):
-        st.session_state.onboarded = False
-        _prefs = _load_user_prefs()
-        _prefs["onboarded"] = False
-        _save_user_prefs(_prefs)
-        st.rerun()
-
-with st.expander("⚙️ Parametres & Connexions"):
-    _p1, _p2, _p3 = st.columns(3)
-    with _p1:
-        st.markdown("**Cle API Gemini**")
-        api_key = st.text_input(
-            "Cle API Gemini",
-            type="password",
-            help="Recupere ta cle gratuite sur aistudio.google.com. Elle n'est jamais sauvegardee.",
-            label_visibility="collapsed",
-        )
-        st.caption(
-            "Pas encore de cle ? [aistudio.google.com](https://aistudio.google.com/apikey)"
-        )
-        st.divider()
-        st.markdown("**Budget mensuel**")
-        if "monthly_budget" not in st.session_state:
-            st.session_state.monthly_budget = 0.0
-        budget_val = st.number_input(
-            "Budget (EUR)", min_value=0.0,
-            value=st.session_state.monthly_budget,
-            step=50.0, key="budget_input",
-            label_visibility="collapsed",
-        )
-        if budget_val != st.session_state.monthly_budget:
-            st.session_state.monthly_budget = budget_val
-            st.rerun()
-        if st.session_state.monthly_budget > 0:
-            st.caption(f"Objectif : {st.session_state.monthly_budget:.0f} EUR / mois")
-        else:
-            st.caption("Definis un budget pour suivre tes depenses.")
-    with _p2:
-        st.markdown("**Mes fournisseurs**")
-        if "connected_providers" not in st.session_state:
-            st.session_state.connected_providers = {}
-        provider_names = sorted(KNOWN_PROVIDERS.keys())
-        choices = provider_names + ["── Autre (saisie libre) ──"]
-        prov_choice = st.selectbox("Fournisseur", choices, key="prov_select")
-        custom_name = None
-        if prov_choice.startswith("──"):
-            custom_name = st.text_input("Nom du fournisseur", key="prov_custom_name",
-                                         placeholder="Ex: Direct Assurance, Leclerc Energie...")
-        chosen_name = custom_name if custom_name else prov_choice
-        prov_info = KNOWN_PROVIDERS.get(chosen_name, {})
-        has_auto = _HAS_WOOB and prov_info.get("module") is not None
-        if has_auto:
-            prov_login = st.text_input("Identifiant / email", key="prov_login")
-            prov_password = st.text_input("Mot de passe", type="password", key="prov_password")
-            can_add = bool(prov_login and prov_password and chosen_name)
-        else:
-            if chosen_name and not prov_choice.startswith("──"):
-                st.caption("Pas de recuperation automatique — upload manuel.")
-            elif custom_name:
-                st.caption("Fournisseur personnalise — upload manuel.")
-            prov_login = ""
-            prov_password = ""
-            can_add = bool(chosen_name and not prov_choice.startswith("──")) or bool(custom_name)
-        if st.button("Ajouter", disabled=not can_add):
-            icon = prov_info.get("icon", "📄") if prov_info else "📄"
-            st.session_state.connected_providers[chosen_name] = {
-                "login": prov_login,
-                "password": prov_password,
-                "auto": has_auto,
-                "icon": icon,
-            }
-            st.success(f"{icon} {chosen_name} ajoute !")
-            st.rerun()
-        if st.session_state.connected_providers:
-            for name in list(st.session_state.connected_providers.keys()):
-                info = st.session_state.connected_providers[name]
-                icon = info.get("icon", KNOWN_PROVIDERS.get(name, {}).get("icon", "📄"))
-                auto_tag = " (auto)" if info.get("auto") else ""
-                col_name, col_btn = st.columns([3, 1])
-                col_name.caption(f"{icon} {name}{auto_tag}")
-                if col_btn.button("✕", key=f"rm_{name}"):
-                    del st.session_state.connected_providers[name]
-                    st.rerun()
-        else:
-            st.caption("Aucun fournisseur ajoute.")
-        if not _HAS_WOOB:
-            st.caption("Pour la recuperation auto :")
-            st.code("pip install woob", language="bash")
-    with _p3:
-        st.markdown("**Ma banque**")
-        if "connected_bank" not in st.session_state:
-            st.session_state.connected_bank = None
-        bank_names = sorted(KNOWN_BANKS.keys())
-        bank_choice = st.selectbox("Banque", bank_names, key="bank_select")
-        bank_info = KNOWN_BANKS.get(bank_choice, {})
-        bank_has_module = _HAS_WOOB and bank_info.get("module") is not None
-        if bank_has_module:
-            bank_login = st.text_input("Identifiant bancaire", key="bank_login")
-            bank_password = st.text_input("Mot de passe", type="password", key="bank_password")
-            can_connect_bank = bool(bank_login and bank_password)
-        else:
-            st.caption("Pas de connexion automatique pour cette banque.")
-            bank_login = ""
-            bank_password = ""
-            can_connect_bank = False
-        if st.button("Connecter", disabled=not can_connect_bank, key="btn_connect_bank"):
-            st.session_state.connected_bank = {
-                "name": bank_choice,
-                "login": bank_login,
-                "password": bank_password,
-                "icon": bank_info.get("icon", "🏦"),
-            }
-            st.success(f"🏦 {bank_choice} connectee !")
-            st.rerun()
-        if st.session_state.connected_bank:
-            bk = st.session_state.connected_bank
-            col_bk, col_rm = st.columns([3, 1])
-            col_bk.caption(f"🏦 {bk['name']}")
-            if col_rm.button("✕", key="rm_bank"):
-                st.session_state.connected_bank = None
-                st.rerun()
-        else:
-            st.caption("Aucune banque connectee.")
-        st.divider()
-        st.markdown("**Options**")
-        st.caption(f"Historique : `{HISTORY_PATH}`")
-        confirm = st.checkbox("Je confirme vouloir tout effacer")
-        if st.button("Reinitialiser l'historique", disabled=not confirm):
-            if HISTORY_PATH.exists():
-                HISTORY_PATH.unlink()
-            st.success("Historique efface.")
-            st.rerun()
+    st.html("<div style='height:36px;'></div>")
 
 
 if not _HAS_GENAI:
     st.error("Le paquet `google-genai` n'est pas installé. Lance `pip install -r requirements.txt`.")
     st.stop()
+
+# Variable api_key initialisée ici, définie dans l'onglet Parametres
+if "api_key_val" not in st.session_state:
+    st.session_state.api_key_val = ""
+api_key = st.session_state.api_key_val
 
 # --------------------------------------------------------------------------
 # Onglets principaux
@@ -1967,7 +1821,7 @@ st.markdown(f"""<style>
   }}
 </style>""", unsafe_allow_html=True)
 
-tab_factures, tab_paie = st.tabs(["Factures & Abonnements", "Fiches de paie"])
+tab_factures, tab_paie, tab_params = st.tabs(["Factures & Abonnements", "Fiches de paie", "Parametres"])
 
 with tab_factures:
     # --------------------------------------------------------------------------
@@ -3391,3 +3245,214 @@ with tab_paie:
             Depose ta premiere fiche ci-dessus pour commencer le suivi.</p>
         </div>
         """)
+
+# --------------------------------------------------------------------------
+# Onglet Parametres
+# --------------------------------------------------------------------------
+with tab_params:
+
+    # ── Apparence ──
+    _sec_p = "display:flex; align-items:center; gap:10px; margin:16px 0 16px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;"
+    _ico_p = f"width:36px; height:36px; border-radius:10px; background:{_th['accent_bg']}; display:flex; align-items:center; justify-content:center;"
+    _paint_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>'
+    st.html(f"""
+    <div style="{_sec_p}">
+        <div style="{_ico_p}">{svg_img(_paint_svg)}</div>
+        <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Apparence</h2>
+    </div>
+    """)
+
+    _ap1, _ap2 = st.columns(2)
+    with _ap1:
+        _theme_names = list(ACCENT_THEMES.keys())
+        _cur_idx = _theme_names.index(st.session_state.accent_theme)
+        _theme_icons = {"Bleu nuit": "🔵", "Emeraude": "🟢", "Violet": "🟣", "Corail": "🟠", "Rose": "🩷", "Or": "🟡"}
+        _theme_options = [f"{_theme_icons.get(n, '●')} {n}" for n in _theme_names]
+        _sel_theme_full = st.selectbox("Couleur du theme", _theme_options, index=_cur_idx, key="theme_select")
+        _sel_theme = _sel_theme_full.split(" ", 1)[1] if " " in _sel_theme_full else _sel_theme_full
+        if _sel_theme != st.session_state.accent_theme:
+            st.session_state.accent_theme = _sel_theme
+            st.rerun()
+    with _ap2:
+        mode_label = "☀️ Mode clair" if _dark else "🌙 Mode sombre"
+        st.html("<div style='height:24px;'></div>")
+        if st.button(mode_label, key="toggle_mode", use_container_width=True):
+            st.session_state.dark_mode = not _dark
+            st.rerun()
+
+    st.divider()
+
+    # ── Cle API & Budget ──
+    _key_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.78 7.78 5.5 5.5 0 0 1 7.78-7.78zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>'
+    st.html(f"""
+    <div style="{_sec_p}">
+        <div style="{_ico_p}">{svg_img(_key_svg)}</div>
+        <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">API & Budget</h2>
+    </div>
+    """)
+
+    _kb1, _kb2 = st.columns(2)
+    with _kb1:
+        st.markdown("**Cle API Gemini**")
+        _api_input = st.text_input(
+            "Cle API Gemini",
+            value=st.session_state.api_key_val,
+            type="password",
+            help="Recupere ta cle gratuite sur aistudio.google.com. Elle n'est jamais sauvegardee.",
+            label_visibility="collapsed",
+        )
+        if _api_input != st.session_state.api_key_val:
+            st.session_state.api_key_val = _api_input
+            st.rerun()
+        st.caption(
+            "Pas encore de cle ? [aistudio.google.com](https://aistudio.google.com/apikey)"
+        )
+    with _kb2:
+        st.markdown("**Budget mensuel**")
+        if "monthly_budget" not in st.session_state:
+            st.session_state.monthly_budget = 0.0
+        budget_val = st.number_input(
+            "Budget (EUR)", min_value=0.0,
+            value=st.session_state.monthly_budget,
+            step=50.0, key="budget_input",
+            label_visibility="collapsed",
+        )
+        if budget_val != st.session_state.monthly_budget:
+            st.session_state.monthly_budget = budget_val
+            st.rerun()
+        if st.session_state.monthly_budget > 0:
+            st.caption(f"Objectif : {st.session_state.monthly_budget:.0f} EUR / mois")
+        else:
+            st.caption("Definis un budget pour suivre tes depenses.")
+
+    st.divider()
+
+    # ── Fournisseurs ──
+    _prov_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/></svg>'
+    st.html(f"""
+    <div style="{_sec_p}">
+        <div style="{_ico_p}">{svg_img(_prov_svg)}</div>
+        <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Connexions</h2>
+    </div>
+    """)
+
+    _cn1, _cn2 = st.columns(2)
+    with _cn1:
+        st.markdown("**Mes fournisseurs**")
+        if "connected_providers" not in st.session_state:
+            st.session_state.connected_providers = {}
+        provider_names = sorted(KNOWN_PROVIDERS.keys())
+        choices = provider_names + ["── Autre (saisie libre) ──"]
+        prov_choice = st.selectbox("Fournisseur", choices, key="prov_select")
+        custom_name = None
+        if prov_choice.startswith("──"):
+            custom_name = st.text_input("Nom du fournisseur", key="prov_custom_name",
+                                         placeholder="Ex: Direct Assurance, Leclerc Energie...")
+        chosen_name = custom_name if custom_name else prov_choice
+        prov_info = KNOWN_PROVIDERS.get(chosen_name, {})
+        has_auto = _HAS_WOOB and prov_info.get("module") is not None
+        if has_auto:
+            prov_login = st.text_input("Identifiant / email", key="prov_login")
+            prov_password = st.text_input("Mot de passe", type="password", key="prov_password")
+            can_add = bool(prov_login and prov_password and chosen_name)
+        else:
+            if chosen_name and not prov_choice.startswith("──"):
+                st.caption("Pas de recuperation automatique — upload manuel.")
+            elif custom_name:
+                st.caption("Fournisseur personnalise — upload manuel.")
+            prov_login = ""
+            prov_password = ""
+            can_add = bool(chosen_name and not prov_choice.startswith("──")) or bool(custom_name)
+        if st.button("Ajouter", disabled=not can_add):
+            icon = prov_info.get("icon", "📄") if prov_info else "📄"
+            st.session_state.connected_providers[chosen_name] = {
+                "login": prov_login,
+                "password": prov_password,
+                "auto": has_auto,
+                "icon": icon,
+            }
+            st.success(f"{icon} {chosen_name} ajoute !")
+            st.rerun()
+        if st.session_state.connected_providers:
+            for name in list(st.session_state.connected_providers.keys()):
+                info = st.session_state.connected_providers[name]
+                icon = info.get("icon", KNOWN_PROVIDERS.get(name, {}).get("icon", "📄"))
+                auto_tag = " (auto)" if info.get("auto") else ""
+                col_name, col_btn = st.columns([3, 1])
+                col_name.caption(f"{icon} {name}{auto_tag}")
+                if col_btn.button("✕", key=f"rm_{name}"):
+                    del st.session_state.connected_providers[name]
+                    st.rerun()
+        else:
+            st.caption("Aucun fournisseur ajoute.")
+        if not _HAS_WOOB:
+            st.caption("Pour la recuperation auto :")
+            st.code("pip install woob", language="bash")
+
+    with _cn2:
+        st.markdown("**Ma banque**")
+        if "connected_bank" not in st.session_state:
+            st.session_state.connected_bank = None
+        bank_names = sorted(KNOWN_BANKS.keys())
+        bank_choice = st.selectbox("Banque", bank_names, key="bank_select")
+        bank_info = KNOWN_BANKS.get(bank_choice, {})
+        bank_has_module = _HAS_WOOB and bank_info.get("module") is not None
+        if bank_has_module:
+            bank_login = st.text_input("Identifiant bancaire", key="bank_login")
+            bank_password = st.text_input("Mot de passe", type="password", key="bank_password")
+            can_connect_bank = bool(bank_login and bank_password)
+        else:
+            st.caption("Pas de connexion automatique pour cette banque.")
+            bank_login = ""
+            bank_password = ""
+            can_connect_bank = False
+        if st.button("Connecter", disabled=not can_connect_bank, key="btn_connect_bank"):
+            st.session_state.connected_bank = {
+                "name": bank_choice,
+                "login": bank_login,
+                "password": bank_password,
+                "icon": bank_info.get("icon", "🏦"),
+            }
+            st.success(f"🏦 {bank_choice} connectee !")
+            st.rerun()
+        if st.session_state.connected_bank:
+            bk = st.session_state.connected_bank
+            col_bk, col_rm = st.columns([3, 1])
+            col_bk.caption(f"🏦 {bk['name']}")
+            if col_rm.button("✕", key="rm_bank"):
+                st.session_state.connected_bank = None
+                st.rerun()
+        else:
+            st.caption("Aucune banque connectee.")
+
+    st.divider()
+
+    # ── Donnees & reinitialisation ──
+    _data_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>'
+    st.html(f"""
+    <div style="{_sec_p}">
+        <div style="{_ico_p}">{svg_img(_data_svg)}</div>
+        <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Donnees</h2>
+    </div>
+    """)
+
+    st.caption(f"Historique : `{HISTORY_PATH}`")
+    st.caption(f"Transactions : `{BANK_TX_PATH}`")
+    st.caption(f"Fiches de paie : `{PAYSLIP_PATH}`")
+
+    confirm = st.checkbox("Je confirme vouloir tout effacer")
+    if st.button("Reinitialiser l'historique", disabled=not confirm, type="primary"):
+        if HISTORY_PATH.exists():
+            HISTORY_PATH.unlink()
+        st.success("Historique efface.")
+        st.rerun()
+
+    st.divider()
+
+    # ── Retour accueil ──
+    if st.button("↩ Retour a la page d'accueil", key="back_to_welcome", type="tertiary"):
+        st.session_state.onboarded = False
+        _prefs = _load_user_prefs()
+        _prefs["onboarded"] = False
+        _save_user_prefs(_prefs)
+        st.rerun()
