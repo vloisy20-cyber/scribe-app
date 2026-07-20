@@ -76,6 +76,162 @@ BANK_TX_COLUMNS = [
     "date_import",
 ]
 
+SAVINGS_PATH = DATA_DIR / "savings_goals.json"
+CATEGORY_BUDGETS_PATH = DATA_DIR / "category_budgets.json"
+
+# --------------------------------------------------------------------------
+# Catégorisation automatique des transactions
+# --------------------------------------------------------------------------
+
+TRANSACTION_CATEGORIES = {
+    "Alimentation": {
+        "icon": "🛒",
+        "color": "#22c55e",
+        "keywords": [
+            "CARREFOUR", "LECLERC", "AUCHAN", "LIDL", "INTERMARCHE", "SUPER U",
+            "MONOPRIX", "FRANPRIX", "PICARD", "CASINO", "ALDI", "NETTO",
+            "SPAR", "CORA", "MATCH", "BOULANGERIE", "BOUCHERIE", "PRIMEUR",
+            "EPICERIE", "BIOCOOP", "NATURALIA", "GRAND FRAIS", "MARCHE",
+            "DELIVEROO", "UBER EATS", "JUST EAT", "MC DONALD", "MCDO",
+            "BURGER KING", "KFC", "SUBWAY", "DOMINOS", "PIZZA", "SUSHI",
+            "RESTAURANT", "RESTO", "BRASSERIE", "CAFE", "STARBUCKS",
+        ],
+    },
+    "Transport": {
+        "icon": "🚗",
+        "color": "#3b82f6",
+        "keywords": [
+            "SNCF", "RATP", "NAVIGO", "UBER", "BOLT", "TAXI", "BLABLACAR",
+            "TOTAL ENERGIES", "TOTALENERGIES", "SHELL", "BP ", "ESSO",
+            "STATION SERVICE", "CARBURANT", "ESSENCE", "GASOIL", "PEAGE",
+            "AUTOROUTE", "PARKING", "STATIONNEMENT", "VINCI", "SANEF",
+            "VELIB", "LIME", "TIER", "BIRD", "CITROEN", "RENAULT",
+            "PEUGEOT", "CONTROLE TECHNIQUE", "ASSURANCE AUTO",
+        ],
+    },
+    "Logement": {
+        "icon": "🏠",
+        "color": "#f59e0b",
+        "keywords": [
+            "LOYER", "CHARGES", "SYNDIC", "FONCIA", "NEXITY", "ORPI",
+            "EDF", "ENGIE", "GDF", "VEOLIA", "SUEZ", "ELECTRICITE",
+            "GAZ", "CHAUFFAGE", "TAXE HABITATION", "TAXE FONCIERE",
+            "ASSURANCE HABITATION", "MRH",
+        ],
+    },
+    "Sante": {
+        "icon": "🏥",
+        "color": "#ef4444",
+        "keywords": [
+            "PHARMACIE", "MEDECIN", "DOCTEUR", "HOPITAL", "CLINIQUE",
+            "DENTISTE", "OPTICIEN", "KINE", "OSTEO", "CPAM", "AMELI",
+            "MUTUELLE", "SANTE", "LABORATOIRE", "LABO ", "OPTIQUE",
+            "LUNETTES", "DENTAL", "ORTHODONT",
+        ],
+    },
+    "Loisirs": {
+        "icon": "🎮",
+        "color": "#8b5cf6",
+        "keywords": [
+            "NETFLIX", "SPOTIFY", "DEEZER", "DISNEY", "AMAZON PRIME",
+            "CANAL+", "CANAL PLUS", "OCS", "APPLE MUSIC", "YOUTUBE",
+            "GAMING", "STEAM", "PLAYSTATION", "XBOX", "NINTENDO",
+            "CINEMA", "UGC", "PATHE", "GAUMONT", "FNAC", "CULTURA",
+            "CONCERT", "SPECTACLE", "THEATRE", "MUSEE", "SPORT",
+            "FITNESS", "SALLE DE SPORT", "BASIC FIT", "KEEP COOL",
+        ],
+    },
+    "Shopping": {
+        "icon": "🛍️",
+        "color": "#ec4899",
+        "keywords": [
+            "AMAZON", "CDISCOUNT", "ALIEXPRESS", "SHEIN", "ZALANDO",
+            "ZARA", "H&M", "KIABI", "DECATHLON", "IKEA", "LEROY MERLIN",
+            "CASTORAMA", "DARTY", "BOULANGER", "ELECTRO", "VINTED",
+            "LEBONCOIN", "ACTION", "GIFI", "HEMA", "PRIMARK", "UNIQLO",
+        ],
+    },
+    "Assurance": {
+        "icon": "🛡️",
+        "color": "#14b8a6",
+        "keywords": [
+            "ASSURANCE", "AXA", "MAIF", "MACIF", "MATMUT", "ALLIANZ",
+            "GROUPAMA", "MMA", "GMF", "ACM", "GENERALI", "DIRECT ASSUR",
+            "OLIVIER ASSURANCE", "PRLV ASSUR",
+        ],
+    },
+    "Telecom": {
+        "icon": "📱",
+        "color": "#06b6d4",
+        "keywords": [
+            "ORANGE", "FREE", "SFR", "BOUYGUES", "SOSH", "RED BY SFR",
+            "B&YOU", "PRIXTEL", "OVH", "ICLOUD", "GOOGLE STORAGE",
+        ],
+    },
+    "Impots & Taxes": {
+        "icon": "🏛️",
+        "color": "#78716c",
+        "keywords": [
+            "IMPOT", "TRESOR PUBLIC", "DGFIP", "TAXE", "AMENDE",
+            "CONTRIB", "PRELEVEMENT SOURCE", "URSSAF", "CAF",
+        ],
+    },
+    "Autre": {
+        "icon": "📦",
+        "color": "#6b7280",
+        "keywords": [],
+    },
+}
+
+
+def categorize_transaction(label: str) -> str:
+    """Classe une transaction dans une catégorie selon le libellé."""
+    up = label.upper().strip()
+    for cat_name, cat_info in TRANSACTION_CATEGORIES.items():
+        if cat_name == "Autre":
+            continue
+        for kw in cat_info["keywords"]:
+            if kw in up:
+                return cat_name
+    return "Autre"
+
+
+def categorize_all_transactions(tx_df: pd.DataFrame) -> pd.DataFrame:
+    """Ajoute une colonne 'auto_category' à toutes les transactions."""
+    df = tx_df.copy()
+    df["auto_category"] = df["label"].apply(categorize_transaction)
+    return df
+
+
+def load_savings_goals() -> list:
+    """Charge les objectifs d'épargne depuis le JSON."""
+    if SAVINGS_PATH.exists():
+        try:
+            return json.loads(SAVINGS_PATH.read_text())
+        except Exception:
+            return []
+    return []
+
+
+def save_savings_goals(goals: list) -> None:
+    """Sauvegarde les objectifs d'épargne."""
+    SAVINGS_PATH.write_text(json.dumps(goals, ensure_ascii=False, indent=2))
+
+
+def load_category_budgets() -> dict:
+    """Charge les budgets par catégorie."""
+    if CATEGORY_BUDGETS_PATH.exists():
+        try:
+            return json.loads(CATEGORY_BUDGETS_PATH.read_text())
+        except Exception:
+            return {}
+    return {}
+
+
+def save_category_budgets(budgets: dict) -> None:
+    """Sauvegarde les budgets par catégorie."""
+    CATEGORY_BUDGETS_PATH.write_text(json.dumps(budgets, ensure_ascii=False, indent=2))
+
 # Banques françaises connues (modules woob CapBank)
 KNOWN_BANKS = {
     "BNP Paribas": {"module": "bnporc", "icon": "🏦"},
@@ -2042,95 +2198,305 @@ with tab_factures:
                     st.success(f"{len(txs)} transaction(s) recuperee(s) !")
                     st.rerun()
 
-    # Afficher les abonnements détectés
+    # Afficher les données bancaires
     tx_df = st.session_state.bank_tx
     if not tx_df.empty and len(tx_df) >= 2:
+        import altair as alt
+
+        # Préparer les données catégorisées
+        _tx_all = categorize_all_transactions(tx_df)
+        _tx_all["amount"] = pd.to_numeric(_tx_all["amount"], errors="coerce")
+        _tx_all["date"] = pd.to_datetime(_tx_all["date"], errors="coerce", dayfirst=True)
+        _tx_all = _tx_all.dropna(subset=["amount", "date"])
+
+        # ════════════════════════════════════════════════════════════════
+        # 1. REVENUS vs DÉPENSES
+        # ════════════════════════════════════════════════════════════════
+        _sec = "display:flex; align-items:center; gap:10px; margin:24px 0 16px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;"
+        _ico = f"width:36px; height:36px; border-radius:10px; background:{_th['accent_bg']}; display:flex; align-items:center; justify-content:center;"
+        _bal_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+        st.html(f"""
+        <div style="{_sec}">
+            <div style="{_ico}">{svg_img(_bal_svg)}</div>
+            <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Revenus vs Depenses</h2>
+        </div>
+        """)
+
+        # Calculer revenus (montants positifs dans le CSV original) et dépenses
+        _tx_full = tx_df.copy()
+        _tx_full["amount"] = pd.to_numeric(_tx_full["amount"], errors="coerce")
+        _tx_full["date"] = pd.to_datetime(_tx_full["date"], errors="coerce", dayfirst=True)
+        _tx_full = _tx_full.dropna(subset=["amount", "date"])
+
+        _now_bk = pd.Timestamp.now()
+        _tx_this_month = _tx_full[
+            (_tx_full["date"].dt.month == _now_bk.month) &
+            (_tx_full["date"].dt.year == _now_bk.year)
+        ]
+
+        _total_depenses = _tx_all["amount"].sum()
+        _month_depenses = _tx_this_month["amount"].sum() if not _tx_this_month.empty else 0
+
+        # Revenus = fiches de paie si disponibles
+        _payslips_rev = load_payslips()
+        _revenu_mensuel = 0.0
+        if not _payslips_rev.empty:
+            _payslips_rev["salaire_net"] = pd.to_numeric(_payslips_rev["salaire_net"], errors="coerce")
+            _last_pay = _payslips_rev.dropna(subset=["salaire_net"]).sort_values("date_ajout")
+            if not _last_pay.empty:
+                _revenu_mensuel = _last_pay.iloc[-1]["salaire_net"]
+
+        _solde = _revenu_mensuel - _month_depenses if _revenu_mensuel > 0 else 0
+        _solde_color = "#22c55e" if _solde >= 0 else "#ef4444"
+        _solde_icon = "+" if _solde >= 0 else ""
+
+        _stat_box = f"flex:1; background:{_card}; border:1px solid {_border}; border-radius:14px; padding:20px 24px; text-align:center;"
+        _stat_val = f"font-size:28px; font-weight:800; line-height:1.2;"
+        _stat_lbl = f"font-size:12px; font-weight:600; color:{_text3}; text-transform:uppercase; letter-spacing:.04em; margin-top:6px;"
+
+        st.html(f"""
+        <div style="display:flex; gap:16px; margin-bottom:24px; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+            <div style="{_stat_box}">
+                <div style="{_stat_val} color:#22c55e;">{_revenu_mensuel:,.2f} EUR</div>
+                <div style="{_stat_lbl}">Revenu mensuel</div>
+            </div>
+            <div style="{_stat_box}">
+                <div style="{_stat_val} color:#ef4444;">{_month_depenses:,.2f} EUR</div>
+                <div style="{_stat_lbl}">Depenses ce mois</div>
+            </div>
+            <div style="{_stat_box}">
+                <div style="{_stat_val} color:{_solde_color};">{_solde_icon}{_solde:,.2f} EUR</div>
+                <div style="{_stat_lbl}">Solde restant</div>
+            </div>
+        </div>
+        """)
+
+        if _revenu_mensuel > 0 and _month_depenses > 0:
+            _pct_spent = min((_month_depenses / _revenu_mensuel) * 100, 100)
+            _bar_col = "#ef4444" if _pct_spent > 90 else ("#f59e0b" if _pct_spent > 70 else "#22c55e")
+            st.html(f"""
+            <div style="background:{_card}; border:1px solid {_border}; border-radius:14px; padding:16px 24px; margin-bottom:24px; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                    <span style="font-size:13px; font-weight:600; color:{_text1};">Consommation du revenu</span>
+                    <span style="font-size:13px; font-weight:700; color:{_bar_col};">{_pct_spent:.0f}%</span>
+                </div>
+                <div style="background:{_input_bg}; border-radius:8px; height:10px; overflow:hidden;">
+                    <div style="width:{_pct_spent}%; height:100%; background:{_bar_col}; border-radius:8px; transition:width 0.5s;"></div>
+                </div>
+            </div>
+            """)
+
+        # ════════════════════════════════════════════════════════════════
+        # 2. DÉPENSES PAR CATÉGORIE
+        # ════════════════════════════════════════════════════════════════
+        _sec = "display:flex; align-items:center; gap:10px; margin:24px 0 16px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;"
+        _cat_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 10 10h-10z"/></svg>'
+        st.html(f"""
+        <div style="{_sec}">
+            <div style="{_ico}">{svg_img(_cat_svg)}</div>
+            <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Depenses par categorie</h2>
+        </div>
+        """)
+
+        _cat_totals = _tx_all.groupby("auto_category")["amount"].sum().sort_values(ascending=False)
+        _cat_totals = _cat_totals[_cat_totals > 0]
+
+        if not _cat_totals.empty:
+            _cat_colors = [TRANSACTION_CATEGORIES.get(c, {}).get("color", "#6b7280") for c in _cat_totals.index]
+            _cat_icons = [TRANSACTION_CATEGORIES.get(c, {}).get("icon", "📦") for c in _cat_totals.index]
+            _grand_total = _cat_totals.sum()
+
+            # Barres horizontales par catégorie
+            _cat_html = ""
+            for idx, (cat, amount) in enumerate(_cat_totals.items()):
+                pct = (amount / _grand_total) * 100 if _grand_total > 0 else 0
+                color = TRANSACTION_CATEGORIES.get(cat, {}).get("color", "#6b7280")
+                icon = TRANSACTION_CATEGORIES.get(cat, {}).get("icon", "📦")
+                _cat_html += f"""
+                <div style="margin-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:14px; font-weight:600; color:{_text1};">{icon} {cat}</span>
+                        <span style="font-size:14px; font-weight:700; color:{color};">{amount:.2f} EUR <span style="font-size:11px; color:{_text3};">({pct:.0f}%)</span></span>
+                    </div>
+                    <div style="background:{_input_bg}; border-radius:6px; height:8px; overflow:hidden;">
+                        <div style="width:{pct}%; height:100%; background:{color}; border-radius:6px;"></div>
+                    </div>
+                </div>
+                """
+            st.html(f"""
+            <div style="background:{_card}; border:1px solid {_border}; border-radius:14px; padding:20px 24px; margin-bottom:24px; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+                {_cat_html}
+            </div>
+            """)
+
+            # Donut chart par catégorie
+            _cat_df = pd.DataFrame({"Categorie": _cat_totals.index, "Montant": _cat_totals.values})
+            _donut = alt.Chart(_cat_df).mark_arc(
+                innerRadius=50, outerRadius=100, stroke=_card, strokeWidth=2,
+            ).encode(
+                theta=alt.Theta("Montant:Q"),
+                color=alt.Color("Categorie:N",
+                    scale=alt.Scale(domain=list(_cat_totals.index), range=_cat_colors),
+                    legend=alt.Legend(title=None, orient="bottom", labelFontSize=12, columns=3),
+                ),
+                tooltip=[alt.Tooltip("Categorie:N"), alt.Tooltip("Montant:Q", format=".2f", title="EUR")],
+            ).properties(height=300).configure_view(strokeWidth=0)
+            st.altair_chart(_donut, use_container_width=True)
+
+        # ════════════════════════════════════════════════════════════════
+        # 3. BUDGET PAR CATÉGORIE
+        # ════════════════════════════════════════════════════════════════
+        _sec = "display:flex; align-items:center; gap:10px; margin:24px 0 16px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;"
+        _budget_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M2 9h20"/><path d="M9 16h6"/></svg>'
+        st.html(f"""
+        <div style="{_sec}">
+            <div style="{_ico}">{svg_img(_budget_svg)}</div>
+            <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Budget par categorie</h2>
+        </div>
+        """)
+
+        _cat_budgets = load_category_budgets()
+
+        with st.expander("Definir les budgets par categorie"):
+            _budget_cols = st.columns(3)
+            _new_budgets = dict(_cat_budgets)
+            for idx, cat_name in enumerate([c for c in TRANSACTION_CATEGORIES.keys() if c != "Autre"]):
+                with _budget_cols[idx % 3]:
+                    icon = TRANSACTION_CATEGORIES[cat_name]["icon"]
+                    val = st.number_input(
+                        f"{icon} {cat_name}",
+                        min_value=0.0, step=10.0,
+                        value=float(_cat_budgets.get(cat_name, 0)),
+                        key=f"budget_cat_{cat_name}",
+                    )
+                    _new_budgets[cat_name] = val
+            if st.button("Sauvegarder les budgets", key="save_cat_budgets"):
+                save_category_budgets(_new_budgets)
+                st.success("Budgets sauvegardes !")
+                st.rerun()
+
+        # Barres de progression par catégorie (ce mois)
+        _tx_month_cat = _tx_all[
+            (_tx_all["date"].dt.month == _now_bk.month) &
+            (_tx_all["date"].dt.year == _now_bk.year)
+        ]
+        _month_cat_totals = _tx_month_cat.groupby("auto_category")["amount"].sum()
+
+        _has_any_budget = any(v > 0 for v in _cat_budgets.values())
+        if _has_any_budget:
+            _budget_html = ""
+            _alerts = []
+            for cat_name, budget_limit in _cat_budgets.items():
+                if budget_limit <= 0:
+                    continue
+                spent = _month_cat_totals.get(cat_name, 0)
+                pct = min((spent / budget_limit) * 100, 100) if budget_limit > 0 else 0
+                icon = TRANSACTION_CATEGORIES.get(cat_name, {}).get("icon", "📦")
+                color = TRANSACTION_CATEGORIES.get(cat_name, {}).get("color", "#6b7280")
+                bar_color = "#ef4444" if pct >= 90 else ("#f59e0b" if pct >= 70 else color)
+                status = f"Reste {budget_limit - spent:.0f} EUR" if spent <= budget_limit else f"Depasse de {spent - budget_limit:.0f} EUR"
+                status_color = "#ef4444" if spent > budget_limit else _text3
+
+                if spent > budget_limit:
+                    _alerts.append(f"{icon} {cat_name} : depasse de {spent - budget_limit:.0f} EUR !")
+
+                _budget_html += f"""
+                <div style="margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                        <span style="font-size:13px; font-weight:600; color:{_text1};">{icon} {cat_name}</span>
+                        <span style="font-size:12px; color:{status_color}; font-weight:600;">{status}</span>
+                    </div>
+                    <div style="background:{_input_bg}; border-radius:6px; height:8px; overflow:hidden;">
+                        <div style="width:{pct}%; height:100%; background:{bar_color}; border-radius:6px;"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; margin-top:3px;">
+                        <span style="font-size:11px; color:{_text3};">{spent:.0f} EUR</span>
+                        <span style="font-size:11px; color:{_text3};">{budget_limit:.0f} EUR</span>
+                    </div>
+                </div>
+                """
+            st.html(f"""
+            <div style="background:{_card}; border:1px solid {_border}; border-radius:14px; padding:20px 24px; margin-bottom:16px; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+                <div style="font-size:11px; font-weight:600; color:{_text3}; text-transform:uppercase; letter-spacing:.04em; margin-bottom:12px;">Ce mois-ci</div>
+                {_budget_html}
+            </div>
+            """)
+            for alert in _alerts:
+                st.warning(alert)
+
+        # ════════════════════════════════════════════════════════════════
+        # 4. TENDANCES MULTI-MOIS
+        # ════════════════════════════════════════════════════════════════
+        _sec = "display:flex; align-items:center; gap:10px; margin:24px 0 16px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;"
+        _trend_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18M5 16l4-4 4 4 6-8"/></svg>'
+        st.html(f"""
+        <div style="{_sec}">
+            <div style="{_ico}">{svg_img(_trend_svg)}</div>
+            <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Tendances mensuelles</h2>
+        </div>
+        """)
+
+        _tx_trend = _tx_all.copy()
+        _tx_trend["mois"] = _tx_trend["date"].dt.to_period("M").astype(str)
+        _trend_by_cat = _tx_trend.groupby(["mois", "auto_category"])["amount"].sum().reset_index()
+        _trend_by_cat.columns = ["Mois", "Categorie", "Montant"]
+
+        if len(_trend_by_cat["Mois"].unique()) >= 2:
+            _all_cat_colors = [TRANSACTION_CATEGORIES.get(c, {}).get("color", "#6b7280")
+                               for c in _trend_by_cat["Categorie"].unique()]
+            _trend_chart = alt.Chart(_trend_by_cat).mark_bar(
+                cornerRadiusTopLeft=4, cornerRadiusTopRight=4,
+            ).encode(
+                x=alt.X("Mois:N", title=None, axis=alt.Axis(labelAngle=-45)),
+                y=alt.Y("Montant:Q", title="Depenses (EUR)", stack="zero"),
+                color=alt.Color("Categorie:N",
+                    scale=alt.Scale(
+                        domain=list(_trend_by_cat["Categorie"].unique()),
+                        range=_all_cat_colors,
+                    ),
+                    legend=alt.Legend(title=None, orient="bottom", columns=3, labelFontSize=11),
+                ),
+                tooltip=["Mois", "Categorie", alt.Tooltip("Montant:Q", format=".2f")],
+            ).properties(height=300).configure_view(strokeWidth=0).configure(background=_card)
+            st.altair_chart(_trend_chart, use_container_width=True)
+        else:
+            # Total par mois simple
+            _trend_total = _tx_trend.groupby("mois")["amount"].sum().reset_index()
+            _trend_total.columns = ["Mois", "Total"]
+            if not _trend_total.empty:
+                _bar_simple = alt.Chart(_trend_total).mark_bar(
+                    cornerRadiusTopLeft=6, cornerRadiusTopRight=6, color=_th["accent_text"],
+                ).encode(
+                    x=alt.X("Mois:N", title=None),
+                    y=alt.Y("Total:Q", title="Total (EUR)"),
+                    tooltip=["Mois", alt.Tooltip("Total:Q", format=".2f")],
+                ).properties(height=250)
+                st.altair_chart(_bar_simple, use_container_width=True)
+
+        # ════════════════════════════════════════════════════════════════
+        # 5. ABONNEMENTS MENSUELS (existant, réorganisé)
+        # ════════════════════════════════════════════════════════════════
         subs = detect_subscriptions(tx_df)
         if not subs.empty:
-            # ── Graphique des abonnements mensuels ──
-            _tx_chart = tx_df.copy()
-            _tx_chart["amount"] = pd.to_numeric(_tx_chart["amount"], errors="coerce")
-            _tx_chart["date"] = pd.to_datetime(_tx_chart["date"], errors="coerce", dayfirst=True)
-            _tx_chart = _tx_chart.dropna(subset=["amount", "date"])
-            _tx_chart["label_norm"] = _tx_chart["label"].str.upper().str.strip()
-            # Ne garder que les transactions des abonnements détectés
-            _sub_labels = set(subs["label"].str.upper().str.strip())
-            _tx_chart = _tx_chart[_tx_chart["label_norm"].isin(_sub_labels)]
-            import altair as alt
+            _sec = "display:flex; align-items:center; gap:10px; margin:24px 0 16px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;"
+            _sub_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg>'
+            st.html(f"""
+            <div style="{_sec}">
+                <div style="{_ico}">{svg_img(_sub_svg)}</div>
+                <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Abonnements mensuels</h2>
+            </div>
+            """)
 
-            # ── Graphique circulaire par abonnement ──
-            _pie_data = subs[["label", "dernier_montant"]].copy()
-            _pie_data.columns = ["Abonnement", "Montant"]
-            _pie_data = _pie_data[_pie_data["Montant"] > 0].sort_values("Montant", ascending=False)
-
-            _pie_colors = ["#6366f1", "#ec4899", "#f59e0b", "#10b981", "#3b82f6",
-                           "#8b5cf6", "#ef4444", "#14b8a6", "#f97316", "#06b6d4",
-                           "#a855f7", "#84cc16", "#e11d48", "#0ea5e9", "#d946ef"]
-
-            _ratio = st.slider("Ajuster la taille des graphiques", min_value=20, max_value=80,
-                                value=60, step=5, key="chart_ratio",
-                                help="Gauche = plus de place pour les barres, Droite = plus de place pour le camembert")
-            _col_bar, _col_pie = st.columns([_ratio, 100 - _ratio])
-
-            with _col_bar:
-                if not _tx_chart.empty:
-                    _tx_chart["mois"] = _tx_chart["date"].dt.to_period("M").astype(str)
-                    _monthly = _tx_chart.groupby("mois")["amount"].sum().reset_index()
-                    _monthly.columns = ["Mois", "Total"]
-                    _monthly["Total"] = _monthly["Total"].round(2)
-                    _monthly = _monthly.sort_values("Mois")
-
-                    _bar_chart = alt.Chart(_monthly).mark_bar(
-                        cornerRadiusTopLeft=6,
-                        cornerRadiusTopRight=6,
-                        color=_th["accent_text"],
-                    ).encode(
-                        x=alt.X("Mois:N", title=None, axis=alt.Axis(labelAngle=-45)),
-                        y=alt.Y("Total:Q", title="Total abonnements (EUR)"),
-                        tooltip=["Mois", alt.Tooltip("Total:Q", format=".2f", title="Total EUR")],
-                    ).properties(height=280)
-                    st.altair_chart(_bar_chart, use_container_width=True)
-
-            with _col_pie:
-                _pie_chart = alt.Chart(_pie_data).mark_arc(
-                    innerRadius=50,
-                    outerRadius=110,
-                    stroke=_card,
-                    strokeWidth=2,
-                ).encode(
-                    theta=alt.Theta("Montant:Q"),
-                    color=alt.Color(
-                        "Abonnement:N",
-                        scale=alt.Scale(range=_pie_colors),
-                        legend=alt.Legend(
-                            title=None,
-                            orient="bottom",
-                            labelFontSize=13,
-                            labelLimit=250,
-                            symbolSize=140,
-                            symbolType="square",
-                            columns=1,
-                        ),
-                    ),
-                    tooltip=[
-                        alt.Tooltip("Abonnement:N"),
-                        alt.Tooltip("Montant:Q", format=".2f", title="EUR"),
-                    ],
-                ).properties(
-                    height=350,
-                ).configure_view(
-                    strokeWidth=0,
-                ).configure(
-                    autosize=alt.AutoSizeParams(type="fit", contains="padding"),
-                    padding={"left": 50, "right": 50, "top": 10, "bottom": 10},
-                )
-                st.altair_chart(_pie_chart, use_container_width=True)
-
-            st.markdown("##### Abonnements mensuels detectes")
+            _total_subs = subs["dernier_montant"].sum()
+            st.html(f"""
+            <div style="background:{_card}; border:1px solid {_border}; border-radius:14px; padding:16px 24px; margin-bottom:16px; font-family:system-ui,-apple-system,'Segoe UI',sans-serif; text-align:center;">
+                <span style="font-size:13px; color:{_text3};">Total abonnements mensuels : </span>
+                <span style="font-size:22px; font-weight:800; color:{_th['accent_text']};">{_total_subs:.2f} EUR/mois</span>
+            </div>
+            """)
 
             for _, row in subs.iterrows():
                 _sub_box = f"background:{_card}; border:1px solid {_border}; border-radius:12px; padding:14px 18px; margin-bottom:8px; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;"
-
                 variation = row["variation_pct"]
                 if variation > 5:
                     _badge = f'<span style="display:inline-block; padding:2px 8px; border-radius:999px; background:rgba(213,81,129,0.15); color:#d55181; font-size:11px; font-weight:600; margin-left:8px;">+{variation:.1f}%</span>'
@@ -2145,7 +2511,7 @@ with tab_factures:
                         <div>
                             <span style="font-size:15px; font-weight:600; color:{_text1};">{row['label']}</span>
                             {_badge}
-                            <div style="font-size:12px; color:{_text3}; margin-top:4px;">{int(row['occurrences'])} prelevement(s) detecte(s)</div>
+                            <div style="font-size:12px; color:{_text3}; margin-top:4px;">{int(row['occurrences'])} prelevement(s)</div>
                         </div>
                         <div style="text-align:right;">
                             <div style="font-size:20px; font-weight:700; color:{_th['accent_text']};">{row['dernier_montant']:.2f} EUR</div>
@@ -2154,8 +2520,163 @@ with tab_factures:
                     </div>
                 </div>
                 """)
+
+        # ════════════════════════════════════════════════════════════════
+        # 6. RECHERCHE ET FILTRE DES TRANSACTIONS
+        # ════════════════════════════════════════════════════════════════
+        _sec = "display:flex; align-items:center; gap:10px; margin:24px 0 16px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;"
+        _search_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>'
+        st.html(f"""
+        <div style="{_sec}">
+            <div style="{_ico}">{svg_img(_search_svg)}</div>
+            <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Toutes les transactions</h2>
+        </div>
+        """)
+
+        _search_col, _cat_col, _month_col = st.columns([3, 2, 2])
+        with _search_col:
+            _search_q = st.text_input("Rechercher", placeholder="Ex: Carrefour, Netflix...", key="tx_search", label_visibility="collapsed")
+        with _cat_col:
+            _cat_options = ["Toutes"] + sorted([c for c in _tx_all["auto_category"].unique()])
+            _cat_filter = st.selectbox("Categorie", _cat_options, key="tx_cat_filter", label_visibility="collapsed")
+        with _month_col:
+            _month_options = ["Tous les mois"] + sorted(_tx_all["date"].dt.to_period("M").astype(str).unique().tolist(), reverse=True)
+            _month_filter = st.selectbox("Mois", _month_options, key="tx_month_filter", label_visibility="collapsed")
+
+        _filtered_tx = _tx_all.copy()
+        if _search_q:
+            _filtered_tx = _filtered_tx[_filtered_tx["label"].str.contains(_search_q, case=False, na=False)]
+        if _cat_filter != "Toutes":
+            _filtered_tx = _filtered_tx[_filtered_tx["auto_category"] == _cat_filter]
+        if _month_filter != "Tous les mois":
+            _filtered_tx = _filtered_tx[_filtered_tx["date"].dt.to_period("M").astype(str) == _month_filter]
+
+        _filtered_tx = _filtered_tx.sort_values("date", ascending=False)
+        _display_tx = _filtered_tx[["date", "label", "amount", "auto_category"]].copy()
+        _display_tx.columns = ["Date", "Libelle", "Montant (EUR)", "Categorie"]
+        _display_tx["Date"] = _display_tx["Date"].dt.strftime("%d/%m/%Y")
+        st.dataframe(_display_tx, use_container_width=True, hide_index=True, height=400)
+        st.caption(f"{len(_display_tx)} transaction(s) affichee(s)")
+
+        # ════════════════════════════════════════════════════════════════
+        # 7. OBJECTIFS D'ÉPARGNE
+        # ════════════════════════════════════════════════════════════════
+        _sec = "display:flex; align-items:center; gap:10px; margin:24px 0 16px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;"
+        _save_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>'
+        st.html(f"""
+        <div style="{_sec}">
+            <div style="{_ico}">{svg_img(_save_svg)}</div>
+            <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Objectifs d'epargne</h2>
+        </div>
+        """)
+
+        if "savings_goals" not in st.session_state:
+            st.session_state.savings_goals = load_savings_goals()
+
+        with st.expander("Ajouter un objectif"):
+            _goal_name = st.text_input("Nom de l'objectif", placeholder="Ex: Vacances, Voiture...", key="goal_name")
+            _goal_c1, _goal_c2 = st.columns(2)
+            with _goal_c1:
+                _goal_target = st.number_input("Montant cible (EUR)", min_value=0.0, step=50.0, key="goal_target")
+            with _goal_c2:
+                _goal_saved = st.number_input("Deja epargne (EUR)", min_value=0.0, step=10.0, key="goal_saved")
+            if st.button("Ajouter l'objectif", key="add_goal"):
+                if _goal_name and _goal_target > 0:
+                    st.session_state.savings_goals.append({
+                        "name": _goal_name,
+                        "target": _goal_target,
+                        "saved": _goal_saved,
+                        "created": datetime.now().strftime("%Y-%m-%d"),
+                    })
+                    save_savings_goals(st.session_state.savings_goals)
+                    st.success(f"Objectif '{_goal_name}' ajoute !")
+                    st.rerun()
+
+        if st.session_state.savings_goals:
+            for g_idx, goal in enumerate(st.session_state.savings_goals):
+                _g_pct = min((goal["saved"] / goal["target"]) * 100, 100) if goal["target"] > 0 else 0
+                _g_color = "#22c55e" if _g_pct >= 100 else _th["accent_mid"]
+                _g_status = "Objectif atteint !" if _g_pct >= 100 else f"Encore {goal['target'] - goal['saved']:.0f} EUR"
+
+                _goal_col, _upd_col, _del_col = st.columns([6, 1, 1])
+                with _goal_col:
+                    st.html(f"""
+                    <div style="background:{_card}; border:1px solid {_border}; border-radius:14px; padding:16px 24px; margin-bottom:8px; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <span style="font-size:15px; font-weight:700; color:{_text1};">{"🎉" if _g_pct >= 100 else "🎯"} {goal['name']}</span>
+                            <span style="font-size:13px; color:{_g_color}; font-weight:600;">{_g_status}</span>
+                        </div>
+                        <div style="background:{_input_bg}; border-radius:8px; height:12px; overflow:hidden;">
+                            <div style="width:{_g_pct}%; height:100%; background:linear-gradient(90deg, {_th['accent_dark']}, {_g_color}); border-radius:8px;"></div>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                            <span style="font-size:11px; color:{_text3};">{goal['saved']:.0f} EUR epargnes</span>
+                            <span style="font-size:11px; color:{_text3};">{goal['target']:.0f} EUR objectif</span>
+                        </div>
+                    </div>
+                    """)
+                with _upd_col:
+                    _add_amount = st.number_input("Ajouter", min_value=0.0, step=10.0, key=f"add_save_{g_idx}", label_visibility="collapsed")
+                with _del_col:
+                    if st.button("➕", key=f"btn_add_save_{g_idx}"):
+                        if _add_amount > 0:
+                            st.session_state.savings_goals[g_idx]["saved"] += _add_amount
+                            save_savings_goals(st.session_state.savings_goals)
+                            st.rerun()
+                    if st.button("🗑️", key=f"btn_del_goal_{g_idx}"):
+                        st.session_state.savings_goals.pop(g_idx)
+                        save_savings_goals(st.session_state.savings_goals)
+                        st.rerun()
         else:
-            st.caption("Pas assez de donnees pour detecter des abonnements recurrents.")
+            st.caption("Aucun objectif defini. Ajoute ton premier objectif ci-dessus !")
+
+        # ════════════════════════════════════════════════════════════════
+        # 8. EXPORT PDF RÉSUMÉ MENSUEL
+        # ════════════════════════════════════════════════════════════════
+        _sec = "display:flex; align-items:center; gap:10px; margin:24px 0 16px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;"
+        _pdf_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M9 13h6M9 17h4"/></svg>'
+        st.html(f"""
+        <div style="{_sec}">
+            <div style="{_ico}">{svg_img(_pdf_svg)}</div>
+            <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Export resume mensuel</h2>
+        </div>
+        """)
+
+        _export_month = st.selectbox(
+            "Choisir le mois",
+            sorted(_tx_all["date"].dt.to_period("M").astype(str).unique().tolist(), reverse=True),
+            key="export_month",
+        )
+        if st.button("Generer le resume CSV", type="primary", key="export_csv"):
+            _exp = _tx_all[_tx_all["date"].dt.to_period("M").astype(str) == _export_month].copy()
+            _exp = _exp.sort_values("date")
+            _exp_display = _exp[["date", "label", "amount", "auto_category"]].copy()
+            _exp_display.columns = ["Date", "Libelle", "Montant", "Categorie"]
+            _exp_display["Date"] = _exp_display["Date"].dt.strftime("%d/%m/%Y")
+
+            # Résumé par catégorie
+            _summary = _exp.groupby("auto_category")["amount"].agg(["sum", "count"]).reset_index()
+            _summary.columns = ["Categorie", "Total", "Nb transactions"]
+            _summary = _summary.sort_values("Total", ascending=False)
+
+            # Créer un CSV avec résumé + détails
+            csv_buffer = io.StringIO()
+            csv_buffer.write(f"Resume mensuel - {_export_month}\n\n")
+            csv_buffer.write("=== RESUME PAR CATEGORIE ===\n")
+            _summary.to_csv(csv_buffer, index=False)
+            csv_buffer.write(f"\nTotal general: {_exp['amount'].sum():.2f} EUR\n")
+            csv_buffer.write(f"Nombre de transactions: {len(_exp)}\n\n")
+            csv_buffer.write("=== DETAIL DES TRANSACTIONS ===\n")
+            _exp_display.to_csv(csv_buffer, index=False)
+
+            st.download_button(
+                label=f"Telecharger le resume {_export_month}",
+                data=csv_buffer.getvalue(),
+                file_name=f"scribe_resume_{_export_month}.csv",
+                mime="text/csv",
+                key="download_csv",
+            )
+
     elif tx_df.empty:
         st.caption("Importe un CSV ou connecte ta banque pour commencer le suivi.")
 
