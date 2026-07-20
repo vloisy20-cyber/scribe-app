@@ -668,13 +668,29 @@ st.markdown(f"""
   [data-testid="stHeader"], [data-testid="stToolbar"] {{
     background-color: transparent !important;
   }}
-  /* ─── Masquer menu GitHub et footer Streamlit ─── */
-  #MainMenu, footer, .viewerBadge_container__r5tak,
+  /* ─── Masquer menu GitHub, footer, et boutons Streamlit Cloud ─── */
+  #MainMenu, footer, header,
+  .viewerBadge_container__r5tak,
+  .styles_viewerBadge__CvC9N,
   [data-testid="manage-app-button"],
+  [data-testid="stStatusWidget"],
+  [data-testid="stToolbar"],
+  [data-testid="stHeader"],
+  [data-testid="stDecoration"],
   ._link_gzau3_10,
-  .styles_viewerBadge__CvC9N {{
+  ._profileContainer_gzau3_53,
+  .stDeployButton,
+  ._container_gzau3_1,
+  [data-testid="baseButton-header"],
+  div[class*="stApp"] > header,
+  iframe[title="streamlit_app_badge"] {{
     display: none !important;
     visibility: hidden !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    top: -9999px !important;
   }}
   [data-testid="stAppViewContainer"],
   [data-testid="stMain"],
