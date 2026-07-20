@@ -635,158 +635,275 @@ if not st.session_state.onboarded:
     _logo_big_img = svg_img(_logo_big, 80, 80)
 
     st.html(f"""
-    <div style="max-width:580px; margin:40px auto; text-align:center; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
+    <div id="ob-scene" style="position:relative; max-width:640px; margin:0 auto; min-height:90vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:system-ui,-apple-system,'Segoe UI',sans-serif; overflow:hidden;">
+
+      <!-- Particules flottantes -->
       <style>
-        @keyframes logoFloat {{
-          0%, 100% {{ transform: translateY(0); }}
-          50% {{ transform: translateY(-8px); }}
+        @keyframes float1 {{ 0%,100% {{ transform: translate(0,0) scale(1); opacity:0.4; }} 25% {{ transform: translate(60px,-80px) scale(1.2); opacity:0.7; }} 50% {{ transform: translate(-30px,-140px) scale(0.8); opacity:0.3; }} 75% {{ transform: translate(40px,-60px) scale(1.1); opacity:0.6; }} }}
+        @keyframes float2 {{ 0%,100% {{ transform: translate(0,0) scale(1); opacity:0.3; }} 33% {{ transform: translate(-70px,-100px) scale(1.3); opacity:0.6; }} 66% {{ transform: translate(50px,-50px) scale(0.9); opacity:0.4; }} }}
+        @keyframes float3 {{ 0%,100% {{ transform: translate(0,0) scale(0.8); opacity:0.2; }} 50% {{ transform: translate(80px,-120px) scale(1.4); opacity:0.5; }} }}
+        @keyframes float4 {{ 0%,100% {{ transform: translate(0,0); opacity:0.3; }} 40% {{ transform: translate(-50px,-90px); opacity:0.6; }} 80% {{ transform: translate(30px,-150px); opacity:0.2; }} }}
+        @keyframes float5 {{ 0%,100% {{ transform: translate(0,0) rotate(0deg); opacity:0.2; }} 50% {{ transform: translate(-60px,-110px) rotate(180deg); opacity:0.5; }} }}
+
+        @keyframes pulseGlow {{
+          0%,100% {{ box-shadow: 0 0 20px {_th["accent_mid"]}33, 0 0 60px {_th["accent_dark"]}22; }}
+          50% {{ box-shadow: 0 0 40px {_th["accent_mid"]}55, 0 0 100px {_th["accent_dark"]}44; }}
         }}
-        @keyframes fadeUp {{
-          0% {{ opacity: 0; transform: translateY(24px); }}
-          100% {{ opacity: 1; transform: translateY(0); }}
+        @keyframes titleGlow {{
+          0% {{ opacity:0; transform: translateY(30px) scale(0.9); filter: blur(10px); }}
+          100% {{ opacity:1; transform: translateY(0) scale(1); filter: blur(0); }}
         }}
-        @keyframes shimmer {{
+        @keyframes subtitleIn {{
+          0% {{ opacity:0; transform: translateY(20px); }}
+          100% {{ opacity:1; transform: translateY(0); }}
+        }}
+        @keyframes featureSlide {{
+          0% {{ opacity:0; transform: translateY(30px) scale(0.95); }}
+          100% {{ opacity:1; transform: translateY(0) scale(1); }}
+        }}
+        @keyframes orbitRing {{
+          0% {{ transform: rotate(0deg); }}
+          100% {{ transform: rotate(360deg); }}
+        }}
+        @keyframes shimmerText {{
           0% {{ background-position: -200% center; }}
           100% {{ background-position: 200% center; }}
         }}
-        @keyframes cardReveal {{
-          0% {{ opacity: 0; transform: translateX(-30px); }}
-          100% {{ opacity: 1; transform: translateX(0); }}
+        @keyframes breathe {{
+          0%,100% {{ transform: scale(1); }}
+          50% {{ transform: scale(1.05); }}
         }}
-        .ob-logo {{
-          animation: logoFloat 3s ease-in-out infinite;
-          display: inline-block;
-          margin-bottom: 20px;
-          filter: drop-shadow(0 8px 24px {_th["accent_dark"]}66);
+
+        .particle {{
+          position: absolute;
+          border-radius: 50%;
+          pointer-events: none;
         }}
+        .p1 {{ width:6px; height:6px; background:{_th["accent_light"]}; top:20%; left:10%; animation: float1 8s ease-in-out infinite; }}
+        .p2 {{ width:4px; height:4px; background:{_th["accent_mid"]}; top:60%; left:80%; animation: float2 10s ease-in-out infinite; }}
+        .p3 {{ width:8px; height:8px; background:{_th["accent_pale"]}; top:70%; left:20%; animation: float3 12s ease-in-out infinite; }}
+        .p4 {{ width:3px; height:3px; background:{_th["accent_text"]}; top:30%; left:70%; animation: float4 9s ease-in-out infinite; }}
+        .p5 {{ width:5px; height:5px; background:{_th["accent_light"]}; top:80%; left:50%; animation: float5 11s ease-in-out infinite; }}
+        .p6 {{ width:4px; height:4px; background:{_th["accent_mid"]}; top:15%; left:60%; animation: float2 7s ease-in-out infinite 1s; }}
+        .p7 {{ width:6px; height:6px; background:{_th["accent_pale"]}; top:50%; left:90%; animation: float1 13s ease-in-out infinite 2s; }}
+        .p8 {{ width:3px; height:3px; background:{_th["accent_text"]}; top:85%; left:35%; animation: float3 9s ease-in-out infinite 0.5s; }}
+
+        .ob-orbit {{
+          position: absolute;
+          width: 200px; height: 200px;
+          border: 1px solid {_th["accent_mid"]}15;
+          border-radius: 50%;
+          animation: orbitRing 20s linear infinite;
+        }}
+        .ob-orbit2 {{
+          position: absolute;
+          width: 300px; height: 300px;
+          border: 1px solid {_th["accent_dark"]}10;
+          border-radius: 50%;
+          animation: orbitRing 30s linear infinite reverse;
+        }}
+        .ob-orbit::after {{
+          content: '';
+          position: absolute;
+          width: 8px; height: 8px;
+          background: {_th["accent_light"]};
+          border-radius: 50%;
+          top: -4px; left: 50%;
+          box-shadow: 0 0 12px {_th["accent_light"]}88;
+        }}
+        .ob-orbit2::after {{
+          content: '';
+          position: absolute;
+          width: 5px; height: 5px;
+          background: {_th["accent_pale"]};
+          border-radius: 50%;
+          bottom: -3px; right: 20%;
+          box-shadow: 0 0 8px {_th["accent_pale"]}66;
+        }}
+
+        .ob-logo-wrap {{
+          position: relative;
+          animation: breathe 4s ease-in-out infinite, titleGlow 1s ease 0.2s both;
+          z-index: 2;
+        }}
+        .ob-logo-inner {{
+          border-radius: 24px;
+          animation: pulseGlow 3s ease-in-out infinite;
+          padding: 4px;
+        }}
+        .ob-logo-ring {{
+          position: absolute;
+          inset: -16px;
+          border: 2px solid {_th["accent_mid"]}22;
+          border-radius: 32px;
+          animation: breathe 4s ease-in-out infinite 0.5s;
+        }}
+
         .ob-title {{
-          font-size: 46px;
+          font-size: 52px;
           font-weight: 900;
-          letter-spacing: -0.03em;
-          margin: 0;
-          background: linear-gradient(135deg, {_th["accent_light"]}, {_th["accent_pale"]}, {_th["accent_light"]});
-          background-size: 200% auto;
+          letter-spacing: -0.04em;
+          margin: 24px 0 0 0;
+          background: linear-gradient(135deg, {_th["accent_light"]}, #ffffff, {_th["accent_pale"]}, {_th["accent_light"]});
+          background-size: 300% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          animation: fadeUp 0.8s ease both, shimmer 3s linear infinite;
+          animation: titleGlow 0.8s ease 0.4s both, shimmerText 4s linear infinite;
+          z-index: 2;
+          position: relative;
         }}
         .ob-sub {{
           font-size: 17px;
           color: {_text3};
-          margin: 14px 0 40px 0;
-          animation: fadeUp 0.8s ease 0.15s both;
-          line-height: 1.5;
+          margin: 12px 0 36px 0;
+          line-height: 1.6;
+          animation: subtitleIn 0.8s ease 0.7s both;
+          z-index: 2;
+          position: relative;
+          text-align: center;
         }}
-        .ob-card {{
+
+        .ob-features {{
           display: flex;
-          gap: 18px;
-          align-items: flex-start;
+          gap: 14px;
+          width: 100%;
+          z-index: 2;
+          position: relative;
+        }}
+        .ob-feat {{
+          flex: 1;
           background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 16px;
-          padding: 22px;
-          backdrop-filter: blur(10px);
-          transition: all 0.3s ease;
+          border: 1px solid rgba(255,255,255,0.07);
+          border-radius: 18px;
+          padding: 24px 16px;
+          text-align: center;
+          backdrop-filter: blur(16px);
+          transition: all 0.4s cubic-bezier(.4,0,.2,1);
         }}
-        .ob-card:hover {{
-          background: rgba(255,255,255,0.06);
+        .ob-feat:hover {{
+          background: rgba(255,255,255,0.08);
           border-color: {_th["accent_mid"]}44;
-          transform: translateX(6px);
+          transform: translateY(-6px);
+          box-shadow: 0 12px 40px {_th["accent_dark"]}33;
         }}
-        .ob-num {{
-          width: 42px;
-          height: 42px;
-          border-radius: 12px;
-          background: linear-gradient(135deg, {_th["accent_dark"]}, {_th["accent_mid"]});
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-          font-size: 18px;
-          font-weight: 800;
-          color: #ffffff;
-          box-shadow: 0 4px 12px {_th["accent_dark"]}44;
+        .ob-feat-icon {{
+          font-size: 28px;
+          margin-bottom: 10px;
+          display: block;
+          filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
         }}
-        .ob-card-title {{
+        .ob-feat-title {{
           font-weight: 700;
           color: #ffffff;
-          font-size: 15px;
+          font-size: 14px;
+          margin-bottom: 6px;
         }}
-        .ob-card-desc {{
+        .ob-feat-desc {{
           color: {_text3};
-          font-size: 13px;
-          margin-top: 5px;
+          font-size: 12px;
           line-height: 1.4;
         }}
-        .ob-card-desc a {{
-          color: {_th["accent_text"]};
-          text-decoration: none;
-        }}
-        .ob-card-desc a:hover {{
-          text-decoration: underline;
-        }}
+        .ob-feat:nth-child(1) {{ animation: featureSlide 0.7s ease 0.9s both; }}
+        .ob-feat:nth-child(2) {{ animation: featureSlide 0.7s ease 1.1s both; }}
+        .ob-feat:nth-child(3) {{ animation: featureSlide 0.7s ease 1.3s both; }}
+        .ob-feat:nth-child(4) {{ animation: featureSlide 0.7s ease 1.5s both; }}
       </style>
 
-      <div class="ob-logo">{_logo_big_img}</div>
-      <h1 class="ob-title">Bienvenue sur Scribe</h1>
-      <p class="ob-sub">Tes finances perso sous controle.<br>Factures, abonnements et fiches de paie — tout est analyse en local.</p>
+      <!-- Particules -->
+      <div class="particle p1"></div><div class="particle p2"></div>
+      <div class="particle p3"></div><div class="particle p4"></div>
+      <div class="particle p5"></div><div class="particle p6"></div>
+      <div class="particle p7"></div><div class="particle p8"></div>
 
-      <div style="display:flex; flex-direction:column; gap:16px; text-align:left;">
-        <div class="ob-card" style="animation: cardReveal 0.6s ease 0.3s both;">
-          <div class="ob-num">1</div>
-          <div>
-            <div class="ob-card-title">Ajoute ta cle API Gemini</div>
-            <div class="ob-card-desc">Gratuite sur <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com</a> — elle reste sur ton ordi, jamais envoyee.</div>
-          </div>
+      <!-- Orbites -->
+      <div class="ob-orbit" style="top:calc(50% - 100px); left:calc(50% - 100px);"></div>
+      <div class="ob-orbit2" style="top:calc(50% - 150px); left:calc(50% - 150px);"></div>
+
+      <!-- Logo avec glow -->
+      <div class="ob-logo-wrap">
+        <div class="ob-logo-ring"></div>
+        <div class="ob-logo-inner">{_logo_big_img}</div>
+      </div>
+
+      <!-- Titre -->
+      <h1 class="ob-title">Scribe</h1>
+      <p class="ob-sub">Tes finances perso sous controle.<br>Analyse tes depenses, suis tes abonnements,<br>et garde le controle — tout reste en local.</p>
+
+      <!-- Features -->
+      <div class="ob-features">
+        <div class="ob-feat">
+          <span class="ob-feat-icon">📊</span>
+          <div class="ob-feat-title">Dashboard</div>
+          <div class="ob-feat-desc">Revenus, depenses et budgets en un coup d'oeil</div>
         </div>
-        <div class="ob-card" style="animation: cardReveal 0.6s ease 0.5s both;">
-          <div class="ob-num">2</div>
-          <div>
-            <div class="ob-card-title">Depose tes documents</div>
-            <div class="ob-card-desc">Factures, fiches de paie — PDF ou photo. L'IA extrait tout automatiquement en quelques secondes.</div>
-          </div>
+        <div class="ob-feat">
+          <span class="ob-feat-icon">🔍</span>
+          <div class="ob-feat-title">Analyse IA</div>
+          <div class="ob-feat-desc">Factures et fiches de paie lues automatiquement</div>
         </div>
-        <div class="ob-card" style="animation: cardReveal 0.6s ease 0.7s both;">
-          <div class="ob-num">3</div>
-          <div>
-            <div class="ob-card-title">Suis et protege tes depenses</div>
-            <div class="ob-card-desc">Dashboard, alertes de hausse, budget, comparaison mensuelle — Scribe surveille tout pour toi.</div>
-          </div>
+        <div class="ob-feat">
+          <span class="ob-feat-icon">🎯</span>
+          <div class="ob-feat-title">Objectifs</div>
+          <div class="ob-feat-desc">Epargne et budgets par categorie</div>
+        </div>
+        <div class="ob-feat">
+          <span class="ob-feat-icon">🔒</span>
+          <div class="ob-feat-title">100% Local</div>
+          <div class="ob-feat-desc">Tes donnees restent sur ton appareil</div>
         </div>
       </div>
     </div>
     """)
-    # Bouton dégradé accent → noir, centré
+    # Bouton animé centré
     st.markdown(f"""<style>
       .stMainBlockContainer .stButton {{
         display: flex !important;
         justify-content: center !important;
-        margin-top: 16px !important;
+        margin-top: 24px !important;
       }}
       .stMainBlockContainer .stButton > button {{
-        background: linear-gradient(135deg, {_th["accent_dark"]}, {_th["accent_mid"]}, #111111) !important;
-        background-size: 200% 200% !important;
-        animation: btnShimmer 3s ease infinite !important;
+        background: linear-gradient(135deg, {_th["accent_dark"]}, {_th["accent_mid"]}, {_th["accent_light"]}, {_th["accent_mid"]}, {_th["accent_dark"]}) !important;
+        background-size: 400% 400% !important;
+        animation: btnFlow 6s ease infinite !important;
         color: #ffffff !important;
         border: none !important;
-        border-radius: 14px !important;
-        font-size: 16px !important;
-        font-weight: 700 !important;
-        padding: 14px 60px !important;
-        letter-spacing: 0.02em !important;
-        box-shadow: 0 6px 24px {_th["accent_dark"]}55 !important;
-        transition: all 0.3s cubic-bezier(.4,0,.2,1) !important;
+        border-radius: 16px !important;
+        font-size: 18px !important;
+        font-weight: 800 !important;
+        padding: 16px 80px !important;
+        letter-spacing: 0.04em !important;
+        text-transform: uppercase !important;
+        box-shadow: 0 8px 32px {_th["accent_dark"]}66, 0 0 60px {_th["accent_mid"]}22 !important;
+        transition: all 0.4s cubic-bezier(.4,0,.2,1) !important;
         width: 580px !important;
         max-width: 90vw !important;
+        position: relative !important;
+        overflow: hidden !important;
       }}
       .stMainBlockContainer .stButton > button:hover {{
-        transform: translateY(-2px) scale(1.02) !important;
-        box-shadow: 0 10px 32px {_th["accent_dark"]}77 !important;
+        transform: translateY(-3px) scale(1.03) !important;
+        box-shadow: 0 14px 48px {_th["accent_dark"]}88, 0 0 80px {_th["accent_mid"]}33 !important;
       }}
-      @keyframes btnShimmer {{
+      .stMainBlockContainer .stButton > button::after {{
+        content: '' !important;
+        position: absolute !important;
+        top: -50% !important;
+        left: -50% !important;
+        width: 200% !important;
+        height: 200% !important;
+        background: linear-gradient(transparent, rgba(255,255,255,0.1), transparent) !important;
+        transform: rotate(45deg) !important;
+        animation: btnSweep 3s ease-in-out infinite !important;
+      }}
+      @keyframes btnFlow {{
         0% {{ background-position: 0% 50%; }}
         50% {{ background-position: 100% 50%; }}
         100% {{ background-position: 0% 50%; }}
+      }}
+      @keyframes btnSweep {{
+        0% {{ transform: rotate(45deg) translateY(-200%); }}
+        50% {{ transform: rotate(45deg) translateY(200%); }}
+        100% {{ transform: rotate(45deg) translateY(-200%); }}
       }}
     </style>""", unsafe_allow_html=True)
     if st.button("Commencer", type="primary"):
