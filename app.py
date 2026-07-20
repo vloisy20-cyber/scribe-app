@@ -769,9 +769,16 @@ if not st.session_state.onboarded:
           width: 100%;
           z-index: 2;
           position: relative;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          scroll-snap-type: x mandatory;
+          padding-bottom: 12px;
+          scrollbar-width: none;
         }}
+        .ob-features::-webkit-scrollbar {{ display: none; }}
         .ob-feat {{
-          flex: 1;
+          flex: 0 0 auto;
+          width: calc(25% - 11px);
           background: rgba(255,255,255,0.03);
           border: 1px solid rgba(255,255,255,0.07);
           border-radius: 18px;
@@ -779,6 +786,25 @@ if not st.session_state.onboarded:
           text-align: center;
           backdrop-filter: blur(16px);
           transition: all 0.4s cubic-bezier(.4,0,.2,1);
+          scroll-snap-align: start;
+        }}
+        @media (max-width: 600px) {{
+          .ob-features {{
+            gap: 10px;
+            padding-left: 4px;
+            padding-right: 4px;
+          }}
+          .ob-feat {{
+            width: 140px;
+            min-width: 140px;
+            padding: 20px 12px;
+          }}
+          .ob-title {{
+            font-size: 38px !important;
+          }}
+          .ob-sub {{
+            font-size: 15px !important;
+          }}
         }}
         .ob-feat:hover {{
           background: rgba(255,255,255,0.08);
