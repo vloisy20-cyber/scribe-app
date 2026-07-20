@@ -1795,10 +1795,13 @@ st.markdown(f"""<style>
     padding: 0 !important;
     gap: 10px !important;
     justify-content: flex-start !important;
+    width: 100% !important;
+    display: flex !important;
   }}
   /* ---- pousser le dernier onglet (Parametres) a droite ---- */
   div[data-testid="stTabs"] [role="tablist"] button[data-baseweb="tab"]:last-of-type {{
     margin-left: auto !important;
+    margin-right: 0 !important;
   }}
   /* ---- onglet par défaut : capsule outline ---- */
   div[data-testid="stTabs"] button[data-baseweb="tab"] {{
