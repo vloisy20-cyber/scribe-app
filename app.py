@@ -78,6 +78,7 @@ BANK_TX_COLUMNS = [
 
 SAVINGS_PATH = DATA_DIR / "savings_goals.json"
 CATEGORY_BUDGETS_PATH = DATA_DIR / "category_budgets.json"
+USER_PREFS_PATH = DATA_DIR / "user_prefs.json"
 
 # --------------------------------------------------------------------------
 # Catégorisation automatique des transactions
@@ -496,8 +497,20 @@ LOGO_IMG_LG = svg_img(LOGO_SVG_RAW.replace('width="44"', 'width="56"').replace('
 # Onboarding (première visite)
 # --------------------------------------------------------------------------
 
+def _load_user_prefs():
+    if USER_PREFS_PATH.exists():
+        try:
+            return json.loads(USER_PREFS_PATH.read_text())
+        except Exception:
+            return {}
+    return {}
+
+def _save_user_prefs(prefs):
+    USER_PREFS_PATH.write_text(json.dumps(prefs, ensure_ascii=False))
+
 if "onboarded" not in st.session_state:
-    st.session_state.onboarded = False
+    _prefs = _load_user_prefs()
+    st.session_state.onboarded = _prefs.get("onboarded", False)
 if "onboard_transition" not in st.session_state:
     st.session_state.onboard_transition = False
 
@@ -600,6 +613,9 @@ if st.session_state.onboard_transition:
     time.sleep(3)
     st.session_state.onboard_transition = False
     st.session_state.onboarded = True
+    _prefs = _load_user_prefs()
+    _prefs["onboarded"] = True
+    _save_user_prefs(_prefs)
     st.rerun()
 
 # ── Page d'onboarding ──
