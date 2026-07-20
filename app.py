@@ -163,6 +163,34 @@ PROVIDERS = KNOWN_PROVIDERS
 
 st.set_page_config(page_title="Scribe", page_icon="🖋️", layout="wide")
 
+# ── Supprimer badges et boutons Streamlit Cloud ──
+st.html("""
+<script>
+function removeStreamlitBadges() {
+    // Supprimer tous les elements fixes en bas de page (badges, boutons)
+    document.querySelectorAll('iframe, [class*="Badge"], [class*="badge"], [class*="embeddedApp"]').forEach(el => el.remove());
+    // Supprimer les elements positionnes en fixed dans le coin bas-droite
+    document.querySelectorAll('*').forEach(el => {
+        const s = window.getComputedStyle(el);
+        if (s.position === 'fixed' && parseInt(s.bottom) < 80 && parseInt(s.right) < 80) {
+            if (!el.closest('[data-testid="stMain"]') && !el.closest('.stApp')) {
+                el.remove();
+            }
+        }
+    });
+    // Supprimer toolbar et header
+    document.querySelectorAll('[data-testid="stToolbar"], [data-testid="stStatusWidget"], [data-testid="stDecoration"]').forEach(el => el.remove());
+}
+// Executer plusieurs fois car Streamlit injecte ces elements apres le chargement
+removeStreamlitBadges();
+setTimeout(removeStreamlitBadges, 1000);
+setTimeout(removeStreamlitBadges, 3000);
+setTimeout(removeStreamlitBadges, 5000);
+setTimeout(removeStreamlitBadges, 10000);
+setInterval(removeStreamlitBadges, 15000);
+</script>
+""")
+
 # --------------------------------------------------------------------------
 # Palettes de couleur d'accent
 # --------------------------------------------------------------------------
