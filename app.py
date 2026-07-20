@@ -668,6 +668,14 @@ st.markdown(f"""
   [data-testid="stHeader"], [data-testid="stToolbar"] {{
     background-color: transparent !important;
   }}
+  /* ─── Masquer menu GitHub et footer Streamlit ─── */
+  #MainMenu, footer, .viewerBadge_container__r5tak,
+  [data-testid="manage-app-button"],
+  ._link_gzau3_10,
+  .styles_viewerBadge__CvC9N {{
+    display: none !important;
+    visibility: hidden !important;
+  }}
   [data-testid="stAppViewContainer"],
   [data-testid="stMain"],
   .stMainBlockContainer,
