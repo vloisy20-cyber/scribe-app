@@ -1746,7 +1746,7 @@ def detect_subscriptions(tx_df: pd.DataFrame) -> pd.DataFrame:
 # Interface — Top bar & Parametres
 # --------------------------------------------------------------------------
 
-_bar_left, _bar_mid, _bar_right = st.columns([5, 1, 2])
+_bar_left, _bar_right = st.columns([6, 2])
 with _bar_left:
     st.html(f"""
     <div style="display:flex; align-items:center; gap:20px; padding:24px 0 8px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;">
@@ -1758,31 +1758,32 @@ with _bar_left:
         </div>
     </div>
     """)
-with _bar_mid:
-    st.html("<div style='height:28px;'></div>")
-    if st.button("Accueil", key="back_to_welcome"):
+with _bar_right:
+    # Petits boutons alignés en haut à droite
+    _r1, _r2 = st.columns(2)
+    with _r1:
+        st.html("<div style='height:28px;'></div>")
+        _theme_names = list(ACCENT_THEMES.keys())
+        _cur_idx = _theme_names.index(st.session_state.accent_theme)
+        _theme_icons = {"Bleu nuit": "🔵", "Emeraude": "🟢", "Violet": "🟣", "Corail": "🟠", "Rose": "🩷", "Or": "🟡"}
+        _theme_options = [f"{_theme_icons.get(n, '●')} {n}" for n in _theme_names]
+        _sel_theme_full = st.selectbox("Theme", _theme_options, index=_cur_idx, label_visibility="collapsed", key="theme_select")
+        _sel_theme = _sel_theme_full.split(" ", 1)[1] if " " in _sel_theme_full else _sel_theme_full
+        if _sel_theme != st.session_state.accent_theme:
+            st.session_state.accent_theme = _sel_theme
+            st.rerun()
+    with _r2:
+        st.html("<div style='height:28px;'></div>")
+        mode_label = "☀️ Clair" if _dark else "🌙 Sombre"
+        if st.button(mode_label, key="toggle_mode"):
+            st.session_state.dark_mode = not _dark
+            st.rerun()
+    # Bouton accueil discret
+    if st.button("↩ Accueil", key="back_to_welcome", type="tertiary", use_container_width=True):
         st.session_state.onboarded = False
         _prefs = _load_user_prefs()
         _prefs["onboarded"] = False
         _save_user_prefs(_prefs)
-        st.rerun()
-with _bar_right:
-    _sw_items = ""
-    for _sn, _sd in ACCENT_THEMES.items():
-        _is_act = _sn == st.session_state.accent_theme
-        _bdr = f"border:2.5px solid {_text1};" if _is_act else "border:2.5px solid transparent;"
-        _shd = f"box-shadow:0 0 0 3px {_sd['accent_mid']}55;" if _is_act else ""
-        _sw_items += f'<div style="width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,{_sd["accent_dark"]},{_sd["accent_mid"]},{_sd["accent_light"]});{_bdr}{_shd}flex-shrink:0;" title="{_sn}"></div>'
-    st.html(f'<div style="display:flex;gap:8px;padding:28px 0 0 0;justify-content:flex-end;font-family:system-ui;">{_sw_items}</div>')
-    _theme_names = list(ACCENT_THEMES.keys())
-    _cur_idx = _theme_names.index(st.session_state.accent_theme)
-    _sel_theme = st.radio("accent", _theme_names, index=_cur_idx, horizontal=True, label_visibility="collapsed", key="theme_radio")
-    if _sel_theme != st.session_state.accent_theme:
-        st.session_state.accent_theme = _sel_theme
-        st.rerun()
-    mode_label = "Mode clair" if _dark else "Mode sombre"
-    if st.button(f"{'☀️' if _dark else '🌙'} {mode_label}", key="toggle_mode"):
-        st.session_state.dark_mode = not _dark
         st.rerun()
 
 with st.expander("⚙️ Parametres & Connexions"):
