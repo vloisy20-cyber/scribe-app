@@ -1821,7 +1821,7 @@ st.markdown(f"""<style>
   }}
 </style>""", unsafe_allow_html=True)
 
-tab_factures, tab_paie, tab_params = st.tabs(["Factures & Abonnements", "Fiches de paie", "Parametres"])
+tab_factures, tab_paie = st.tabs(["Factures & Abonnements", "Fiches de paie"])
 
 with tab_factures:
     # --------------------------------------------------------------------------
@@ -3247,9 +3247,20 @@ with tab_paie:
         """)
 
 # --------------------------------------------------------------------------
-# Onglet Parametres
+# Section Parametres (separee des onglets)
 # --------------------------------------------------------------------------
-with tab_params:
+
+_gear_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" stroke="{_th["accent_text"]}" fill="none" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>'
+_sec_hdr = "display:flex; align-items:center; gap:10px; margin:32px 0 16px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;"
+_ico_hdr = f"width:36px; height:36px; border-radius:10px; background:{_th['accent_bg']}; display:flex; align-items:center; justify-content:center;"
+st.html(f"""
+<div style="{_sec_hdr}">
+    <div style="{_ico_hdr}">{svg_img(_gear_svg)}</div>
+    <h2 style="font-size:22px; font-weight:700; margin:0; color:{_text1};">Parametres</h2>
+</div>
+""")
+
+with st.expander("Ouvrir les parametres"):
 
     # ── Apparence ──
     _sec_p = "display:flex; align-items:center; gap:10px; margin:16px 0 16px 0; font-family:system-ui,-apple-system,'Segoe UI',sans-serif;"
