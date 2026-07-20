@@ -635,7 +635,7 @@ if not st.session_state.onboarded:
     _logo_big_img = svg_img(_logo_big, 80, 80)
 
     st.html(f"""
-    <div id="ob-scene" style="position:relative; max-width:640px; margin:0 auto; min-height:90vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:system-ui,-apple-system,'Segoe UI',sans-serif; overflow:hidden;">
+    <div id="ob-scene" style="position:relative; max-width:640px; margin:0 auto; min-height:70vh; display:flex; flex-direction:column; align-items:center; justify-content:center; font-family:system-ui,-apple-system,'Segoe UI',sans-serif; overflow:hidden; padding-top:0;">
 
       <!-- Particules flottantes -->
       <style>
@@ -755,7 +755,7 @@ if not st.session_state.onboarded:
         .ob-sub {{
           font-size: 17px;
           color: {_text3};
-          margin: 12px 0 36px 0;
+          margin: 12px 0 24px 0;
           line-height: 1.6;
           animation: subtitleIn 0.8s ease 0.7s both;
           z-index: 2;
@@ -885,7 +885,7 @@ if not st.session_state.onboarded:
       .stMainBlockContainer .stButton {{
         display: flex !important;
         justify-content: center !important;
-        margin-top: 24px !important;
+        margin-top: 8px !important;
       }}
       .stMainBlockContainer .stButton > button {{
         background: linear-gradient(135deg, {_th["accent_dark"]}, {_th["accent_mid"]}, {_th["accent_light"]}, {_th["accent_mid"]}, {_th["accent_dark"]}) !important;
