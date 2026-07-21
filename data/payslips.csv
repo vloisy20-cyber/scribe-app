@@ -1,0 +1,7 @@
+date_ajout,employeur,mois,salaire_brut,salaire_net,net_imposable,devise,date_fiche,notes,fichier
+2026-01-31 18:30,Acme SAS,Janvier 2026,3200.00,2496.00,2560.00,EUR,2026-01-01,,fiche_jan_2026.pdf
+2026-02-28 18:15,Acme SAS,Fevrier 2026,3200.00,2496.00,2560.00,EUR,2026-02-01,,fiche_fev_2026.pdf
+2026-03-31 17:45,Acme SAS,Mars 2026,3200.00,2496.00,2560.00,EUR,2026-03-01,,fiche_mar_2026.pdf
+2026-04-30 18:00,Acme SAS,Avril 2026,3200.00,2496.00,2560.00,EUR,2026-04-01,,fiche_avr_2026.pdf
+2026-05-31 18:20,Acme SAS,Mai 2026,3350.00,2613.00,2680.00,EUR,2026-05-01,Augmentation annuelle,fiche_mai_2026.pdf
+2026-06-30 18:10,Acme SAS,Juin 2026,3350.00,2613.00,2680.00,EUR,2026-06-01,,fiche_juin_2026.pdf
