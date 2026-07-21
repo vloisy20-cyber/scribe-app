@@ -66,6 +66,11 @@ else:
 
 from datetime import timedelta
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
 
 # --------------------------------------------------------------------------
 # Configuration
@@ -1684,7 +1689,6 @@ def subscribe():
     # Connecter l'utilisateur
     session["user_email"] = email
     session["user_pseudo"] = pseudo
-    session.permanent = remember
     return redirect(url_for("index", welcome=1))
 
 
@@ -1705,7 +1709,6 @@ def login():
     # Connecter avec le pseudo
     session["user_email"] = email
     session["user_pseudo"] = user.get("pseudo", "")
-    session.permanent = remember
     return redirect(url_for("index", welcome=1, ret=1))
 
 
