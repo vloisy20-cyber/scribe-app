@@ -376,6 +376,23 @@ a:hover { color: var(--accent-light); }
   padding: 2px 8px; border-radius: 20px; font-size: .78rem;
   font-weight: 500; white-space: nowrap;
 }
+.cat-badge-clickable {
+  cursor: pointer; transition: transform var(--transition), box-shadow var(--transition);
+}
+.cat-badge-clickable:hover {
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.filter-active-label {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-size: .82rem; color: var(--accent-mid); font-weight: 500;
+}
+.filter-clear {
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 1rem; padding: 0 4px;
+  transition: color var(--transition);
+}
+.filter-clear:hover { color: var(--color-danger); }
 
 /* Variation */
 .variation-up { color: var(--color-danger); font-weight: 500; }

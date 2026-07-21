@@ -338,6 +338,25 @@ function initSearch() {
 
   if (searchInput) searchInput.addEventListener('input', filterTable);
   if (categoryFilter) categoryFilter.addEventListener('change', filterTable);
+
+  // Expose filter function globally for badge clicks
+  window._txFilterTable = filterTable;
+}
+
+/* Filter by clicking a category badge */
+function filterByCategory(catName) {
+  const categoryFilter = document.getElementById('txCategoryFilter');
+  if (!categoryFilter) return;
+
+  // If already filtering this category, clear the filter
+  if (categoryFilter.value === catName) {
+    categoryFilter.value = '';
+  } else {
+    categoryFilter.value = catName;
+  }
+
+  // Trigger the filter
+  if (window._txFilterTable) window._txFilterTable();
 }
 
 /* ================================================================

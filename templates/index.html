@@ -772,7 +772,7 @@
               <td>{{ tx.label }}</td>
               <td class="amount">{{ "%.2f"|format(tx.amount) }} EUR</td>
               <td>
-                <span class="cat-badge" style="background: {{ categories.get(tx.auto_category, {}).get('color', '#6b7280') }}20; color: {{ categories.get(tx.auto_category, {}).get('color', '#6b7280') }}; border: 1px solid {{ categories.get(tx.auto_category, {}).get('color', '#6b7280') }}40">
+                <span class="cat-badge cat-badge-clickable" data-cat="{{ tx.auto_category }}" onclick="filterByCategory('{{ tx.auto_category }}')" style="background: {{ categories.get(tx.auto_category, {}).get('color', '#6b7280') }}20; color: {{ categories.get(tx.auto_category, {}).get('color', '#6b7280') }}; border: 1px solid {{ categories.get(tx.auto_category, {}).get('color', '#6b7280') }}40">
                   {{ categories.get(tx.auto_category, {}).get('emoji', '') }} {{ tx.auto_category }}
                 </span>
               </td>
