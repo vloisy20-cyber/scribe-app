@@ -17,6 +17,9 @@ import os
 import urllib.parse
 from datetime import date, datetime
 from pathlib import Path
+from uuid import uuid4
+
+import requests as http_requests
 
 import pandas as pd
 from flask import (
@@ -38,6 +41,12 @@ try:
     _HAS_WOOB = True
 except ImportError:
     _HAS_WOOB = False
+
+try:
+    import jwt as pyjwt
+    _HAS_PYJWT = True
+except ImportError:
+    _HAS_PYJWT = False
 
 # --------------------------------------------------------------------------
 # Flask app
@@ -82,6 +91,199 @@ BANK_TX_COLUMNS = [
 SAVINGS_PATH = DATA_DIR / "savings_goals.json"
 CATEGORY_BUDGETS_PATH = DATA_DIR / "category_budgets.json"
 USER_PREFS_PATH = DATA_DIR / "user_prefs.json"
+EB_CONFIG_PATH = DATA_DIR / "enable_banking.json"
+
+# --------------------------------------------------------------------------
+# Enable Banking (Open Banking)
+# --------------------------------------------------------------------------
+
+EB_BASE = "https://api.enablebanking.com"
+
+
+def _eb_load():
+    """Charge la config Enable Banking depuis le fichier JSON."""
+    if EB_CONFIG_PATH.exists():
+        try:
+            return json.loads(EB_CONFIG_PATH.read_text())
+        except Exception:
+            pass
+    return {}
+
+
+def _eb_save(data):
+    """Sauvegarde la config Enable Banking."""
+    EB_CONFIG_PATH.write_text(json.dumps(data, indent=2, ensure_ascii=False))
+
+
+def _eb_configured():
+    """Verifie si Enable Banking est configure (Application ID + cle privee)."""
+    return bool(os.environ.get("EB_APPLICATION_ID", "")) and bool(os.environ.get("EB_PRIVATE_KEY", ""))
+
+
+def _eb_create_jwt():
+    """Cree un JWT pour l'API Enable Banking (RS256)."""
+    if not _HAS_PYJWT:
+        return None, "PyJWT non installe (pip install PyJWT[crypto])"
+
+    app_id = os.environ.get("EB_APPLICATION_ID", "")
+    key_data = os.environ.get("EB_PRIVATE_KEY", "")
+    if not app_id or not key_data:
+        return None, "Enable Banking non configure (EB_APPLICATION_ID / EB_PRIVATE_KEY manquants)"
+
+    # Decoder la cle privee (base64 ou PEM brut avec \n)
+    try:
+        if key_data.startswith("-----"):
+            key_bytes = key_data.replace("\\n", "\n").encode()
+        else:
+            key_bytes = base64.b64decode(key_data)
+    except Exception as e:
+        return None, f"Erreur cle privee: {e}"
+
+    now = int(datetime.now().timestamp())
+    payload = {
+        "iss": "enablebanking.com",
+        "aud": "api.enablebanking.com",
+        "iat": now,
+        "exp": now + 3600,
+    }
+    try:
+        token = pyjwt.encode(payload, key_bytes, algorithm="RS256",
+                              headers={"kid": app_id})
+        return token, None
+    except Exception as e:
+        return None, f"Erreur creation JWT: {e}"
+
+
+def _eb_headers():
+    """Cree les headers d'authentification Enable Banking."""
+    token, err = _eb_create_jwt()
+    if err:
+        return None, err
+    return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}, None
+
+
+def eb_list_banks(country="FR"):
+    """Liste les banques disponibles pour un pays via Enable Banking."""
+    headers, err = _eb_headers()
+    if err:
+        return [], err
+    resp = http_requests.get(f"{EB_BASE}/aspsps?country={country}",
+                             headers=headers, timeout=15)
+    if resp.status_code != 200:
+        return [], f"Erreur: {resp.status_code} - {resp.text}"
+    return resp.json().get("aspsps", []), None
+
+
+def eb_start_auth(bank_name, bank_country, redirect_url):
+    """Initie l'authentification bancaire via Enable Banking."""
+    headers, err = _eb_headers()
+    if err:
+        return None, err
+    state = str(uuid4())
+    valid_until = (datetime.now() + pd.Timedelta(days=90)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    payload = {
+        "access": {"valid_until": valid_until},
+        "aspsp": {"name": bank_name, "country": bank_country},
+        "state": state,
+        "redirect_url": redirect_url,
+        "psu_type": "personal",
+    }
+    resp = http_requests.post(f"{EB_BASE}/auth", headers=headers,
+                              json=payload, timeout=15)
+    if resp.status_code not in (200, 201):
+        return None, f"Erreur authentification: {resp.status_code} - {resp.text}"
+    result = resp.json()
+    result["state"] = state
+    return result, None
+
+
+def eb_create_session(auth_code):
+    """Cree une session Enable Banking avec le code d'autorisation."""
+    headers, err = _eb_headers()
+    if err:
+        return None, err
+    resp = http_requests.post(f"{EB_BASE}/sessions", headers=headers,
+                              json={"code": auth_code}, timeout=15)
+    if resp.status_code not in (200, 201):
+        return None, f"Erreur session: {resp.status_code} - {resp.text}"
+    return resp.json(), None
+
+
+def eb_fetch_transactions(account_uid, date_from=None):
+    """Recupere les transactions d'un compte via Enable Banking."""
+    headers, err = _eb_headers()
+    if err:
+        return [], err
+    url = f"{EB_BASE}/accounts/{account_uid}/transactions"
+    params = {}
+    if date_from:
+        params["date_from"] = date_from
+    resp = http_requests.get(url, headers=headers, params=params, timeout=30)
+    if resp.status_code != 200:
+        return [], f"Erreur: {resp.status_code} - {resp.text}"
+    data = resp.json()
+    return data.get("transactions", []), None
+
+
+def eb_fetch_balances(account_uid):
+    """Recupere les soldes d'un compte via Enable Banking."""
+    headers, err = _eb_headers()
+    if err:
+        return None, err
+    resp = http_requests.get(f"{EB_BASE}/accounts/{account_uid}/balances",
+                             headers=headers, timeout=15)
+    if resp.status_code != 200:
+        return None, f"Erreur: {resp.status_code}"
+    return resp.json().get("balances", []), None
+
+
+def eb_sync_all_accounts():
+    """Synchronise toutes les transactions des comptes connectes."""
+    eb_data = _eb_load()
+    accounts = eb_data.get("accounts", [])
+    if not accounts:
+        return 0, "Aucun compte connecte"
+
+    all_transactions = []
+    for acc in accounts:
+        account_uid = acc.get("uid")
+        if not account_uid:
+            continue
+        txs, err = eb_fetch_transactions(account_uid)
+        if err:
+            continue
+        for tx in txs:
+            # Enable Banking suit le format PSD2 Berlin Group
+            # Le montant peut etre dans transactionAmount.amount ou amount directement
+            if isinstance(tx.get("transactionAmount"), dict):
+                amount_raw = float(tx["transactionAmount"].get("amount", 0))
+            else:
+                amount_raw = float(tx.get("amount", 0))
+
+            if amount_raw >= 0:
+                continue  # Ignorer les credits (revenus)
+
+            tx_date = tx.get("bookingDate") or tx.get("valueDate") or tx.get("date", "")
+            label = (tx.get("remittanceInformationUnstructured")
+                     or (tx.get("remittanceInformationUnstructuredArray", [None]) or [None])[0]
+                     or tx.get("creditorName")
+                     or tx.get("debtorName")
+                     or "Transaction")
+            all_transactions.append({
+                "date": tx_date,
+                "label": label.strip(),
+                "amount": round(abs(amount_raw), 2),
+                "category": "",
+                "bank_name": acc.get("bank_name", "Banque"),
+                "account_label": acc.get("iban", ""),
+                "date_import": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            })
+
+    if not all_transactions:
+        return 0, None
+
+    count, err = import_transactions_from_list(all_transactions)
+    return count, err
 
 # --------------------------------------------------------------------------
 # Categorisation automatique des transactions
@@ -366,6 +568,30 @@ def load_bank_transactions() -> pd.DataFrame:
 
 def save_bank_transactions(df: pd.DataFrame) -> None:
     df.to_csv(BANK_TX_PATH, index=False)
+
+
+def import_transactions_from_list(transactions: list):
+    """Importe une liste de dicts de transactions dans le CSV bancaire."""
+    if not transactions:
+        return 0, None
+    new_df = pd.DataFrame(transactions)
+    for col in BANK_TX_COLUMNS:
+        if col not in new_df.columns:
+            new_df[col] = None
+    new_df = new_df[BANK_TX_COLUMNS]
+    existing = load_bank_transactions()
+    if not existing.empty:
+        # Deduplication par date + label + amount
+        existing["_key"] = existing["date"].astype(str) + "|" + existing["label"].astype(str) + "|" + existing["amount"].astype(str)
+        new_df["_key"] = new_df["date"].astype(str) + "|" + new_df["label"].astype(str) + "|" + new_df["amount"].astype(str)
+        new_df = new_df[~new_df["_key"].isin(existing["_key"])]
+        new_df = new_df.drop(columns=["_key"])
+        existing = existing.drop(columns=["_key"])
+        combined = pd.concat([existing, new_df], ignore_index=True)
+    else:
+        combined = new_df
+    save_bank_transactions(combined)
+    return len(new_df), None
 
 def load_savings_goals() -> list:
     if SAVINGS_PATH.exists():
@@ -1061,6 +1287,9 @@ def compute_dashboard_data():
         "known_banks": list(KNOWN_BANKS.keys()),
         # Impots
         "tax_data": tax_data,
+        # Enable Banking (Open Banking)
+        "eb_data": _eb_load(),
+        "eb_configured": _eb_configured(),
     }
 
 
@@ -1453,6 +1682,156 @@ def api_simuler_impot():
     result["revenu_declare"] = round(revenu, 2)
     result["nb_parts"] = parts
     return jsonify(result)
+
+
+# --------------------------------------------------------------------------
+# Enable Banking — Routes API
+# --------------------------------------------------------------------------
+
+@app.route("/api/eb-banks")
+def eb_banks():
+    """Liste les banques disponibles via Enable Banking (AJAX)."""
+    country = request.args.get("country", "FR")
+    banks, err = eb_list_banks(country)
+    if err:
+        return jsonify({"error": err}), 400
+    # Simplifier la reponse
+    result = []
+    for b in banks:
+        result.append({
+            "name": b.get("name", ""),
+            "country": b.get("country", country),
+            "logo": b.get("logo", ""),
+        })
+    # Trier par nom
+    result.sort(key=lambda x: x["name"])
+    return jsonify(result)
+
+
+@app.route("/api/eb-connect", methods=["POST"])
+def eb_connect():
+    """Initie la connexion avec une banque via Enable Banking."""
+    bank_name = request.form.get("bank_name", "").strip()
+    bank_country = request.form.get("bank_country", "FR").strip()
+    if not bank_name:
+        flash("Selectionne une banque.", "error")
+        return redirect(url_for("index"))
+
+    # Determiner l'URL de callback
+    host = request.host_url.rstrip("/")
+    redirect_url = f"{host}/api/eb-callback"
+
+    auth_result, err = eb_start_auth(bank_name, bank_country, redirect_url)
+    if err:
+        flash(f"Erreur : {err}", "error")
+        return redirect(url_for("index"))
+
+    # Sauvegarder l'etat en attente
+    eb_data = _eb_load()
+    eb_data["pending_auth"] = {
+        "state": auth_result.get("state"),
+        "bank_name": bank_name,
+        "bank_country": bank_country,
+    }
+    _eb_save(eb_data)
+
+    # Rediriger vers la page d'authentification de la banque
+    return redirect(auth_result.get("url", url_for("index")))
+
+
+@app.route("/api/eb-callback")
+def eb_callback():
+    """Callback apres authentification bancaire Enable Banking."""
+    code = request.args.get("code", "")
+    state = request.args.get("state", "")
+
+    eb_data = _eb_load()
+    pending = eb_data.get("pending_auth")
+    if not pending:
+        flash("Aucune connexion en attente.", "error")
+        return redirect(url_for("index"))
+
+    # Verifier le state
+    if state and pending.get("state") and state != pending["state"]:
+        flash("Erreur de securite : state invalide.", "error")
+        return redirect(url_for("index"))
+
+    if not code:
+        flash("Erreur : aucun code d'autorisation recu.", "error")
+        return redirect(url_for("index"))
+
+    # Creer la session avec le code
+    session_data, err = eb_create_session(code)
+    if err:
+        flash(f"Erreur : {err}", "error")
+        return redirect(url_for("index"))
+
+    session_id = session_data.get("session_id", "")
+    session_accounts = session_data.get("accounts", [])
+
+    if not session_accounts:
+        flash("Aucun compte trouve. La connexion a peut-etre echoue.", "warning")
+        return redirect(url_for("index"))
+
+    # Sauvegarder les comptes connectes
+    accounts = eb_data.get("accounts", [])
+    new_count = 0
+    for acc in session_accounts:
+        acc_uid = acc.get("uid", "")
+        if not acc_uid:
+            continue
+        # Verifier qu'il n'est pas deja connecte
+        if any(a.get("uid") == acc_uid for a in accounts):
+            continue
+        accounts.append({
+            "uid": acc_uid,
+            "session_id": session_id,
+            "iban": acc.get("iban", acc.get("account_id", {}).get("iban", "")),
+            "bank_name": pending.get("bank_name", "Banque"),
+            "bank_country": pending.get("bank_country", "FR"),
+            "connected_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        })
+        new_count += 1
+
+    eb_data["accounts"] = accounts
+    eb_data.pop("pending_auth", None)
+    _eb_save(eb_data)
+
+    flash(f"{new_count} compte(s) connecte(s) avec succes !", "success")
+
+    # Synchroniser les transactions automatiquement
+    count, sync_err = eb_sync_all_accounts()
+    if count > 0:
+        flash(f"{count} transaction(s) importee(s) automatiquement.", "success")
+    elif sync_err:
+        flash(f"Sync : {sync_err}", "warning")
+
+    return redirect(url_for("index"))
+
+
+@app.route("/api/eb-sync", methods=["POST"])
+def eb_sync():
+    """Synchronise les transactions depuis les comptes connectes."""
+    count, err = eb_sync_all_accounts()
+    if err:
+        flash(f"Erreur sync : {err}", "error")
+    elif count == 0:
+        flash("Aucune nouvelle transaction.", "info")
+    else:
+        flash(f"{count} nouvelle(s) transaction(s) importee(s) !", "success")
+    return redirect(url_for("index"))
+
+
+@app.route("/api/eb-disconnect", methods=["POST"])
+def eb_disconnect():
+    """Deconnecte un compte bancaire."""
+    account_uid = request.form.get("account_uid", "").strip()
+    eb_data = _eb_load()
+    accounts = eb_data.get("accounts", [])
+    eb_data["accounts"] = [a for a in accounts if a.get("uid") != account_uid]
+    _eb_save(eb_data)
+    flash("Compte deconnecte.", "success")
+    return redirect(url_for("index"))
 
 
 # --------------------------------------------------------------------------

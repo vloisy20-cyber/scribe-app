@@ -472,8 +472,110 @@
   <section class="content-section" id="section-banque">
     <h2 class="section-title">Suivi bancaire</h2>
 
+    {# ---------- CONNEXION BANCAIRE ENABLE BANKING ---------- #}
     <div class="card">
-      <h3 class="card-title">Importer un releve CSV</h3>
+      <h3 class="card-title">🔗 Connexion bancaire automatique</h3>
+
+      {% if not eb_configured %}
+      <div class="info-box" style="margin-bottom:1rem">
+        <span>ℹ️</span>
+        <span>La connexion bancaire n'est pas encore configuree. L'administrateur doit ajouter les variables d'environnement <strong>EB_APPLICATION_ID</strong> et <strong>EB_PRIVATE_KEY</strong> sur le serveur (via <a href="https://enablebanking.com" target="_blank" style="color:var(--accent-mid)">Enable Banking</a>).</span>
+      </div>
+      {% else %}
+
+      {# Comptes connectes #}
+      {% if eb_data.accounts %}
+      <div style="margin-bottom:1rem">
+        <div style="font-size:.82rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">Comptes connectes</div>
+        {% for acc in eb_data.accounts %}
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .8rem;background:var(--bg-input);border-radius:var(--radius-sm);margin-bottom:.4rem">
+          <div>
+            <span style="font-weight:600">🏦 {{ acc.bank_name }}</span>
+            {% if acc.iban %}
+            <span style="color:var(--text-muted);font-size:.82rem;margin-left:.5rem">{{ acc.iban[-4:] if acc.iban|length > 4 else acc.iban }}</span>
+            {% endif %}
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <span style="font-size:.75rem;color:var(--text-muted)">{{ acc.connected_at }}</span>
+            <form action="/api/eb-disconnect" method="post" style="margin:0">
+              <input type="hidden" name="account_uid" value="{{ acc.uid }}">
+              <button type="submit" class="btn-icon btn-danger-icon" title="Deconnecter">✕</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+
+        <form action="/api/eb-sync" method="post" style="margin-top:.8rem">
+          <button type="submit" class="btn btn-accent">🔄 Synchroniser les transactions</button>
+        </form>
+      </div>
+      {% endif %}
+
+      {# Ajouter une banque #}
+      <div style="border-top:1px solid var(--border-light);padding-top:1rem;margin-top:.5rem">
+        <div style="font-size:.88rem;color:var(--text-secondary);margin-bottom:.8rem">Connecter une nouvelle banque :</div>
+        <div class="form-row" style="align-items:flex-end">
+          <div class="form-group" style="flex:2">
+            <label for="ebBankSearch">Rechercher ta banque</label>
+            <input type="text" id="ebBankSearch" class="input-field" placeholder="Ex: Boursorama, Credit Agricole, BNP..." oninput="searchBanks(this.value)">
+          </div>
+        </div>
+        <div id="ebBankList" style="display:none;max-height:300px;overflow-y:auto;margin-top:.5rem;border:1px solid var(--border-color);border-radius:var(--radius-sm)"></div>
+      </div>
+
+      <script>
+      var _ebBanks = null;
+      function searchBanks(query) {
+        var list = document.getElementById('ebBankList');
+        if (!query || query.length < 2) { list.style.display = 'none'; return; }
+
+        if (!_ebBanks) {
+          list.innerHTML = '<div style="padding:.8rem;color:var(--text-muted)">Chargement des banques...</div>';
+          list.style.display = 'block';
+          fetch('/api/eb-banks?country=FR')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+              if (data.error) { list.innerHTML = '<div style="padding:.8rem;color:var(--color-danger)">' + data.error + '</div>'; return; }
+              _ebBanks = data;
+              renderBankList(query);
+            })
+            .catch(function() { list.innerHTML = '<div style="padding:.8rem;color:var(--color-danger)">Erreur de chargement</div>'; });
+        } else {
+          renderBankList(query);
+        }
+      }
+
+      function renderBankList(query) {
+        var list = document.getElementById('ebBankList');
+        var q = query.toLowerCase();
+        var filtered = _ebBanks.filter(function(b) { return b.name.toLowerCase().indexOf(q) !== -1; });
+        if (filtered.length === 0) {
+          list.innerHTML = '<div style="padding:.8rem;color:var(--text-muted)">Aucune banque trouvee</div>';
+          list.style.display = 'block';
+          return;
+        }
+        var html = '';
+        filtered.slice(0, 20).forEach(function(b) {
+          html += '<form action="/api/eb-connect" method="post" style="margin:0">';
+          html += '<input type="hidden" name="bank_name" value="' + b.name + '">';
+          html += '<input type="hidden" name="bank_country" value="' + b.country + '">';
+          html += '<button type="submit" style="display:flex;align-items:center;gap:.8rem;width:100%;padding:.7rem .8rem;background:none;border:none;border-bottom:1px solid var(--border-light);cursor:pointer;text-align:left;color:var(--text-primary);transition:background .2s" onmouseover="this.style.background=\'var(--bg-card-hover)\'" onmouseout="this.style.background=\'none\'">';
+          if (b.logo) { html += '<img src="' + b.logo + '" alt="" style="width:28px;height:28px;border-radius:6px;object-fit:contain">'; }
+          html += '<span style="font-size:.9rem">' + b.name + '</span>';
+          html += '</button></form>';
+        });
+        if (filtered.length > 20) {
+          html += '<div style="padding:.5rem .8rem;font-size:.82rem;color:var(--text-muted)">' + (filtered.length - 20) + ' autres resultats...</div>';
+        }
+        list.innerHTML = html;
+        list.style.display = 'block';
+      }
+      </script>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">📄 Importer un releve CSV</h3>
       <form action="/api/import-csv" method="post" enctype="multipart/form-data" class="upload-form">
         <div class="upload-area" id="csvDropZone">
           <span class="upload-icon">🏦</span>
