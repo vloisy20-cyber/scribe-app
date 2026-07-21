@@ -198,6 +198,49 @@ a:hover { color: var(--accent-light); }
 .land-hero-subscribe .land-subscribe-form {
   width: 100%;
 }
+
+/* Checkbox "Rester connecte" */
+.land-remember {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .85rem; color: rgba(255,255,255,.6);
+  cursor: pointer; margin-top: .3rem;
+  user-select: none;
+}
+.land-remember input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: var(--accent-mid);
+  cursor: pointer;
+}
+.land-remember-light {
+  color: rgba(255,255,255,.7);
+  justify-content: center;
+  margin-top: .5rem;
+}
+
+/* Lien basculer inscription / connexion */
+.land-auth-switch, .land-auth-switch-bottom {
+  margin-top: .8rem;
+  font-size: .88rem;
+}
+.land-auth-link {
+  color: rgba(255,255,255,.7);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color .2s;
+  cursor: pointer;
+}
+.land-auth-link:hover {
+  color: #fff;
+}
+.land-auth-link-light {
+  color: rgba(255,255,255,.8);
+}
+
+/* Bottom subscribe form wrapper */
+.land-bottom-sub {
+  max-width: 460px; margin: 0 auto;
+}
+
 .land-subscribe-input-dark {
   background: rgba(255,255,255,.1);
   border-color: rgba(255,255,255,.2);
@@ -677,6 +720,19 @@ a:hover { color: var(--accent-light); }
 
 .sidebar-footer {
   padding: .5rem 0; border-top: 1px solid var(--border-color);
+}
+.sidebar-user {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .6rem 1rem;
+  font-size: .82rem; color: var(--text-secondary);
+  overflow: hidden;
+}
+.sidebar-user-icon { font-size: 1rem; flex-shrink: 0; }
+.sidebar-user-email {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.nav-item-logout:hover {
+  color: var(--color-danger) !important;
 }
 
 .sidebar-overlay {

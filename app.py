@@ -53,7 +53,19 @@ except ImportError:
 # --------------------------------------------------------------------------
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+
+# Cle secrete persistante pour les sessions
+_secret_path = Path(__file__).parent / "data" / ".secret_key"
+if _secret_path.exists():
+    app.secret_key = _secret_path.read_bytes()
+else:
+    _secret_path.parent.mkdir(exist_ok=True)
+    _sk = os.urandom(32)
+    _secret_path.write_bytes(_sk)
+    app.secret_key = _sk
+
+from datetime import timedelta
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
 
 # --------------------------------------------------------------------------
 # Configuration
@@ -1610,9 +1622,15 @@ def compute_dashboard_data():
 @app.route("/")
 def index():
     data = compute_dashboard_data()
-    # Inscription newsletter
+    # Verifier si l'utilisateur est connecte via session
+    logged_in = "user_email" in session
+    data["onboarded"] = logged_in
+    data["user_email"] = session.get("user_email", "")
+    # Parametres landing
     sub_status = request.args.get("sub", "")
+    login_error = request.args.get("login_err", "")
     data["sub_status"] = sub_status
+    data["login_error"] = login_error
     subs_count = 0
     if SUBSCRIBERS_PATH.exists():
         try:
@@ -1625,17 +1643,19 @@ def index():
 
 @app.route("/api/onboard", methods=["POST"])
 def onboard():
-    prefs = load_user_prefs()
-    prefs["onboarded"] = True
-    save_user_prefs(prefs)
+    # Garde l'ancien onboard comme fallback
+    if "user_email" not in session:
+        session["user_email"] = "utilisateur"
+        session.permanent = True
     return redirect(url_for("index"))
 
 
 @app.route("/api/subscribe", methods=["POST"])
 def subscribe():
     import re
-    from datetime import datetime
+    from datetime import datetime as _dt
     email = request.form.get("email", "").strip().lower()
+    remember = request.form.get("remember", "") == "on"
     # Validation simple
     if not email or not re.match(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$", email):
         return redirect(url_for("index", sub="invalid"))
@@ -1648,26 +1668,44 @@ def subscribe():
             subs = []
     # Verifier doublon — on le laisse entrer quand meme
     existing_emails = [s["email"] for s in subs]
-    if email in existing_emails:
-        prefs = load_user_prefs()
-        prefs["onboarded"] = True
-        save_user_prefs(prefs)
-        return redirect(url_for("index"))
-    # Ajouter
-    subs.append({"email": email, "date": datetime.now().isoformat()})
-    SUBSCRIBERS_PATH.write_text(json.dumps(subs, indent=2, ensure_ascii=False), "utf-8")
-    # Onboarder l'utilisateur pour qu'il entre dans l'app
-    prefs = load_user_prefs()
-    prefs["onboarded"] = True
-    save_user_prefs(prefs)
+    if email not in existing_emails:
+        subs.append({"email": email, "date": _dt.now().isoformat()})
+        SUBSCRIBERS_PATH.write_text(json.dumps(subs, indent=2, ensure_ascii=False), "utf-8")
+    # Connecter l'utilisateur
+    session["user_email"] = email
+    session.permanent = remember
+    return redirect(url_for("index"))
+
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    email = request.form.get("email", "").strip().lower()
+    remember = request.form.get("remember", "") == "on"
+    # Verifier que l'email existe dans les inscrits
+    subs = []
+    if SUBSCRIBERS_PATH.exists():
+        try:
+            subs = json.loads(SUBSCRIBERS_PATH.read_text("utf-8"))
+        except Exception:
+            subs = []
+    existing_emails = [s["email"] for s in subs]
+    if email not in existing_emails:
+        return redirect(url_for("index", login_err="notfound"))
+    # Connecter
+    session["user_email"] = email
+    session.permanent = remember
+    return redirect(url_for("index"))
+
+
+@app.route("/api/logout", methods=["POST"])
+def logout():
+    session.pop("user_email", None)
     return redirect(url_for("index"))
 
 
 @app.route("/api/reset-onboard", methods=["POST"])
 def reset_onboard():
-    prefs = load_user_prefs()
-    prefs["onboarded"] = False
-    save_user_prefs(prefs)
+    session.pop("user_email", None)
     return redirect(url_for("index"))
 
 
