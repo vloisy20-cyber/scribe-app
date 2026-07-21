@@ -337,7 +337,13 @@ function initSearch() {
   }
 
   if (searchInput) searchInput.addEventListener('input', filterTable);
-  if (categoryFilter) categoryFilter.addEventListener('change', filterTable);
+  if (categoryFilter) {
+    categoryFilter.addEventListener('change', filterTable);
+    categoryFilter.addEventListener('input', filterTable);
+  }
+
+  // Run filter once on load (in case browser pre-filled the dropdown)
+  filterTable();
 
   // Expose filter function globally for badge clicks
   window._txFilterTable = filterTable;

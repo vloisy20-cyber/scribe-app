@@ -10,7 +10,7 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
   <title>Scribe — Ton ombudsman personnel</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -748,7 +748,7 @@
     <div class="card">
       <div class="search-bar">
         <input type="text" id="txSearch" class="input-field" placeholder="Rechercher une transaction...">
-        <select id="txCategoryFilter" class="input-field input-select">
+        <select id="txCategoryFilter" class="input-field input-select" onchange="if(window._txFilterTable) window._txFilterTable()">
           <option value="">Toutes les categories</option>
           {% for cat_name in categories %}
           <option value="{{ cat_name }}">{{ categories[cat_name].emoji }} {{ cat_name }}</option>
@@ -1083,6 +1083,6 @@
     lightGrads: {{ light_grads | tojson }},
   };
 </script>
-<script src="{{ url_for('static', filename='app.js') }}"></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=2"></script>
 </body>
 </html>
