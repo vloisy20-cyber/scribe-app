@@ -1,11 +1,1 @@
-{
-  "Alimentation": 120.0,
-  "Transport": 30.0,
-  "Logement": 40.0,
-  "Sante": 40.0,
-  "Loisirs": 50.0,
-  "Shopping": 70.0,
-  "Assurance": 40.0,
-  "Telecom": 30.0,
-  "Impots & Taxes": 0.0
-}
+{"Alimentation": 400, "Transport": 200, "Shopping": 150, "Restaurants": 120, "Loisirs": 80, "Sante": 50}

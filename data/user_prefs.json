@@ -1,15 +1,1 @@
-{
-  "onboarded": true,
-  "chart_prefs": {
-    "show_pie": true,
-    "show_compare": true,
-    "show_evolution": true,
-    "show_donut": true,
-    "show_trends": true,
-    "show_bilan": true
-  },
-  "dark_mode": true,
-  "accent_theme": "Rose",
-  "api_key": "",
-  "monthly_budget": 0.0
-}
+{"onboarded": true, "accent_theme": "Bleu nuit", "dark_mode": true, "api_key": "", "monthly_budget": 2000.0}

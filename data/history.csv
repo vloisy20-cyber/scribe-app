@@ -1,0 +1,7 @@
+date_ajout,fournisseur,type_contrat,montant,devise,date_facture,numero_contrat,periode,notes,fichier
+2026-02-15 10:30,EDF,Electricite,89.5,EUR,2026-02-10,EDF-2024-7891,Janvier 2026,,
+2026-03-18 14:20,Orange,Internet Fibre,39.99,EUR,2026-03-15,ORG-556677,Mars 2026,,
+2026-04-05 09:00,EDF,Electricite,95.2,EUR,2026-04-01,EDF-2024-7891,Mars 2026,Hausse tarifaire,
+2026-05-12 16:45,AXA,Assurance auto,780.0,EUR,2026-05-10,AXA-AUTO-334,Annuel 2026,,
+2026-06-01 11:00,Free,Mobile,19.99,EUR,2026-05-28,FREE-MOB-445,Mai 2026,,
+2026-07-03 08:30,EDF,Electricite,72.3,EUR,2026-07-01,EDF-2024-7891,Juin 2026,,
