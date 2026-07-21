@@ -1646,14 +1646,21 @@ def subscribe():
             subs = json.loads(SUBSCRIBERS_PATH.read_text("utf-8"))
         except Exception:
             subs = []
-    # Verifier doublon
+    # Verifier doublon — on le laisse entrer quand meme
     existing_emails = [s["email"] for s in subs]
     if email in existing_emails:
-        return redirect(url_for("index", sub="exists"))
+        prefs = load_user_prefs()
+        prefs["onboarded"] = True
+        save_user_prefs(prefs)
+        return redirect(url_for("index"))
     # Ajouter
     subs.append({"email": email, "date": datetime.now().isoformat()})
     SUBSCRIBERS_PATH.write_text(json.dumps(subs, indent=2, ensure_ascii=False), "utf-8")
-    return redirect(url_for("index", sub="ok"))
+    # Onboarder l'utilisateur pour qu'il entre dans l'app
+    prefs = load_user_prefs()
+    prefs["onboarded"] = True
+    save_user_prefs(prefs)
+    return redirect(url_for("index"))
 
 
 @app.route("/api/reset-onboard", methods=["POST"])
