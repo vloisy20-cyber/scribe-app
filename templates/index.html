@@ -10,7 +10,7 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
   <title>Scribe — Ton ombudsman personnel</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=4">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -38,84 +38,195 @@
 {# ================================================================ #}
 {#  ECRAN D'ACCUEIL (ONBOARDING)                                    #}
 {# ================================================================ #}
-<div class="onboarding-screen" id="onboardingScreen">
-  {# Particules flottantes animees #}
-  <div class="ob-particles">
-    <div class="ob-particle ob-p1">💰</div>
-    <div class="ob-particle ob-p2">📊</div>
-    <div class="ob-particle ob-p3">🏦</div>
-    <div class="ob-particle ob-p4">💳</div>
-    <div class="ob-particle ob-p5">🐷</div>
-    <div class="ob-particle ob-p6">📈</div>
-    <div class="ob-particle ob-p7">🧾</div>
-    <div class="ob-particle ob-p8">🔔</div>
-  </div>
+<div class="landing" id="onboardingScreen">
 
-  {# Cercles decoratifs animes #}
-  <div class="ob-circle ob-c1"></div>
-  <div class="ob-circle ob-c2"></div>
-  <div class="ob-circle ob-c3"></div>
-
-  <div class="onboarding-content">
-    {# Logo anime avec pulse #}
-    <div class="ob-logo-wrap ob-anim" style="--d:0s">
-      <div class="ob-logo-glow"></div>
-      <div class="ob-logo">
-        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+  {# ========== SECTION 1 : HERO ========== #}
+  <section class="land-hero">
+    <div class="land-hero-bg"></div>
+    <nav class="land-nav">
+      <div class="land-nav-logo">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
           <polyline points="14 2 14 8 20 8"/>
           <line x1="16" y1="13" x2="8" y2="13"/>
           <line x1="16" y1="17" x2="8" y2="17"/>
-          <polyline points="10 9 9 9 8 9"/>
         </svg>
+        <span>Scribe</span>
       </div>
+      <a href="#land-features" class="land-nav-link">Fonctionnalites</a>
+      <a href="#land-how" class="land-nav-link">Comment ca marche</a>
+    </nav>
+
+    <div class="land-hero-content">
+      <h1 class="land-h1">Reprends le controle<br>de tes <span class="land-gradient-text">finances</span></h1>
+      <p class="land-hero-sub">Scribe analyse tes depenses, detecte les abonnements oublies, surveille les hausses de prix et t'aide a mieux gerer ton argent — automatiquement.</p>
+      <form action="/api/onboard" method="post">
+        <button type="submit" class="land-cta-primary">
+          Commencer gratuitement <span class="land-cta-arrow">→</span>
+        </button>
+      </form>
+      <p class="land-hero-trust">100% gratuit — Aucune carte bancaire requise</p>
     </div>
 
-    {# Titre avec apparition lettre par lettre #}
-    <h1 class="ob-title ob-anim" style="--d:.2s">Scribe</h1>
-    <p class="ob-tagline ob-anim" style="--d:.4s">Tes finances, sous controle.</p>
-
-    {# Ligne de separation animee #}
-    <div class="ob-divider ob-anim" style="--d:.5s"></div>
-
-    {# Features en grille avec icones animees #}
-    <div class="ob-features">
-      <div class="ob-feat ob-anim" style="--d:.6s">
-        <div class="ob-feat-icon">📄</div>
-        <div class="ob-feat-label">Factures</div>
-      </div>
-      <div class="ob-feat ob-anim" style="--d:.7s">
-        <div class="ob-feat-icon">🏦</div>
-        <div class="ob-feat-label">Banque</div>
-      </div>
-      <div class="ob-feat ob-anim" style="--d:.8s">
-        <div class="ob-feat-icon">💪</div>
-        <div class="ob-feat-label">Score</div>
-      </div>
-      <div class="ob-feat ob-anim" style="--d:.9s">
-        <div class="ob-feat-icon">🔔</div>
-        <div class="ob-feat-label">Alertes</div>
-      </div>
-      <div class="ob-feat ob-anim" style="--d:1s">
-        <div class="ob-feat-icon">🔄</div>
-        <div class="ob-feat-label">Abonnements</div>
-      </div>
-      <div class="ob-feat ob-anim" style="--d:1.1s">
-        <div class="ob-feat-icon">🧾</div>
-        <div class="ob-feat-label">Impots</div>
+    {# Mini apercu dashboard #}
+    <div class="land-preview">
+      <div class="land-preview-card">
+        <div class="land-prev-row">
+          <span class="land-prev-label">Score financier</span>
+          <span class="land-prev-value land-green">78/100</span>
+        </div>
+        <div class="land-prev-row">
+          <span class="land-prev-label">Depenses ce mois</span>
+          <span class="land-prev-value">1 544 EUR</span>
+        </div>
+        <div class="land-prev-row">
+          <span class="land-prev-label">Abonnements detectes</span>
+          <span class="land-prev-value">13</span>
+        </div>
+        <div class="land-prev-row land-prev-alert">
+          <span class="land-prev-label">🔔 Alerte</span>
+          <span class="land-prev-value land-orange">Netflix +18%</span>
+        </div>
       </div>
     </div>
+  </section>
 
-    {# Bouton CTA anime #}
-    <form action="/api/onboard" method="post">
-      <button type="submit" class="ob-cta ob-anim" style="--d:1.3s">
-        <span class="ob-cta-text">C'est parti</span>
-        <span class="ob-cta-arrow">→</span>
-      </button>
-    </form>
+  {# ========== SECTION 2 : FONCTIONNALITES ========== #}
+  <section class="land-section" id="land-features">
+    <div class="land-container">
+      <p class="land-section-tag">Fonctionnalites</p>
+      <h2 class="land-h2">Tout ce dont tu as besoin<br>pour gerer ton argent</h2>
 
-    <p class="ob-footer ob-anim" style="--d:1.5s">Gratuit — Tes donnees restent chez toi</p>
-  </div>
+      <div class="land-features-grid">
+        <div class="land-feat-card">
+          <div class="land-feat-icon-wrap" style="--fc: #3b82f6">
+            <span>🏦</span>
+          </div>
+          <h3>Suivi bancaire</h3>
+          <p>Importe tes releves et visualise tes depenses par categorie avec des graphiques clairs.</p>
+        </div>
+
+        <div class="land-feat-card">
+          <div class="land-feat-icon-wrap" style="--fc: #8b5cf6">
+            <span>🔔</span>
+          </div>
+          <h3>Alertes intelligentes</h3>
+          <p>Scribe detecte les hausses de prix, les depenses inhabituelles et les budgets depasses.</p>
+        </div>
+
+        <div class="land-feat-card">
+          <div class="land-feat-icon-wrap" style="--fc: #10b981">
+            <span>💪</span>
+          </div>
+          <h3>Score de sante financiere</h3>
+          <p>Un score de 0 a 100 pour savoir ou tu en es, avec des conseils personnalises.</p>
+        </div>
+
+        <div class="land-feat-card">
+          <div class="land-feat-icon-wrap" style="--fc: #f59e0b">
+            <span>🔄</span>
+          </div>
+          <h3>Detection d'abonnements</h3>
+          <p>Retrouve tous tes prelevements recurrents, meme ceux que tu avais oublies.</p>
+        </div>
+
+        <div class="land-feat-card">
+          <div class="land-feat-icon-wrap" style="--fc: #ef4444">
+            <span>📄</span>
+          </div>
+          <h3>Analyse de factures</h3>
+          <p>L'IA compare tes factures et genere une lettre de reclamation en cas de hausse abusive.</p>
+        </div>
+
+        <div class="land-feat-card">
+          <div class="land-feat-icon-wrap" style="--fc: #06b6d4">
+            <span>🧾</span>
+          </div>
+          <h3>Simulateur d'impots</h3>
+          <p>Estime ton impot sur le revenu avec le bareme officiel et optimise ta declaration.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ========== SECTION 3 : COMMENT CA MARCHE ========== #}
+  <section class="land-section land-section-alt" id="land-how">
+    <div class="land-container">
+      <p class="land-section-tag">Simple comme bonjour</p>
+      <h2 class="land-h2">Comment ca marche ?</h2>
+
+      <div class="land-steps">
+        <div class="land-step">
+          <div class="land-step-num">1</div>
+          <div class="land-step-body">
+            <h3>Importe tes donnees</h3>
+            <p>Telecharge le CSV depuis ta banque en ligne ou connecte-toi via Open Banking. Tes fiches de paie aussi.</p>
+          </div>
+        </div>
+        <div class="land-step-line"></div>
+        <div class="land-step">
+          <div class="land-step-num">2</div>
+          <div class="land-step-body">
+            <h3>Scribe analyse tout</h3>
+            <p>Categorisation automatique, detection des abonnements, calcul du score, verification des hausses de prix.</p>
+          </div>
+        </div>
+        <div class="land-step-line"></div>
+        <div class="land-step">
+          <div class="land-step-num">3</div>
+          <div class="land-step-body">
+            <h3>Tu reprends le controle</h3>
+            <p>Dashboard complet, alertes en temps reel, objectifs d'epargne et simulateur d'impots a portee de main.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ========== SECTION 4 : CHIFFRES / AVANTAGES ========== #}
+  <section class="land-section">
+    <div class="land-container">
+      <p class="land-section-tag">Pourquoi Scribe ?</p>
+      <h2 class="land-h2">Tes finances meritent mieux<br>qu'un tableau Excel</h2>
+
+      <div class="land-benefits">
+        <div class="land-benefit">
+          <div class="land-benefit-icon">🔒</div>
+          <h3>Tes donnees restent chez toi</h3>
+          <p>Aucun envoi vers des serveurs tiers. Tout est stocke localement sur ton espace.</p>
+        </div>
+        <div class="land-benefit">
+          <div class="land-benefit-icon">⚡</div>
+          <h3>Gratuit et sans pub</h3>
+          <p>Pas de premium cache, pas de publicite. Scribe est un outil fait pour toi.</p>
+        </div>
+        <div class="land-benefit">
+          <div class="land-benefit-icon">🤖</div>
+          <h3>Propulse par l'IA</h3>
+          <p>Categorisation intelligente, detection d'anomalies et generation de courriers automatique.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ========== SECTION 5 : CTA FINAL ========== #}
+  <section class="land-section land-cta-section">
+    <div class="land-container land-cta-final">
+      <h2 class="land-h2 land-h2-white">Pret a reprendre le controle ?</h2>
+      <p class="land-cta-sub">Rejoins Scribe et commence a mieux gerer tes finances des aujourd'hui.</p>
+      <form action="/api/onboard" method="post">
+        <button type="submit" class="land-cta-primary land-cta-white">
+          C'est parti <span class="land-cta-arrow">→</span>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  {# ========== FOOTER ========== #}
+  <footer class="land-footer">
+    <p>Scribe — Ton assistant financier personnel</p>
+  </footer>
+
 </div>
 
 {% else %}
@@ -1381,6 +1492,6 @@
     lightGrads: {{ light_grads | tojson }},
   };
 </script>
-<script src="{{ url_for('static', filename='app.js') }}?v=4"></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=5"></script>
 </body>
 </html>
