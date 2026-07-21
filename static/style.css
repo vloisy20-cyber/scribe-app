@@ -169,6 +169,47 @@ a:hover { color: var(--accent-light); }
   font-size: .82rem; color: rgba(255,255,255,.45);
 }
 
+/* Hero CTA → subscribe toggle */
+.land-hero-cta-wrap {
+  display: flex; flex-direction: column; align-items: center;
+}
+.land-hero-subscribe {
+  display: none;
+  flex-direction: column; align-items: center; gap: .6rem;
+  max-width: 460px; width: 100%;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity .4s ease, transform .4s ease;
+}
+.land-hero-subscribe.land-hero-subscribe-visible {
+  display: flex;
+  opacity: 1;
+  transform: translateY(0);
+  animation: heroSubReveal .45s cubic-bezier(.22,.68,0,1) forwards;
+}
+@keyframes heroSubReveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.land-hero-subscribe-label {
+  font-size: .95rem; color: rgba(255,255,255,.85);
+  margin-bottom: .2rem;
+}
+.land-hero-subscribe .land-subscribe-form {
+  width: 100%;
+}
+.land-subscribe-input-dark {
+  background: rgba(255,255,255,.1);
+  border-color: rgba(255,255,255,.2);
+}
+.land-subscribe-input-dark:focus {
+  border-color: rgba(255,255,255,.5);
+  background: rgba(255,255,255,.15);
+}
+.land-hero-subscribe-note {
+  font-size: .78rem; color: rgba(255,255,255,.4);
+}
+
 /* --- CTA Buttons --- */
 .land-cta-primary {
   display: inline-flex; align-items: center; gap: .5rem;

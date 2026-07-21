@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=8">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=9">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -58,11 +58,21 @@
     <div class="land-hero-content">
       <h1 class="land-h1">Reprends le controle<br>de tes <span class="land-gradient-text">finances</span></h1>
       <p class="land-hero-sub">Scribe analyse tes depenses, detecte les abonnements oublies, surveille les hausses de prix et t'aide a mieux gerer ton argent — automatiquement.</p>
-      <form action="/api/onboard" method="post">
-        <button type="submit" class="land-cta-primary">
+      <div class="land-hero-cta-wrap" id="heroCta">
+        <button type="button" class="land-cta-primary" id="heroCtaBtn">
           Commencer gratuitement <span class="land-cta-arrow">→</span>
         </button>
-      </form>
+        <form action="/api/subscribe" method="post" class="land-hero-subscribe" id="heroSubForm">
+          <p class="land-hero-subscribe-label">Entre ton email pour commencer :</p>
+          <div class="land-subscribe-form">
+            <input type="email" name="email" placeholder="ton@email.com" required class="land-subscribe-input land-subscribe-input-dark">
+            <button type="submit" class="land-cta-primary land-subscribe-btn">
+              C'est parti <span class="land-cta-arrow">→</span>
+            </button>
+          </div>
+          <p class="land-hero-subscribe-note">Pas de spam. On t'envoie juste l'acces.</p>
+        </form>
+      </div>
       <p class="land-hero-trust">100% gratuit — Aucune carte bancaire requise</p>
     </div>
 
@@ -1587,6 +1597,18 @@
       if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
+
+  /* --- Hero CTA → formulaire inscription --- */
+  var heroBtn = document.getElementById('heroCtaBtn');
+  var heroForm = document.getElementById('heroSubForm');
+  if (heroBtn && heroForm) {
+    heroBtn.addEventListener('click', function() {
+      heroBtn.style.display = 'none';
+      heroForm.classList.add('land-hero-subscribe-visible');
+      var input = heroForm.querySelector('input[type="email"]');
+      if (input) setTimeout(function() { input.focus(); }, 350);
+    });
+  }
 
   /* --- Animations au scroll (IntersectionObserver) --- */
   var reveals = document.querySelectorAll('.land-reveal');
