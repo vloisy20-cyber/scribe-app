@@ -748,7 +748,7 @@
     <div class="card">
       <div class="search-bar">
         <input type="text" id="txSearch" class="input-field" placeholder="Rechercher une transaction...">
-        <select id="txCategoryFilter" class="input-field input-select" onchange="if(window._txFilterTable) window._txFilterTable()">
+        <select id="txCategoryFilter" class="input-field input-select" onchange="scribeFilter()">
           <option value="">Toutes les categories</option>
           {% for cat_name in categories %}
           <option value="{{ cat_name }}">{{ categories[cat_name].emoji }} {{ cat_name }}</option>
@@ -772,7 +772,7 @@
               <td>{{ tx.label }}</td>
               <td class="amount">{{ "%.2f"|format(tx.amount) }} EUR</td>
               <td>
-                <span class="cat-badge cat-badge-clickable" data-cat="{{ tx.auto_category }}" onclick="filterByCategory('{{ tx.auto_category }}')" style="background: {{ categories.get(tx.auto_category, {}).get('color', '#6b7280') }}20; color: {{ categories.get(tx.auto_category, {}).get('color', '#6b7280') }}; border: 1px solid {{ categories.get(tx.auto_category, {}).get('color', '#6b7280') }}40">
+                <span class="cat-badge cat-badge-clickable" onclick="document.getElementById('txCategoryFilter').value='{{ tx.auto_category }}';scribeFilter()" style="background: {{ categories.get(tx.auto_category, {}).get('color', '#6b7280') }}20; color: {{ categories.get(tx.auto_category, {}).get('color', '#6b7280') }}; border: 1px solid {{ categories.get(tx.auto_category, {}).get('color', '#6b7280') }}40; cursor:pointer">
                   {{ categories.get(tx.auto_category, {}).get('emoji', '') }} {{ tx.auto_category }}
                 </span>
               </td>
@@ -784,6 +784,29 @@
       <div class="table-footer">
         <span id="txCount">{{ tx_data|length }} transaction(s)</span>
       </div>
+      <script>
+      function scribeFilter(){
+        var sel=document.getElementById('txCategoryFilter');
+        var search=document.getElementById('txSearch');
+        var cat=sel?sel.value:'';
+        var q=search?search.value.toLowerCase().trim():'';
+        var rows=document.querySelectorAll('#txTableBody tr');
+        var n=0;
+        for(var i=0;i<rows.length;i++){
+          var r=rows[i];
+          var rc=r.getAttribute('data-category')||'';
+          var rl=r.getAttribute('data-label')||'';
+          var ok=(!cat||rc===cat)&&(!q||rl.indexOf(q)!==-1);
+          r.style.display=ok?'':'none';
+          if(ok)n++;
+        }
+        var c=document.getElementById('txCount');
+        if(c)c.textContent=n+' transaction(s)';
+      }
+      if(document.getElementById('txSearch')){
+        document.getElementById('txSearch').addEventListener('input',scribeFilter);
+      }
+      </script>
     </div>
     {% else %}
     <div class="empty-state">
