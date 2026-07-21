@@ -92,6 +92,7 @@ SAVINGS_PATH = DATA_DIR / "savings_goals.json"
 CATEGORY_BUDGETS_PATH = DATA_DIR / "category_budgets.json"
 USER_PREFS_PATH = DATA_DIR / "user_prefs.json"
 EB_CONFIG_PATH = DATA_DIR / "enable_banking.json"
+SUBSCRIBERS_PATH = DATA_DIR / "subscribers.json"
 
 # --------------------------------------------------------------------------
 # Enable Banking (Open Banking)
@@ -1609,6 +1610,16 @@ def compute_dashboard_data():
 @app.route("/")
 def index():
     data = compute_dashboard_data()
+    # Inscription newsletter
+    sub_status = request.args.get("sub", "")
+    data["sub_status"] = sub_status
+    subs_count = 0
+    if SUBSCRIBERS_PATH.exists():
+        try:
+            subs_count = len(json.loads(SUBSCRIBERS_PATH.read_text("utf-8")))
+        except Exception:
+            pass
+    data["subscribers_count"] = subs_count
     return render_template("index.html", **data)
 
 
@@ -1618,6 +1629,31 @@ def onboard():
     prefs["onboarded"] = True
     save_user_prefs(prefs)
     return redirect(url_for("index"))
+
+
+@app.route("/api/subscribe", methods=["POST"])
+def subscribe():
+    import re
+    from datetime import datetime
+    email = request.form.get("email", "").strip().lower()
+    # Validation simple
+    if not email or not re.match(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$", email):
+        return redirect(url_for("index", sub="invalid"))
+    # Charger les inscrits existants
+    subs = []
+    if SUBSCRIBERS_PATH.exists():
+        try:
+            subs = json.loads(SUBSCRIBERS_PATH.read_text("utf-8"))
+        except Exception:
+            subs = []
+    # Verifier doublon
+    existing_emails = [s["email"] for s in subs]
+    if email in existing_emails:
+        return redirect(url_for("index", sub="exists"))
+    # Ajouter
+    subs.append({"email": email, "date": datetime.now().isoformat()})
+    SUBSCRIBERS_PATH.write_text(json.dumps(subs, indent=2, ensure_ascii=False), "utf-8")
+    return redirect(url_for("index", sub="ok"))
 
 
 @app.route("/api/reset-onboard", methods=["POST"])

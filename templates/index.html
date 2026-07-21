@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=8">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -260,16 +260,38 @@
     </div>
   </section>
 
-  {# ========== SECTION 5 : CTA FINAL ========== #}
+  {# ========== SECTION 5 : CTA FINAL + INSCRIPTION ========== #}
   <section class="land-section land-cta-section">
     <div class="land-container land-cta-final">
       <h2 class="land-h2 land-h2-white">Pret a reprendre le controle ?</h2>
-      <p class="land-cta-sub">Rejoins Scribe et commence a mieux gerer tes finances des aujourd'hui.</p>
-      <form action="/api/onboard" method="post">
-        <button type="submit" class="land-cta-primary land-cta-white">
-          C'est parti <span class="land-cta-arrow">→</span>
+      <p class="land-cta-sub">Laisse ton email pour etre informe du lancement et acceder en avant-premiere.</p>
+
+      {% if sub_status == 'ok' %}
+      <div class="land-sub-msg land-sub-success">
+        <span>✓</span> Merci ! Tu es inscrit. On te tient au courant.
+      </div>
+      {% elif sub_status == 'exists' %}
+      <div class="land-sub-msg land-sub-info">
+        <span>ℹ</span> Cet email est deja inscrit.
+      </div>
+      {% elif sub_status == 'invalid' %}
+      <div class="land-sub-msg land-sub-error">
+        <span>✗</span> Email invalide. Verifie le format.
+      </div>
+      {% endif %}
+
+      <form action="/api/subscribe" method="post" class="land-subscribe-form">
+        <input type="email" name="email" placeholder="ton@email.com" required class="land-subscribe-input">
+        <button type="submit" class="land-cta-primary land-cta-white land-subscribe-btn">
+          S'inscrire <span class="land-cta-arrow">→</span>
         </button>
       </form>
+
+      {% if subscribers_count > 0 %}
+      <p class="land-sub-count">{{ subscribers_count }} personne{{ 's' if subscribers_count > 1 else '' }} inscrite{{ 's' if subscribers_count > 1 else '' }}</p>
+      {% endif %}
+
+      <p class="land-sub-privacy">Pas de spam, jamais. Desinscription en un clic.</p>
     </div>
   </section>
 
