@@ -185,7 +185,12 @@
       <span></span><span></span><span></span>
     </button>
     <span class="topbar-title">Scribe</span>
-    <button class="topbar-settings" onclick="openSettings()" aria-label="Parametres">⚙️</button>
+    <div class="topbar-actions">
+      <form action="/api/toggle-dark" method="post" style="margin:0;display:inline">
+        <button type="submit" class="topbar-darkbtn" aria-label="Changer le mode">{{ '☀️' if dark_mode else '🌙' }}</button>
+      </form>
+      <button class="topbar-settings" onclick="openSettings()" aria-label="Parametres">⚙️</button>
+    </div>
   </header>
 
   {# Flash messages #}
@@ -998,9 +1003,14 @@
           <label>Theme d'accent</label>
           <div class="theme-picker">
             {% for tname, tinfo in themes.items() %}
-            <label class="theme-swatch {{ 'active' if tname == theme_name else '' }}" title="{{ tname }}">
+            <label class="theme-swatch {{ 'active' if tname == theme_name else '' }}" title="{{ tname }}"
+                   data-mid="{{ tinfo.accent_mid }}" data-dark="{{ tinfo.accent_dark }}"
+                   data-light="{{ tinfo.accent_light }}" data-text="{{ tinfo.accent_text }}"
+                   data-pale="{{ tinfo.accent_pale }}" data-bg="{{ tinfo.accent_bg }}"
+                   data-g1="{{ tinfo.gradient1 }}" data-g2="{{ tinfo.gradient2 }}" data-g3="{{ tinfo.gradient3 }}">
               <input type="radio" name="accent_theme" value="{{ tname }}" {{ 'checked' if tname == theme_name else '' }} hidden>
               <span class="swatch-color" style="background: {{ tinfo.swatch }}"></span>
+              <span class="swatch-check">✓</span>
               <span class="swatch-label">{{ tname }}</span>
             </label>
             {% endfor %}
@@ -1009,8 +1019,12 @@
         <div class="form-group">
           <label>Mode</label>
           <div class="toggle-row">
-            <span>{{ '🌙 Sombre' if dark_mode else '☀️ Clair' }}</span>
-            <input type="hidden" name="dark_mode" value="{{ 'true' if dark_mode else 'false' }}">
+            <span id="darkModeLabel">{{ '🌙 Sombre' if dark_mode else '☀️ Clair' }}</span>
+            <label class="toggle-switch">
+              <input type="checkbox" name="dark_mode_toggle" id="darkModeToggle" {{ 'checked' if dark_mode else '' }} onchange="toggleDarkPreview(this)">
+              <span class="toggle-slider"></span>
+            </label>
+            <input type="hidden" name="dark_mode" id="darkModeInput" value="{{ 'true' if dark_mode else 'false' }}">
           </div>
         </div>
       </div>
@@ -1066,6 +1080,7 @@
     monthlyTrends: {{ monthly_trends | tojson }},
     categories: {{ categories | tojson }},
     darkMode: {{ 'true' if dark_mode else 'false' }},
+    lightGrads: {{ light_grads | tojson }},
   };
 </script>
 <script src="{{ url_for('static', filename='app.js') }}"></script>

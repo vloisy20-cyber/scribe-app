@@ -208,6 +208,14 @@ a:hover { color: var(--accent-light); }
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
 }
+.topbar-actions {
+  display: flex; align-items: center; gap: .3rem;
+}
+.topbar-darkbtn {
+  background: none; border: none; font-size: 1.2rem; cursor: pointer;
+  padding: 4px; border-radius: 6px; transition: background var(--transition);
+}
+.topbar-darkbtn:hover { background: var(--bg-input); }
 .topbar-settings {
   background: none; border: none; font-size: 1.2rem; cursor: pointer;
 }
@@ -806,16 +814,50 @@ body.light .flash-error   { color: #b91c1c; }
   cursor: pointer; padding: .4rem; border-radius: var(--radius-sm);
   border: 2px solid transparent;
   transition: all var(--transition);
+  position: relative;
 }
 .theme-swatch:hover { background: var(--bg-input); }
-.theme-swatch.active { border-color: var(--accent-mid); }
+.theme-swatch.active { border-color: var(--accent-mid); background: var(--bg-input); }
 .swatch-color {
   width: 32px; height: 32px; border-radius: 50%;
-  display: block;
+  display: block; position: relative;
 }
+.swatch-check {
+  display: none; position: absolute; top: .25rem; right: .25rem;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--accent-mid); color: #fff;
+  font-size: .6rem; font-weight: 700;
+  line-height: 16px; text-align: center;
+  box-shadow: 0 1px 4px rgba(0,0,0,.3);
+}
+.theme-swatch.active .swatch-check { display: block; }
 .swatch-label { font-size: .7rem; color: var(--text-muted); }
+.theme-swatch.active .swatch-label { color: var(--accent-mid); font-weight: 600; }
 
+/* Toggle switch */
 .toggle-row { display: flex; align-items: center; gap: .8rem; }
+.toggle-switch {
+  position: relative; display: inline-block;
+  width: 48px; height: 26px; flex-shrink: 0;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: var(--bg-input); border: 1px solid var(--border-color);
+  border-radius: 13px; transition: all var(--transition);
+}
+.toggle-slider::before {
+  content: ""; position: absolute;
+  height: 20px; width: 20px; left: 2px; bottom: 2px;
+  background: var(--text-muted); border-radius: 50%;
+  transition: all var(--transition);
+}
+.toggle-switch input:checked + .toggle-slider {
+  background: var(--accent-mid); border-color: var(--accent-mid);
+}
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(22px); background: #fff;
+}
 
 /* ================================================================
    SCROLL TO TOP

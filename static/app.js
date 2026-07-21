@@ -381,7 +381,7 @@ function initFlashAutoDismiss() {
 }
 
 /* ================================================================
-   THEME PICKER (live swatch click)
+   THEME PICKER (live swatch click + preview)
    ================================================================ */
 function initThemePicker() {
   const swatches = document.querySelectorAll('.theme-swatch');
@@ -389,8 +389,72 @@ function initThemePicker() {
     s.addEventListener('click', () => {
       swatches.forEach(sw => sw.classList.remove('active'));
       s.classList.add('active');
+
+      // Live preview — apply accent colors immediately
+      const root = document.documentElement;
+      root.style.setProperty('--accent-mid', s.dataset.mid);
+      root.style.setProperty('--accent-dark', s.dataset.dark);
+      root.style.setProperty('--accent-light', s.dataset.light);
+      root.style.setProperty('--accent-text', s.dataset.text);
+      root.style.setProperty('--accent-pale', s.dataset.pale);
+      root.style.setProperty('--accent-bg', s.dataset.bg);
+
+      // Update gradients based on current mode
+      const isDark = document.body.classList.contains('dark');
+      if (isDark) {
+        root.style.setProperty('--gradient1', s.dataset.g1);
+        root.style.setProperty('--gradient2', s.dataset.g2);
+        root.style.setProperty('--gradient3', s.dataset.g3);
+      } else {
+        // Use light gradients if available
+        const themeName = s.querySelector('input[name="accent_theme"]').value;
+        const lightGrads = window.SCRIBE_DATA && window.SCRIBE_DATA.lightGrads;
+        if (lightGrads && lightGrads[themeName]) {
+          const lg = lightGrads[themeName];
+          root.style.setProperty('--gradient1', lg[0]);
+          root.style.setProperty('--gradient2', lg[1]);
+          root.style.setProperty('--gradient3', lg[2]);
+        }
+      }
     });
   });
+}
+
+/* ================================================================
+   DARK MODE TOGGLE (in settings modal)
+   ================================================================ */
+function toggleDarkPreview(checkbox) {
+  const isDark = checkbox.checked;
+  const hiddenInput = document.getElementById('darkModeInput');
+  const label = document.getElementById('darkModeLabel');
+
+  if (hiddenInput) hiddenInput.value = isDark ? 'true' : 'false';
+  if (label) label.textContent = isDark ? '🌙 Sombre' : '☀️ Clair';
+
+  // Live preview — switch body class
+  document.body.classList.toggle('dark', isDark);
+  document.body.classList.toggle('light', !isDark);
+  document.documentElement.setAttribute('data-dark', isDark ? 'true' : 'false');
+
+  // Update gradients for the current theme
+  const activeSwatch = document.querySelector('.theme-swatch.active');
+  if (activeSwatch) {
+    const root = document.documentElement;
+    if (isDark) {
+      root.style.setProperty('--gradient1', activeSwatch.dataset.g1);
+      root.style.setProperty('--gradient2', activeSwatch.dataset.g2);
+      root.style.setProperty('--gradient3', activeSwatch.dataset.g3);
+    } else {
+      const themeName = activeSwatch.querySelector('input[name="accent_theme"]').value;
+      const lightGrads = window.SCRIBE_DATA && window.SCRIBE_DATA.lightGrads;
+      if (lightGrads && lightGrads[themeName]) {
+        const lg = lightGrads[themeName];
+        root.style.setProperty('--gradient1', lg[0]);
+        root.style.setProperty('--gradient2', lg[1]);
+        root.style.setProperty('--gradient3', lg[2]);
+      }
+    }
+  }
 }
 
 /* ================================================================
