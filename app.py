@@ -1626,6 +1626,7 @@ def index():
     logged_in = "user_email" in session
     data["onboarded"] = logged_in
     data["user_email"] = session.get("user_email", "")
+    data["user_pseudo"] = session.get("user_pseudo", "")
     # Parametres landing
     sub_status = request.args.get("sub", "")
     login_error = request.args.get("login_err", "")
@@ -1655,10 +1656,13 @@ def subscribe():
     import re
     from datetime import datetime as _dt
     email = request.form.get("email", "").strip().lower()
+    pseudo = request.form.get("pseudo", "").strip()
     remember = request.form.get("remember", "") == "on"
-    # Validation simple
+    # Validation
     if not email or not re.match(r"^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$", email):
         return redirect(url_for("index", sub="invalid"))
+    if not pseudo or len(pseudo) < 2 or len(pseudo) > 20:
+        return redirect(url_for("index", sub="pseudo"))
     # Charger les inscrits existants
     subs = []
     if SUBSCRIBERS_PATH.exists():
@@ -1666,13 +1670,18 @@ def subscribe():
             subs = json.loads(SUBSCRIBERS_PATH.read_text("utf-8"))
         except Exception:
             subs = []
-    # Verifier doublon — on le laisse entrer quand meme
+    # Verifier doublon email
     existing_emails = [s["email"] for s in subs]
     if email not in existing_emails:
-        subs.append({"email": email, "date": _dt.now().isoformat()})
+        # Verifier doublon pseudo
+        existing_pseudos = [s.get("pseudo", "").lower() for s in subs]
+        if pseudo.lower() in existing_pseudos:
+            return redirect(url_for("index", sub="pseudo_taken"))
+        subs.append({"email": email, "pseudo": pseudo, "date": _dt.now().isoformat()})
         SUBSCRIBERS_PATH.write_text(json.dumps(subs, indent=2, ensure_ascii=False), "utf-8")
     # Connecter l'utilisateur
     session["user_email"] = email
+    session["user_pseudo"] = pseudo
     session.permanent = remember
     return redirect(url_for("index"))
 
@@ -1688,18 +1697,46 @@ def login():
             subs = json.loads(SUBSCRIBERS_PATH.read_text("utf-8"))
         except Exception:
             subs = []
-    existing_emails = [s["email"] for s in subs]
-    if email not in existing_emails:
+    user = next((s for s in subs if s["email"] == email), None)
+    if not user:
         return redirect(url_for("index", login_err="notfound"))
-    # Connecter
+    # Connecter avec le pseudo
     session["user_email"] = email
+    session["user_pseudo"] = user.get("pseudo", "")
     session.permanent = remember
+    return redirect(url_for("index"))
+
+
+@app.route("/api/update-pseudo", methods=["POST"])
+def update_pseudo():
+    new_pseudo = request.form.get("pseudo", "").strip()
+    email = session.get("user_email", "")
+    if not email or not new_pseudo or len(new_pseudo) < 2 or len(new_pseudo) > 20:
+        return redirect(url_for("index"))
+    # Mettre a jour dans subscribers.json
+    subs = []
+    if SUBSCRIBERS_PATH.exists():
+        try:
+            subs = json.loads(SUBSCRIBERS_PATH.read_text("utf-8"))
+        except Exception:
+            subs = []
+    # Verifier que le pseudo n'est pas deja pris par quelqu'un d'autre
+    for s in subs:
+        if s.get("pseudo", "").lower() == new_pseudo.lower() and s["email"] != email:
+            return redirect(url_for("index"))
+    for s in subs:
+        if s["email"] == email:
+            s["pseudo"] = new_pseudo
+            break
+    SUBSCRIBERS_PATH.write_text(json.dumps(subs, indent=2, ensure_ascii=False), "utf-8")
+    session["user_pseudo"] = new_pseudo
     return redirect(url_for("index"))
 
 
 @app.route("/api/logout", methods=["POST"])
 def logout():
     session.pop("user_email", None)
+    session.pop("user_pseudo", None)
     return redirect(url_for("index"))
 
 

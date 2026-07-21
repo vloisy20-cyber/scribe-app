@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=10">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=11">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -65,7 +65,21 @@
 
         {# Formulaire inscription (visible apres clic sur Commencer) #}
         <form action="/api/subscribe" method="post" class="land-hero-subscribe" id="heroSubForm">
-          <p class="land-hero-subscribe-label">Entre ton email pour commencer :</p>
+          <p class="land-hero-subscribe-label">Cree ton compte en 10 secondes :</p>
+          {% if sub_status == 'pseudo' %}
+          <div class="land-sub-msg land-sub-error" style="font-size:.85rem;">
+            <span>✗</span> Pseudo requis (2 a 20 caracteres).
+          </div>
+          {% elif sub_status == 'pseudo_taken' %}
+          <div class="land-sub-msg land-sub-error" style="font-size:.85rem;">
+            <span>✗</span> Ce pseudo est deja pris.
+          </div>
+          {% elif sub_status == 'invalid' %}
+          <div class="land-sub-msg land-sub-error" style="font-size:.85rem;">
+            <span>✗</span> Email invalide.
+          </div>
+          {% endif %}
+          <input type="text" name="pseudo" placeholder="Ton pseudo" required minlength="2" maxlength="20" class="land-subscribe-input land-subscribe-input-dark land-input-full">
           <div class="land-subscribe-form">
             <input type="email" name="email" placeholder="ton@email.com" required class="land-subscribe-input land-subscribe-input-dark">
             <button type="submit" class="land-cta-primary land-subscribe-btn">
@@ -75,7 +89,6 @@
           <label class="land-remember">
             <input type="checkbox" name="remember" checked> Rester connecte
           </label>
-          <p class="land-hero-subscribe-note">Pas de spam. On t'envoie juste l'acces.</p>
         </form>
 
         {# Formulaire connexion (visible apres clic sur "Deja inscrit") #}
@@ -320,6 +333,7 @@
       {% endif %}
 
       <form action="/api/subscribe" method="post" class="land-bottom-sub">
+        <input type="text" name="pseudo" placeholder="Ton pseudo" required minlength="2" maxlength="20" class="land-subscribe-input land-input-full land-input-bottom-pseudo">
         <div class="land-subscribe-form">
           <input type="email" name="email" placeholder="ton@email.com" required class="land-subscribe-input">
           <button type="submit" class="land-cta-primary land-cta-white land-subscribe-btn">
@@ -434,8 +448,11 @@
   <div class="sidebar-footer">
     {% if user_email %}
     <div class="sidebar-user">
-      <span class="sidebar-user-icon">👤</span>
-      <span class="sidebar-user-email">{{ user_email }}</span>
+      <span class="sidebar-user-avatar">{{ (user_pseudo or user_email)[0]|upper }}</span>
+      <div class="sidebar-user-info">
+        <span class="sidebar-user-pseudo">{{ user_pseudo or 'Utilisateur' }}</span>
+        <span class="sidebar-user-email">{{ user_email }}</span>
+      </div>
     </div>
     {% endif %}
     <button class="nav-item" onclick="openSettings()">
@@ -1546,6 +1563,22 @@
       <h2>⚙️ Parametres</h2>
       <button class="modal-close" onclick="closeSettings()">&times;</button>
     </div>
+    {% if user_pseudo %}
+    <form action="/api/update-pseudo" method="post" class="settings-pseudo-form">
+      <div class="settings-section">
+        <h3>Profil</h3>
+        <div class="form-group">
+          <label>Pseudo</label>
+          <div class="land-subscribe-form" style="max-width:100%;">
+            <input type="text" name="pseudo" value="{{ user_pseudo }}" class="input-field" minlength="2" maxlength="20" placeholder="Ton pseudo">
+            <button type="submit" class="btn btn-accent btn-sm">Modifier</button>
+          </div>
+          <p class="form-hint">Visible uniquement par toi. 2 a 20 caracteres.</p>
+        </div>
+      </div>
+    </form>
+    {% endif %}
+
     <form action="/api/settings" method="post">
       <div class="settings-section">
         <h3>Apparence</h3>
@@ -1698,9 +1731,13 @@
     });
   }
 
-  // Si erreur login → afficher directement le formulaire de connexion
+  // Si erreur login → afficher le formulaire de connexion
   {% if login_error %}
   showForm(heroLoginForm, heroSubForm);
+  {% endif %}
+  // Si erreur inscription (pseudo) → afficher le formulaire d'inscription
+  {% if sub_status in ('pseudo', 'pseudo_taken', 'invalid') %}
+  showForm(heroSubForm, heroLoginForm);
   {% endif %}
 
   /* --- Animations au scroll (IntersectionObserver) --- */

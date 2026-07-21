@@ -241,6 +241,27 @@ a:hover { color: var(--accent-light); }
   max-width: 460px; margin: 0 auto;
 }
 
+/* Champ pseudo pleine largeur */
+.land-input-full {
+  width: 100%;
+  margin-bottom: .5rem;
+}
+.land-input-bottom-pseudo {
+  margin-bottom: .5rem;
+}
+
+/* Bouton petit pour parametres */
+.btn-sm {
+  padding: .45rem 1rem;
+  font-size: .85rem;
+  white-space: nowrap;
+}
+
+/* Formulaire pseudo dans parametres */
+.settings-pseudo-form {
+  margin-bottom: 0;
+}
+
 .land-subscribe-input-dark {
   background: rgba(255,255,255,.1);
   border-color: rgba(255,255,255,.2);
@@ -722,13 +743,28 @@ a:hover { color: var(--accent-light); }
   padding: .5rem 0; border-top: 1px solid var(--border-color);
 }
 .sidebar-user {
-  display: flex; align-items: center; gap: .5rem;
-  padding: .6rem 1rem;
-  font-size: .82rem; color: var(--text-secondary);
+  display: flex; align-items: center; gap: .6rem;
+  padding: .7rem 1rem;
   overflow: hidden;
 }
-.sidebar-user-icon { font-size: 1rem; flex-shrink: 0; }
+.sidebar-user-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-mid), var(--accent-light));
+  color: #fff; font-weight: 700; font-size: .85rem;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-family: 'Lora', 'Georgia', serif;
+}
+.sidebar-user-info {
+  display: flex; flex-direction: column; overflow: hidden; gap: 1px;
+}
+.sidebar-user-pseudo {
+  font-size: .88rem; font-weight: 600; color: var(--text-primary);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .sidebar-user-email {
+  font-size: .75rem; color: var(--text-muted);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .nav-item-logout:hover {
