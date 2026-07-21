@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 130 40">
+  <defs>
+    <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4a90d9"/>
+      <stop offset="100%" stop-color="#7c5cbf"/>
+    </linearGradient>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Lora:wght@700&amp;display=swap');
+      .logo-text { font-family: 'Lora', 'Georgia', serif; font-weight: 700; font-size: 28px; fill: url(#lg); }
+    </style>
+  </defs>
+  <text class="logo-text" x="4" y="30">Scribe</text>
+  <line x1="4" y1="35" x2="126" y2="35" stroke="url(#lg)" stroke-width="1" stroke-linecap="round" opacity="0.35"/>
+</svg>

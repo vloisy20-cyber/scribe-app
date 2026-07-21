@@ -8,9 +8,13 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Scribe">
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
   <title>Scribe — Ton ombudsman personnel</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=6">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -45,13 +49,7 @@
     <div class="land-hero-bg"></div>
     <nav class="land-nav">
       <div class="land-nav-logo">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="16" y1="13" x2="8" y2="13"/>
-          <line x1="16" y1="17" x2="8" y2="17"/>
-        </svg>
-        <span>Scribe</span>
+        <span class="logo-text">Scribe</span>
       </div>
       <a href="#land-features" class="land-nav-link">Fonctionnalites</a>
       <a href="#land-how" class="land-nav-link">Comment ca marche</a>
@@ -279,11 +277,7 @@
   <footer class="land-footer">
     <div class="land-footer-content">
       <div class="land-footer-brand">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-mid)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-          <polyline points="14 2 14 8 20 8"/>
-        </svg>
-        <span>Scribe</span>
+        <span class="logo-text">Scribe</span>
       </div>
       <p class="land-footer-tagline">Ton assistant financier personnel</p>
       <div class="land-footer-links">
@@ -308,11 +302,7 @@
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-header">
     <div class="sidebar-logo">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--accent-mid)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-        <polyline points="14 2 14 8 20 8"/>
-      </svg>
-      <span class="sidebar-brand">Scribe</span>
+      <span class="logo-text sidebar-brand">Scribe</span>
     </div>
     <button class="sidebar-close" id="sidebarClose" aria-label="Fermer">&times;</button>
   </div>
@@ -393,7 +383,7 @@
     <button class="hamburger" id="hamburgerBtn" aria-label="Menu">
       <span></span><span></span><span></span>
     </button>
-    <span class="topbar-title">Scribe</span>
+    <span class="topbar-title logo-text">Scribe</span>
     <div class="topbar-actions">
       <form action="/api/toggle-dark" method="post" style="margin:0;display:inline">
         <button type="submit" class="topbar-darkbtn" aria-label="Changer le mode">{{ '☀️' if dark_mode else '🌙' }}</button>

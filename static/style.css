@@ -3,6 +3,18 @@
    Dark/light mode, 6 themes d'accent, responsive
    ================================================================ */
 
+/* ---------- LOGO FONT ---------- */
+.logo-text {
+  font-family: 'Lora', 'Georgia', 'Times New Roman', serif;
+  font-weight: 700;
+  font-size: 1.4rem;
+  background: linear-gradient(135deg, var(--accent-mid), var(--accent-light));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: .02em;
+}
+
 /* ---------- RESET & BASE ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -101,10 +113,15 @@ a:hover { color: var(--accent-light); }
 }
 .land-nav-logo {
   display: flex; align-items: center; gap: .5rem;
-  font-size: 1.2rem; font-weight: 700;
-  color: #fff; margin-right: auto;
+  margin-right: auto;
 }
-.land-nav-logo svg { stroke: #fff; }
+.land-nav-logo .logo-text {
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #fff, rgba(255,255,255,.85));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
 .land-nav-link {
   color: rgba(255,255,255,.7); font-size: .9rem;
   text-decoration: none; transition: color .2s;
@@ -224,7 +241,8 @@ a:hover { color: var(--accent-light); }
   background: linear-gradient(135deg, var(--accent-mid), var(--accent-light));
   border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
-  color: #fff; font-weight: 700; font-size: .75rem;
+  color: #fff; font-weight: 700; font-size: .85rem;
+  font-family: 'Lora', 'Georgia', serif;
   margin-bottom: 8px;
 }
 .land-mock-nav-item {
@@ -455,13 +473,9 @@ a:hover { color: var(--accent-light); }
 }
 .land-footer-brand {
   display: flex; align-items: center; gap: .5rem;
-  font-size: 1.1rem; font-weight: 700;
-  background: linear-gradient(135deg, var(--accent-mid), var(--accent-light));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
-.land-footer-brand svg {
-  flex-shrink: 0;
+.land-footer-brand .logo-text {
+  font-size: 1.2rem;
 }
 .land-footer-tagline {
   font-size: .85rem; color: var(--text-secondary);
@@ -518,10 +532,7 @@ a:hover { color: var(--accent-light); }
 }
 .sidebar-logo { display: flex; align-items: center; gap: .6rem; }
 .sidebar-brand {
-  font-size: 1.25rem; font-weight: 700;
-  background: linear-gradient(135deg, var(--accent-mid), var(--accent-light));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 1.35rem;
 }
 .sidebar-close {
   display: none; background: none; border: none;
@@ -587,10 +598,7 @@ a:hover { color: var(--accent-light); }
   position: sticky; top: 0; z-index: 50;
 }
 .topbar-title {
-  font-weight: 700; font-size: 1.1rem;
-  background: linear-gradient(135deg, var(--accent-mid), var(--accent-light));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 1.2rem;
 }
 .topbar-actions {
   display: flex; align-items: center; gap: .3rem;
