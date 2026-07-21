@@ -10,7 +10,7 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
   <title>Scribe — Ton ombudsman personnel</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -144,6 +144,12 @@
     </a>
     <a href="#section-budgets" class="nav-item" data-section="section-budgets">
       <span class="nav-icon">🎯</span> Budgets
+    </a>
+    <a href="#section-score" class="nav-item" data-section="section-score">
+      <span class="nav-icon">💪</span> Score financier
+    </a>
+    <a href="#section-alertes" class="nav-item" data-section="section-alertes">
+      <span class="nav-icon">🔔</span> Alertes{% if smart_alerts %} <span class="nav-badge">{{ smart_alerts|length }}</span>{% endif %}
     </a>
     <a href="#section-abonnements" class="nav-item" data-section="section-abonnements">
       <span class="nav-icon">🔄</span> Abonnements
@@ -721,33 +727,142 @@
   </section>
 
   {# ============================================================ #}
+  {#  SECTION: SCORE DE SANTE FINANCIERE                            #}
+  {# ============================================================ #}
+  <section class="content-section" id="section-score">
+    <h2 class="section-title">Score de sante financiere</h2>
+
+    <div class="card fade-slide-up">
+      <div class="health-score-container">
+        <div class="health-score-ring" style="--score-color: {{ health_score.color }}; --score-pct: {{ health_score.score }}">
+          <svg viewBox="0 0 120 120" class="score-svg">
+            <circle cx="60" cy="60" r="52" class="score-bg-ring"/>
+            <circle cx="60" cy="60" r="52" class="score-fg-ring"
+                    stroke-dasharray="{{ (health_score.score / 100 * 326.7)|round(1) }} 326.7"/>
+          </svg>
+          <div class="score-center">
+            <div class="score-number">{{ health_score.score }}</div>
+            <div class="score-label">/100</div>
+          </div>
+        </div>
+        <div class="health-score-info">
+          <div class="health-grade" style="color: {{ health_score.color }}">{{ health_score.grade }}</div>
+          <p class="health-desc">
+            {% if health_score.score >= 80 %}Tu geres tres bien tes finances. Continue comme ca !
+            {% elif health_score.score >= 65 %}Tes finances sont en bonne sante, avec quelques points a optimiser.
+            {% elif health_score.score >= 50 %}Pas mal, mais il y a de la marge pour s'ameliorer.
+            {% elif health_score.score >= 30 %}Quelques signaux d'alerte. Regarde les details ci-dessous.
+            {% else %}Tes finances meritent une attention particuliere. Voici par ou commencer.
+            {% endif %}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {% if health_score.details %}
+    <div class="card fade-slide-up" style="animation-delay:.1s">
+      <h3 class="card-title">Detail du score</h3>
+      <div class="score-details-grid">
+        {% for key, d in health_score.details.items() %}
+        <div class="score-detail-item">
+          <div class="score-detail-header">
+            <span class="score-detail-label">{{ d.label }}</span>
+            <span class="score-detail-pts">{{ d.score|round(0)|int }}/{{ d.max }}</span>
+          </div>
+          <div class="score-bar-bg">
+            <div class="score-bar-fill" style="width: {{ d.pct }}%; background: {{ health_score.color }}"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="score-tips">
+        {% if health_score.details.epargne and health_score.details.epargne.pct < 50 %}
+        <div class="score-tip">💡 Essaie de mettre de cote au moins 10% de tes revenus chaque mois.</div>
+        {% endif %}
+        {% if health_score.details.budget and health_score.details.budget.pct < 50 %}
+        <div class="score-tip">💡 Definis un budget mensuel realiste dans les parametres.</div>
+        {% endif %}
+        {% if health_score.details.abonnements and health_score.details.abonnements.pct < 50 %}
+        <div class="score-tip">💡 Tes abonnements pesent lourd. Fais le tri dans l'onglet Abonnements.</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  {# ============================================================ #}
+  {#  SECTION: ALERTES INTELLIGENTES                                #}
+  {# ============================================================ #}
+  <section class="content-section" id="section-alertes">
+    <h2 class="section-title">Alertes intelligentes</h2>
+
+    {% if smart_alerts %}
+    <div class="alerts-list">
+      {% for alert in smart_alerts %}
+      <div class="card alert-card alert-{{ alert.severity }} fade-slide-up" style="animation-delay:{{ loop.index0 * 0.08 }}s">
+        <div class="alert-content">
+          <span class="alert-icon">{{ alert.icon }}</span>
+          <div class="alert-text">
+            <div class="alert-title">{{ alert.title }}</div>
+            <div class="alert-message">{{ alert.message }}</div>
+          </div>
+          <span class="alert-severity-badge alert-badge-{{ alert.severity }}">
+            {% if alert.severity == 'serious' %}Urgent{% elif alert.severity == 'warning' %}Attention{% else %}Info{% endif %}
+          </span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <span class="empty-icon">✅</span>
+      <p>Aucune alerte pour le moment.</p>
+      <p class="empty-hint">Tout semble en ordre ! Scribe surveille tes depenses en continu.</p>
+    </div>
+    {% endif %}
+  </section>
+
+  {# ============================================================ #}
   {#  SECTION: ABONNEMENTS                                         #}
   {# ============================================================ #}
   <section class="content-section" id="section-abonnements">
     <h2 class="section-title">Abonnements detectes</h2>
 
     {% if subscriptions %}
-    <div class="card">
+    <div class="card fade-slide-up">
       <div class="table-responsive">
         <table class="data-table">
           <thead>
             <tr>
               <th>Libelle</th>
-              <th>Dernier montant</th>
-              <th>Moy.</th>
-              <th>Occurrences</th>
-              <th>Derniere date</th>
+              <th>Cout/mois</th>
+              <th>Dernier</th>
+              <th>Frequence</th>
+              <th>Statut</th>
               <th>Variation</th>
             </tr>
           </thead>
           <tbody>
             {% for sub in subscriptions %}
-            <tr>
-              <td><strong>{{ sub.label }}</strong></td>
+            <tr class="{{ 'sub-forgotten' if sub.statut == 'oublie' else ('sub-check' if sub.statut == 'a_verifier' else '') }}">
+              <td>
+                <strong>{{ sub.label }}</strong>
+                <div class="sub-meta">{{ sub.occurrences }} x depuis {{ sub.premiere_date }}</div>
+              </td>
+              <td class="amount">{{ "%.2f"|format(sub.cout_mensuel) }} EUR</td>
               <td class="amount">{{ "%.2f"|format(sub.dernier_montant) }} EUR</td>
-              <td class="amount">{{ "%.2f"|format(sub.montant_moyen) }} EUR</td>
-              <td>{{ sub.occurrences }}</td>
-              <td>{{ sub.derniere_date }}</td>
+              <td>
+                <span class="freq-badge freq-{{ sub.frequence }}">{{ sub.frequence }}</span>
+              </td>
+              <td>
+                {% if sub.statut == 'oublie' %}
+                <span class="status-badge status-forgotten">👻 Oublie ?</span>
+                {% elif sub.statut == 'a_verifier' %}
+                <span class="status-badge status-check">⚠️ A verifier</span>
+                {% else %}
+                <span class="status-badge status-active">✅ Actif</span>
+                {% endif %}
+              </td>
               <td class="{{ 'variation-up' if sub.variation_pct > 0 else ('variation-down' if sub.variation_pct < 0 else '') }}">
                 {% if sub.variation_pct > 0 %}↑{% elif sub.variation_pct < 0 %}↓{% else %}={% endif %}
                 {{ "%.1f"|format(sub.variation_pct|abs) }}%
@@ -757,8 +872,21 @@
           </tbody>
         </table>
       </div>
-      <div class="subs-total">
-        Total abonnements estimes : <strong>{{ "%.2f"|format(subscriptions|sum(attribute='dernier_montant')) }} EUR/mois</strong>
+      <div class="subs-summary">
+        <div class="subs-total-card">
+          <div class="subs-total-amount">{{ "%.2f"|format(subscriptions|sum(attribute='cout_mensuel')) }} EUR/mois</div>
+          <div class="subs-total-label">Cout total estime</div>
+        </div>
+        <div class="subs-total-card">
+          <div class="subs-total-amount">{{ "%.2f"|format(subscriptions|sum(attribute='cout_mensuel') * 12) }} EUR/an</div>
+          <div class="subs-total-label">Projection annuelle</div>
+        </div>
+        {% if revenu_mensuel > 0 %}
+        <div class="subs-total-card">
+          <div class="subs-total-amount">{{ "%.1f"|format(subscriptions|sum(attribute='cout_mensuel') / revenu_mensuel * 100) }}%</div>
+          <div class="subs-total-label">De ton revenu</div>
+        </div>
+        {% endif %}
       </div>
     </div>
     {% else %}
@@ -980,8 +1108,31 @@
     </div>
     {% endif %}
 
-    {# --- Simulateur interactif --- #}
+    {# --- Estimation net mensuel --- #}
+    {% if tax_data.ir_mensuel > 0 %}
     <div class="card fade-slide-up" style="animation-delay:.1s">
+      <h3 class="card-title">Ton estimation mensuelle</h3>
+      <div class="tax-monthly-grid">
+        <div class="tax-monthly-item">
+          <div class="tax-monthly-value">{{ "%.0f"|format(revenu_mensuel) }} EUR</div>
+          <div class="tax-monthly-label">Salaire net</div>
+        </div>
+        <div class="tax-monthly-sep">-</div>
+        <div class="tax-monthly-item tax-monthly-impot">
+          <div class="tax-monthly-value">{{ "%.0f"|format(tax_data.ir_mensuel) }} EUR</div>
+          <div class="tax-monthly-label">Impot / mois</div>
+        </div>
+        <div class="tax-monthly-sep">=</div>
+        <div class="tax-monthly-item tax-monthly-net">
+          <div class="tax-monthly-value">{{ "%.0f"|format(tax_data.net_mensuel_apres_impot) }} EUR</div>
+          <div class="tax-monthly-label">Net apres impot</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# --- Simulateur interactif --- #}
+    <div class="card fade-slide-up" style="animation-delay:.2s">
       <h3 class="card-title">Simulateur d'impot sur le revenu</h3>
       <p class="tax-intro">Bareme 2025 (revenus 2024). L'abattement forfaitaire de 10 % est applique automatiquement.</p>
 
@@ -1208,6 +1359,6 @@
     lightGrads: {{ light_grads | tojson }},
   };
 </script>
-<script src="{{ url_for('static', filename='app.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=3"></script>
 </body>
 </html>

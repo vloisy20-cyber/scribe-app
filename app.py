@@ -772,9 +772,12 @@ def detect_subscriptions(tx_df):
         "NETFLIX", "SPOTIFY", "DEEZER", "DISNEY", "AMAZON PRIME",
         "CANAL", "OVH", "ADOBE", "ICLOUD", "GOOGLE STORAGE",
         "ACM", "MAIF", "MACIF", "MATMUT", "AXA", "ALLIANZ", "GROUPAMA",
-        "LOYER", "CPAM", "CAF", "IMPOT",
+        "LOYER", "CPAM", "CAF", "IMPOT", "YOUTUBE", "APPLE",
+        "MICROSOFT", "PLAYSTATION", "XBOX", "NINTENDO", "HBO",
+        "CHATGPT", "OPENAI", "NOTION", "FIGMA", "GITHUB", "DOCTOLIB",
     ]
 
+    today = pd.Timestamp.now()
     per_label = tx_df.sort_values("date").groupby("label_norm")
     results = []
     for lbl, grp in per_label:
@@ -790,25 +793,298 @@ def detect_subscriptions(tx_df):
         is_stable = std_amt <= mean_amt * 0.3 if mean_amt > 0 else True
         is_keyword = any(kw in lbl for kw in _monthly_keywords)
         is_monthly = (20 <= avg_interval <= 45) and is_stable
-        if not (is_monthly or is_keyword):
+        is_quarterly = (80 <= avg_interval <= 100) and is_stable
+        is_yearly = (350 <= avg_interval <= 380) and is_stable
+        if not (is_monthly or is_keyword or is_quarterly or is_yearly):
             continue
+
         prev = grp["amount"].iloc[-2]
         last = grp["amount"].iloc[-1]
         variation = round(((last - prev) / prev) * 100, 1) if prev > 0 else 0.0
+        last_date = grp["date"].max()
+        days_since = (today - last_date).days
+
+        # Determiner la frequence
+        if is_yearly:
+            frequence = "annuel"
+            seuil_oubli = 400  # > 13 mois
+            cout_mensuel = round(mean_amt / 12, 2)
+        elif is_quarterly:
+            frequence = "trimestriel"
+            seuil_oubli = 120  # > 4 mois
+            cout_mensuel = round(mean_amt / 3, 2)
+        else:
+            frequence = "mensuel"
+            seuil_oubli = 60  # > 2 mois sans prelevement
+            cout_mensuel = round(mean_amt, 2)
+
+        # Statut : actif ou potentiellement oublie
+        if days_since > seuil_oubli:
+            statut = "oublie"
+        elif days_since > seuil_oubli * 0.7:
+            statut = "a_verifier"
+        else:
+            statut = "actif"
+
         results.append({
             "label": grp["label"].iloc[0],
             "occurrences": len(grp),
             "montant_moyen": round(mean_amt, 2),
             "dernier_montant": round(last, 2),
-            "derniere_date": str(grp["date"].max().date()),
+            "derniere_date": str(last_date.date()),
             "premiere_date": str(grp["date"].min().date()),
             "variation_pct": variation,
             "intervalle_moyen": round(avg_interval, 0),
+            "frequence": frequence,
+            "statut": statut,
+            "cout_mensuel": cout_mensuel,
+            "jours_depuis": days_since,
         })
     subs = pd.DataFrame(results)
     if not subs.empty:
         subs = subs.sort_values("dernier_montant", ascending=False)
     return subs
+
+
+# --------------------------------------------------------------------------
+# Alertes intelligentes
+# --------------------------------------------------------------------------
+
+def compute_smart_alerts(tx_df, subscriptions, month_depenses, revenu_mensuel,
+                         cat_budgets, month_cat_totals):
+    """Genere des alertes intelligentes basees sur l'analyse des transactions."""
+    alerts = []
+
+    # 1) Alertes sur les abonnements : hausse de prix
+    if subscriptions:
+        for sub in subscriptions:
+            if sub.get("variation_pct", 0) > 5:
+                alerts.append({
+                    "type": "price_increase",
+                    "severity": "warning",
+                    "icon": "💸",
+                    "title": f"Hausse de prix : {sub['label']}",
+                    "message": f"+{sub['variation_pct']}% — passe de {sub['montant_moyen']:.2f} EUR a {sub['dernier_montant']:.2f} EUR",
+                })
+            if sub.get("statut") == "oublie":
+                alerts.append({
+                    "type": "forgotten_sub",
+                    "severity": "info",
+                    "icon": "👻",
+                    "title": f"Abonnement oublie ? {sub['label']}",
+                    "message": f"Pas vu depuis {sub['jours_depuis']} jours. Verifie si tu l'utilises encore.",
+                })
+
+    # 2) Depenses inhabituelles (ce mois vs moyenne des mois precedents)
+    if not tx_df.empty:
+        tx = tx_df.copy()
+        tx["amount"] = pd.to_numeric(tx["amount"], errors="coerce")
+        tx["date"] = pd.to_datetime(tx["date"], errors="coerce", dayfirst=True)
+        tx = tx.dropna(subset=["amount", "date"])
+        now = pd.Timestamp.now()
+
+        # Moyenne mensuelle des 3 derniers mois (hors mois en cours)
+        prev_months = tx[
+            (tx["date"] < now.replace(day=1)) &
+            (tx["date"] >= (now - pd.DateOffset(months=3)).replace(day=1))
+        ]
+        if not prev_months.empty:
+            months_count = prev_months["date"].dt.to_period("M").nunique()
+            if months_count > 0:
+                avg_monthly = prev_months["amount"].sum() / months_count
+                if avg_monthly > 0 and month_depenses > avg_monthly * 1.3:
+                    pct_over = round(((month_depenses - avg_monthly) / avg_monthly) * 100, 0)
+                    alerts.append({
+                        "type": "unusual_spending",
+                        "severity": "warning",
+                        "icon": "⚠️",
+                        "title": "Depenses inhabituelles ce mois",
+                        "message": f"+{pct_over:.0f}% par rapport a ta moyenne ({avg_monthly:.0f} EUR/mois). Tu es a {month_depenses:.0f} EUR.",
+                    })
+
+    # 3) Depassement de budget par categorie
+    if cat_budgets and month_cat_totals:
+        for cat, budget_val in cat_budgets.items():
+            spent = month_cat_totals.get(cat, 0)
+            if budget_val > 0 and spent > budget_val:
+                pct = round((spent / budget_val - 1) * 100, 0)
+                alerts.append({
+                    "type": "budget_exceeded",
+                    "severity": "serious",
+                    "icon": "🚨",
+                    "title": f"Budget depasse : {cat}",
+                    "message": f"{spent:.0f} EUR depenses sur {budget_val:.0f} EUR prevus (+{pct:.0f}%).",
+                })
+            elif budget_val > 0 and spent > budget_val * 0.85:
+                pct = round((spent / budget_val) * 100, 0)
+                alerts.append({
+                    "type": "budget_warning",
+                    "severity": "info",
+                    "icon": "📊",
+                    "title": f"Budget presque atteint : {cat}",
+                    "message": f"{spent:.0f} EUR / {budget_val:.0f} EUR ({pct:.0f}%). Attention ce mois-ci.",
+                })
+
+    # 4) Taux d'epargne faible
+    if revenu_mensuel > 0 and month_depenses > 0:
+        taux_epargne = ((revenu_mensuel - month_depenses) / revenu_mensuel) * 100
+        if taux_epargne < 5:
+            alerts.append({
+                "type": "low_savings",
+                "severity": "warning",
+                "icon": "🐷",
+                "title": "Taux d'epargne tres faible",
+                "message": f"Seulement {taux_epargne:.1f}% d'epargne ce mois. Objectif recommande : 10-20%.",
+            })
+
+    # Trier par severite
+    severity_order = {"serious": 0, "warning": 1, "info": 2}
+    alerts.sort(key=lambda a: severity_order.get(a["severity"], 3))
+    return alerts
+
+
+# --------------------------------------------------------------------------
+# Score de sante financiere (0 a 100)
+# --------------------------------------------------------------------------
+
+def compute_health_score(tx_df, revenu_mensuel, month_depenses, monthly_budget,
+                         subscriptions, cat_budgets, month_cat_totals):
+    """Calcule un score de sante financiere de 0 a 100."""
+    scores = {}
+    weights = {}
+
+    # 1) Taux d'epargne (30 points max)
+    if revenu_mensuel > 0:
+        taux = (revenu_mensuel - month_depenses) / revenu_mensuel
+        if taux >= 0.20:
+            scores["epargne"] = 30
+        elif taux >= 0.10:
+            scores["epargne"] = 20 + (taux - 0.10) * 100  # 20-30
+        elif taux >= 0.0:
+            scores["epargne"] = taux * 200  # 0-20
+        else:
+            scores["epargne"] = max(-10, taux * 50)  # negatif si dettes
+        weights["epargne"] = 30
+    else:
+        scores["epargne"] = 0
+        weights["epargne"] = 0
+
+    # 2) Respect du budget global (20 points max)
+    if monthly_budget > 0:
+        ratio = month_depenses / monthly_budget
+        if ratio <= 0.85:
+            scores["budget"] = 20
+        elif ratio <= 1.0:
+            scores["budget"] = 10 + (1.0 - ratio) * 66.7  # 10-20
+        elif ratio <= 1.2:
+            scores["budget"] = max(0, 10 - (ratio - 1.0) * 50)  # 0-10
+        else:
+            scores["budget"] = 0
+        weights["budget"] = 20
+    else:
+        scores["budget"] = 10  # pas de budget = neutre
+        weights["budget"] = 20
+
+    # 3) Stabilite des depenses (20 points max) — coefficient de variation
+    if not tx_df.empty:
+        tx = tx_df.copy()
+        tx["amount"] = pd.to_numeric(tx["amount"], errors="coerce")
+        tx["date"] = pd.to_datetime(tx["date"], errors="coerce", dayfirst=True)
+        tx = tx.dropna(subset=["amount", "date"])
+        monthly_totals = tx.groupby(tx["date"].dt.to_period("M"))["amount"].sum()
+        if len(monthly_totals) >= 2:
+            cv = monthly_totals.std() / monthly_totals.mean() if monthly_totals.mean() > 0 else 1
+            if cv <= 0.15:
+                scores["stabilite"] = 20
+            elif cv <= 0.30:
+                scores["stabilite"] = 10 + (0.30 - cv) * 66.7
+            elif cv <= 0.50:
+                scores["stabilite"] = max(0, 10 - (cv - 0.30) * 50)
+            else:
+                scores["stabilite"] = 0
+        else:
+            scores["stabilite"] = 10
+        weights["stabilite"] = 20
+    else:
+        scores["stabilite"] = 0
+        weights["stabilite"] = 0
+
+    # 4) Poids des abonnements (15 points max) — pas trop d'abonnements par rapport au revenu
+    if revenu_mensuel > 0 and subscriptions:
+        total_subs = sum(s.get("cout_mensuel", 0) for s in subscriptions)
+        ratio_subs = total_subs / revenu_mensuel
+        if ratio_subs <= 0.15:
+            scores["abonnements"] = 15
+        elif ratio_subs <= 0.25:
+            scores["abonnements"] = 8 + (0.25 - ratio_subs) * 70
+        elif ratio_subs <= 0.40:
+            scores["abonnements"] = max(0, 8 - (ratio_subs - 0.25) * 53)
+        else:
+            scores["abonnements"] = 0
+        weights["abonnements"] = 15
+    else:
+        scores["abonnements"] = 15 if revenu_mensuel > 0 else 0
+        weights["abonnements"] = 15
+
+    # 5) Respect des budgets par categorie (15 points max)
+    if cat_budgets and month_cat_totals:
+        cats_with_budget = [c for c, v in cat_budgets.items() if v > 0]
+        if cats_with_budget:
+            respected = sum(1 for c in cats_with_budget if month_cat_totals.get(c, 0) <= cat_budgets[c])
+            ratio_ok = respected / len(cats_with_budget)
+            scores["budgets_cat"] = round(ratio_ok * 15, 1)
+        else:
+            scores["budgets_cat"] = 7.5
+        weights["budgets_cat"] = 15
+    else:
+        scores["budgets_cat"] = 7.5
+        weights["budgets_cat"] = 15
+
+    # Calcul du score final
+    total_weight = sum(weights.values())
+    if total_weight == 0:
+        return {"score": 0, "details": {}, "grade": "?", "color": "#6b7280"}
+
+    raw_score = sum(max(0, scores[k]) for k in scores)
+    # Normaliser sur 100 si le total des poids n'est pas 100
+    final_score = round(min(100, (raw_score / total_weight) * 100), 0)
+
+    # Grade et couleur
+    if final_score >= 80:
+        grade, color = "Excellent", "#10b981"
+    elif final_score >= 65:
+        grade, color = "Bon", "#3b82f6"
+    elif final_score >= 50:
+        grade, color = "Correct", "#f59e0b"
+    elif final_score >= 30:
+        grade, color = "A ameliorer", "#f97316"
+    else:
+        grade, color = "Critique", "#ef4444"
+
+    # Details pour l'UI
+    details = {}
+    labels = {
+        "epargne": ("Taux d'epargne", 30),
+        "budget": ("Budget global", 20),
+        "stabilite": ("Stabilite", 20),
+        "abonnements": ("Abonnements", 15),
+        "budgets_cat": ("Budgets categories", 15),
+    }
+    for key, (label, max_pts) in labels.items():
+        pts = max(0, round(scores.get(key, 0), 1))
+        details[key] = {
+            "label": label,
+            "score": pts,
+            "max": max_pts,
+            "pct": round((pts / max_pts) * 100, 0) if max_pts > 0 else 0,
+        }
+
+    return {
+        "score": int(final_score),
+        "grade": grade,
+        "color": color,
+        "details": details,
+    }
 
 
 # --------------------------------------------------------------------------
@@ -1248,9 +1524,34 @@ def compute_dashboard_data():
     solde = revenu_mensuel - month_depenses if revenu_mensuel > 0 else 0
 
     # ------------------------------------------------------------------
+    # Alertes intelligentes
+    # ------------------------------------------------------------------
+    smart_alerts = compute_smart_alerts(
+        tx_df, subscriptions, month_depenses, revenu_mensuel,
+        cat_budgets, month_cat_totals_data,
+    )
+
+    # ------------------------------------------------------------------
+    # Score de sante financiere
+    # ------------------------------------------------------------------
+    health_score = compute_health_score(
+        tx_df, revenu_mensuel, month_depenses, monthly_budget,
+        subscriptions, cat_budgets, month_cat_totals_data,
+    )
+
+    # ------------------------------------------------------------------
     # Donnees fiscales (aide aux impots)
     # ------------------------------------------------------------------
     tax_data = _compute_tax_data(payslips_df, tx_df, now)
+
+    # Estimation net mensuel apres impot
+    if tax_data.get("simulation") and revenu_mensuel > 0:
+        ir_mensuel = tax_data["simulation"]["ir"] / 12
+        tax_data["net_mensuel_apres_impot"] = round(revenu_mensuel - ir_mensuel, 2)
+        tax_data["ir_mensuel"] = round(ir_mensuel, 2)
+    else:
+        tax_data["net_mensuel_apres_impot"] = 0
+        tax_data["ir_mensuel"] = 0
 
     return {
         "onboarded": onboarded,
@@ -1292,6 +1593,9 @@ def compute_dashboard_data():
         "known_banks": list(KNOWN_BANKS.keys()),
         # Impots
         "tax_data": tax_data,
+        # Alertes & Score
+        "smart_alerts": smart_alerts,
+        "health_score": health_score,
         # Enable Banking (Open Banking)
         "eb_data": _eb_load(),
         "eb_configured": _eb_configured(),
