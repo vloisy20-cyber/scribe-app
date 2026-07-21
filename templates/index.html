@@ -10,7 +10,7 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
   <title>Scribe — Ton ombudsman personnel</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=5">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=6">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -68,24 +68,77 @@
       <p class="land-hero-trust">100% gratuit — Aucune carte bancaire requise</p>
     </div>
 
-    {# Mini apercu dashboard #}
-    <div class="land-preview">
-      <div class="land-preview-card">
-        <div class="land-prev-row">
-          <span class="land-prev-label">Score financier</span>
-          <span class="land-prev-value land-green">78/100</span>
+    {# Mockup du dashboard #}
+    <div class="land-mockup">
+      <div class="land-mockup-window">
+        <div class="land-mockup-bar">
+          <span class="land-dot land-dot-r"></span>
+          <span class="land-dot land-dot-y"></span>
+          <span class="land-dot land-dot-g"></span>
+          <span class="land-mockup-url">scribe-app.onrender.com</span>
         </div>
-        <div class="land-prev-row">
-          <span class="land-prev-label">Depenses ce mois</span>
-          <span class="land-prev-value">1 544 EUR</span>
-        </div>
-        <div class="land-prev-row">
-          <span class="land-prev-label">Abonnements detectes</span>
-          <span class="land-prev-value">13</span>
-        </div>
-        <div class="land-prev-row land-prev-alert">
-          <span class="land-prev-label">🔔 Alerte</span>
-          <span class="land-prev-value land-orange">Netflix +18%</span>
+        <div class="land-mockup-body">
+          {# Sidebar mini #}
+          <div class="land-mock-sidebar">
+            <div class="land-mock-logo">S</div>
+            <div class="land-mock-nav-item land-mock-active"></div>
+            <div class="land-mock-nav-item"></div>
+            <div class="land-mock-nav-item"></div>
+            <div class="land-mock-nav-item"></div>
+            <div class="land-mock-nav-item"></div>
+          </div>
+          {# Contenu mini #}
+          <div class="land-mock-content">
+            <div class="land-mock-stats">
+              <div class="land-mock-stat">
+                <div class="land-mock-stat-val land-green" data-count="78">0</div>
+                <div class="land-mock-stat-lbl">Score</div>
+              </div>
+              <div class="land-mock-stat">
+                <div class="land-mock-stat-val" data-count="1544" data-suffix=" EUR">0</div>
+                <div class="land-mock-stat-lbl">Depenses</div>
+              </div>
+              <div class="land-mock-stat">
+                <div class="land-mock-stat-val" data-count="13">0</div>
+                <div class="land-mock-stat-lbl">Abonnements</div>
+              </div>
+              <div class="land-mock-stat">
+                <div class="land-mock-stat-val land-orange" data-count="4">0</div>
+                <div class="land-mock-stat-lbl">Alertes</div>
+              </div>
+            </div>
+            {# Mini graphique barre #}
+            <div class="land-mock-chart">
+              <div class="land-mock-bar-group">
+                <div class="land-mock-bar" style="--h:45%"></div>
+                <div class="land-mock-bar-lbl">Fev</div>
+              </div>
+              <div class="land-mock-bar-group">
+                <div class="land-mock-bar" style="--h:60%"></div>
+                <div class="land-mock-bar-lbl">Mar</div>
+              </div>
+              <div class="land-mock-bar-group">
+                <div class="land-mock-bar" style="--h:38%"></div>
+                <div class="land-mock-bar-lbl">Avr</div>
+              </div>
+              <div class="land-mock-bar-group">
+                <div class="land-mock-bar" style="--h:72%"></div>
+                <div class="land-mock-bar-lbl">Mai</div>
+              </div>
+              <div class="land-mock-bar-group">
+                <div class="land-mock-bar" style="--h:55%"></div>
+                <div class="land-mock-bar-lbl">Jun</div>
+              </div>
+              <div class="land-mock-bar-group">
+                <div class="land-mock-bar land-mock-bar-current" style="--h:65%"></div>
+                <div class="land-mock-bar-lbl">Jul</div>
+              </div>
+            </div>
+            {# Mini alerte #}
+            <div class="land-mock-alert">
+              <span>🔔</span> Netflix : hausse de +18% detectee
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -94,11 +147,11 @@
   {# ========== SECTION 2 : FONCTIONNALITES ========== #}
   <section class="land-section" id="land-features">
     <div class="land-container">
-      <p class="land-section-tag">Fonctionnalites</p>
-      <h2 class="land-h2">Tout ce dont tu as besoin<br>pour gerer ton argent</h2>
+      <p class="land-section-tag land-reveal">Fonctionnalites</p>
+      <h2 class="land-h2 land-reveal">Tout ce dont tu as besoin<br>pour gerer ton argent</h2>
 
       <div class="land-features-grid">
-        <div class="land-feat-card">
+        <div class="land-feat-card land-reveal">
           <div class="land-feat-icon-wrap" style="--fc: #3b82f6">
             <span>🏦</span>
           </div>
@@ -106,7 +159,7 @@
           <p>Importe tes releves et visualise tes depenses par categorie avec des graphiques clairs.</p>
         </div>
 
-        <div class="land-feat-card">
+        <div class="land-feat-card land-reveal">
           <div class="land-feat-icon-wrap" style="--fc: #8b5cf6">
             <span>🔔</span>
           </div>
@@ -114,7 +167,7 @@
           <p>Scribe detecte les hausses de prix, les depenses inhabituelles et les budgets depasses.</p>
         </div>
 
-        <div class="land-feat-card">
+        <div class="land-feat-card land-reveal">
           <div class="land-feat-icon-wrap" style="--fc: #10b981">
             <span>💪</span>
           </div>
@@ -122,7 +175,7 @@
           <p>Un score de 0 a 100 pour savoir ou tu en es, avec des conseils personnalises.</p>
         </div>
 
-        <div class="land-feat-card">
+        <div class="land-feat-card land-reveal">
           <div class="land-feat-icon-wrap" style="--fc: #f59e0b">
             <span>🔄</span>
           </div>
@@ -130,7 +183,7 @@
           <p>Retrouve tous tes prelevements recurrents, meme ceux que tu avais oublies.</p>
         </div>
 
-        <div class="land-feat-card">
+        <div class="land-feat-card land-reveal">
           <div class="land-feat-icon-wrap" style="--fc: #ef4444">
             <span>📄</span>
           </div>
@@ -138,7 +191,7 @@
           <p>L'IA compare tes factures et genere une lettre de reclamation en cas de hausse abusive.</p>
         </div>
 
-        <div class="land-feat-card">
+        <div class="land-feat-card land-reveal">
           <div class="land-feat-icon-wrap" style="--fc: #06b6d4">
             <span>🧾</span>
           </div>
@@ -152,11 +205,11 @@
   {# ========== SECTION 3 : COMMENT CA MARCHE ========== #}
   <section class="land-section land-section-alt" id="land-how">
     <div class="land-container">
-      <p class="land-section-tag">Simple comme bonjour</p>
-      <h2 class="land-h2">Comment ca marche ?</h2>
+      <p class="land-section-tag land-reveal">Simple comme bonjour</p>
+      <h2 class="land-h2 land-reveal">Comment ca marche ?</h2>
 
       <div class="land-steps">
-        <div class="land-step">
+        <div class="land-step land-reveal">
           <div class="land-step-num">1</div>
           <div class="land-step-body">
             <h3>Importe tes donnees</h3>
@@ -164,7 +217,7 @@
           </div>
         </div>
         <div class="land-step-line"></div>
-        <div class="land-step">
+        <div class="land-step land-reveal">
           <div class="land-step-num">2</div>
           <div class="land-step-body">
             <h3>Scribe analyse tout</h3>
@@ -172,7 +225,7 @@
           </div>
         </div>
         <div class="land-step-line"></div>
-        <div class="land-step">
+        <div class="land-step land-reveal">
           <div class="land-step-num">3</div>
           <div class="land-step-body">
             <h3>Tu reprends le controle</h3>
@@ -186,21 +239,21 @@
   {# ========== SECTION 4 : CHIFFRES / AVANTAGES ========== #}
   <section class="land-section">
     <div class="land-container">
-      <p class="land-section-tag">Pourquoi Scribe ?</p>
-      <h2 class="land-h2">Tes finances meritent mieux<br>qu'un tableau Excel</h2>
+      <p class="land-section-tag land-reveal">Pourquoi Scribe ?</p>
+      <h2 class="land-h2 land-reveal">Tes finances meritent mieux<br>qu'un tableau Excel</h2>
 
       <div class="land-benefits">
-        <div class="land-benefit">
+        <div class="land-benefit land-reveal">
           <div class="land-benefit-icon">🔒</div>
           <h3>Tes donnees restent chez toi</h3>
           <p>Aucun envoi vers des serveurs tiers. Tout est stocke localement sur ton espace.</p>
         </div>
-        <div class="land-benefit">
+        <div class="land-benefit land-reveal">
           <div class="land-benefit-icon">⚡</div>
           <h3>Gratuit et sans pub</h3>
           <p>Pas de premium cache, pas de publicite. Scribe est un outil fait pour toi.</p>
         </div>
-        <div class="land-benefit">
+        <div class="land-benefit land-reveal">
           <div class="land-benefit-icon">🤖</div>
           <h3>Propulse par l'IA</h3>
           <p>Categorisation intelligente, detection d'anomalies et generation de courriers automatique.</p>
@@ -224,7 +277,24 @@
 
   {# ========== FOOTER ========== #}
   <footer class="land-footer">
-    <p>Scribe — Ton assistant financier personnel</p>
+    <div class="land-footer-content">
+      <div class="land-footer-brand">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-mid)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+          <polyline points="14 2 14 8 20 8"/>
+        </svg>
+        <span>Scribe</span>
+      </div>
+      <p class="land-footer-tagline">Ton assistant financier personnel</p>
+      <div class="land-footer-links">
+        <span>Suivi bancaire</span>
+        <span>Alertes</span>
+        <span>Abonnements</span>
+        <span>Impots</span>
+        <span>Epargne</span>
+      </div>
+      <p class="land-footer-copy">Fait avec ❤️ en France — Tes donnees restent privees, toujours.</p>
+    </div>
   </footer>
 
 </div>
@@ -1492,6 +1562,92 @@
     lightGrads: {{ light_grads | tojson }},
   };
 </script>
-<script src="{{ url_for('static', filename='app.js') }}?v=5"></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=6"></script>
+
+{% if not onboarded %}
+<script>
+(function() {
+  /* --- Smooth scroll pour les liens de nav --- */
+  document.querySelectorAll('.land-nav-link').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var target = document.querySelector(this.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  /* --- Animations au scroll (IntersectionObserver) --- */
+  var reveals = document.querySelectorAll('.land-reveal');
+  if (reveals.length > 0 && 'IntersectionObserver' in window) {
+    var delay = 0;
+    var observer = new IntersectionObserver(function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          var el = entry.target;
+          var d = parseFloat(el.dataset.revealDelay || 0);
+          setTimeout(function() { el.classList.add('land-visible'); }, d * 1000);
+          observer.unobserve(el);
+        }
+      });
+    }, { threshold: 0.15 });
+
+    /* Ajouter des delais en cascade par groupe */
+    var sections = document.querySelectorAll('.land-section');
+    sections.forEach(function(sec) {
+      var items = sec.querySelectorAll('.land-reveal');
+      items.forEach(function(item, i) {
+        item.dataset.revealDelay = (i * 0.1).toFixed(1);
+        observer.observe(item);
+      });
+    });
+  }
+
+  /* --- Compteurs animes --- */
+  function animateCounters() {
+    var counters = document.querySelectorAll('[data-count]');
+    counters.forEach(function(el) {
+      var target = parseInt(el.dataset.count);
+      var suffix = el.dataset.suffix || '';
+      var duration = 1500;
+      var start = 0;
+      var startTime = null;
+
+      function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        var progress = Math.min((timestamp - startTime) / duration, 1);
+        var eased = 1 - Math.pow(1 - progress, 3);
+        var current = Math.floor(eased * target);
+        el.textContent = current.toLocaleString('fr-FR') + suffix;
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  /* Lancer les compteurs quand le mockup est visible */
+  var mockup = document.querySelector('.land-mockup');
+  if (mockup && 'IntersectionObserver' in window) {
+    var cObs = new IntersectionObserver(function(entries) {
+      if (entries[0].isIntersecting) {
+        animateCounters();
+        cObs.unobserve(mockup);
+      }
+    }, { threshold: 0.3 });
+    cObs.observe(mockup);
+  } else {
+    setTimeout(animateCounters, 800);
+  }
+
+  /* --- Animation des barres du mini chart --- */
+  var bars = document.querySelectorAll('.land-mock-bar');
+  bars.forEach(function(bar, i) {
+    bar.style.height = '0%';
+    setTimeout(function() {
+      bar.style.height = bar.style.getPropertyValue('--h');
+    }, 600 + i * 150);
+  });
+})();
+</script>
+{% endif %}
 </body>
 </html>
