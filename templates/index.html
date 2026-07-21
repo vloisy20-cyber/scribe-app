@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=12">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=13">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -40,19 +40,55 @@
 
 {% if show_splash %}
 {# ================================================================ #}
-{#  SPLASH SCREEN DE CHARGEMENT                                     #}
+{#  SPLASH SCREEN — VAGUES FLUIDES                                  #}
 {# ================================================================ #}
 <div class="splash" id="splashScreen">
   <div class="splash-bg"></div>
+
+  {# Orbes flottants en arriere-plan #}
+  <div class="splash-orb splash-orb-1"></div>
+  <div class="splash-orb splash-orb-2"></div>
+  <div class="splash-orb splash-orb-3"></div>
+
+  {# Vagues SVG en bas #}
+  <div class="splash-waves">
+    <svg class="splash-wave splash-wave-1" viewBox="0 0 1440 220" preserveAspectRatio="none">
+      <path d="M0,160 C320,220 420,100 720,140 C1020,180 1200,80 1440,120 L1440,220 L0,220 Z"/>
+    </svg>
+    <svg class="splash-wave splash-wave-2" viewBox="0 0 1440 220" preserveAspectRatio="none">
+      <path d="M0,180 C280,100 520,200 760,150 C1000,100 1280,190 1440,140 L1440,220 L0,220 Z"/>
+    </svg>
+    <svg class="splash-wave splash-wave-3" viewBox="0 0 1440 220" preserveAspectRatio="none">
+      <path d="M0,200 C360,140 600,210 900,170 C1100,145 1300,200 1440,180 L1440,220 L0,220 Z"/>
+    </svg>
+  </div>
+
+  {# Contenu central #}
   <div class="splash-content">
     <div class="splash-logo-wrap">
-      <span class="splash-logo">Scribe</span>
-      <div class="splash-logo-glow"></div>
+      <span class="splash-logo" id="splashLogo">Scribe</span>
+      <p class="splash-tagline" id="splashTagline">Ton assistant financier</p>
     </div>
-    <div class="splash-progress">
-      <div class="splash-progress-bar" id="splashBar"></div>
+
+    <div class="splash-steps" id="splashSteps">
+      <div class="splash-step" data-delay="800">
+        <span class="splash-step-icon">🔐</span>
+        <span class="splash-step-text">Connexion securisee...</span>
+        <span class="splash-step-check">✓</span>
+      </div>
+      <div class="splash-step" data-delay="2000">
+        <span class="splash-step-icon">📊</span>
+        <span class="splash-step-text">Chargement de tes donnees...</span>
+        <span class="splash-step-check">✓</span>
+      </div>
+      <div class="splash-step" data-delay="3200">
+        <span class="splash-step-icon">🧠</span>
+        <span class="splash-step-text">Analyse de tes finances...</span>
+        <span class="splash-step-check">✓</span>
+      </div>
     </div>
-    <p class="splash-text" id="splashText">Preparation de ton espace...</p>
+
+    <p class="splash-welcome" id="splashWelcome">Bienvenue, {{ user_pseudo or 'ami' }} !</p>
   </div>
 </div>
 {% endif %}
@@ -1837,51 +1873,47 @@
 <script>
 (function() {
   var splash = document.getElementById('splashScreen');
-  var bar = document.getElementById('splashBar');
-  var text = document.getElementById('splashText');
   if (!splash) return;
 
-  var messages = [
-    'Preparation de ton espace...',
-    'Chargement de tes donnees...',
-    'Analyse de tes finances...',
-    'Bienvenue, {{ user_pseudo or "ami" }} !'
-  ];
+  var steps = document.querySelectorAll('.splash-step');
+  var welcome = document.getElementById('splashWelcome');
 
-  // Animate progress bar
-  var progress = 0;
-  var msgIndex = 0;
-  var interval = setInterval(function() {
-    progress += Math.random() * 15 + 5;
-    if (progress > 100) progress = 100;
-    bar.style.width = progress + '%';
-
-    var newIndex = Math.min(Math.floor(progress / 28), messages.length - 1);
-    if (newIndex !== msgIndex) {
-      msgIndex = newIndex;
-      text.style.opacity = '0';
+  // Reveler les etapes une par une avec leur data-delay
+  steps.forEach(function(step) {
+    var delay = parseInt(step.getAttribute('data-delay'), 10) || 800;
+    // Affiche l'etape
+    setTimeout(function() {
+      step.classList.add('visible');
+      // Coche apres 600ms
       setTimeout(function() {
-        text.textContent = messages[msgIndex];
-        text.style.opacity = '1';
-      }, 200);
-    }
+        var check = step.querySelector('.splash-step-check');
+        if (check) check.classList.add('done');
+      }, 600);
+    }, delay);
+  });
 
-    if (progress >= 100) {
-      clearInterval(interval);
-      // Attendre un peu sur le dernier message puis disparaitre
-      setTimeout(function() {
-        splash.classList.add('splash-hide');
-        setTimeout(function() {
-          splash.remove();
-          // Nettoyer le ?welcome=1 de l'URL
-          if (window.history.replaceState) {
-            var url = window.location.pathname;
-            window.history.replaceState({}, '', url);
-          }
-        }, 600);
-      }, 700);
-    }
-  }, 120);
+  // Message de bienvenue apres la derniere etape
+  var lastDelay = 0;
+  steps.forEach(function(s) {
+    var d = parseInt(s.getAttribute('data-delay'), 10) || 800;
+    if (d > lastDelay) lastDelay = d;
+  });
+  var welcomeTime = lastDelay + 1200;
+  setTimeout(function() {
+    if (welcome) welcome.classList.add('visible');
+  }, welcomeTime);
+
+  // Disparition du splash
+  var totalTime = welcomeTime + 1400;
+  setTimeout(function() {
+    splash.classList.add('splash-hide');
+    setTimeout(function() {
+      splash.remove();
+      if (window.history.replaceState) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    }, 800);
+  }, totalTime);
 })();
 </script>
 {% endif %}
