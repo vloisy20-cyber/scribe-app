@@ -15,7 +15,7 @@ import json
 import mimetypes
 import os
 import urllib.parse
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from uuid import uuid4
 
@@ -180,7 +180,7 @@ def eb_start_auth(bank_name, bank_country, redirect_url):
     if err:
         return None, err
     state = str(uuid4())
-    valid_until = (datetime.now() + pd.Timedelta(days=90)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    valid_until = (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
     payload = {
         "access": {"valid_until": valid_until},
         "aspsp": {"name": bank_name, "country": bank_country},
@@ -252,32 +252,37 @@ def eb_sync_all_accounts():
         txs, err = eb_fetch_transactions(account_uid)
         if err:
             continue
+        if not isinstance(txs, list):
+            continue
         for tx in txs:
-            # Enable Banking suit le format PSD2 Berlin Group
-            # Le montant peut etre dans transactionAmount.amount ou amount directement
-            if isinstance(tx.get("transactionAmount"), dict):
-                amount_raw = float(tx["transactionAmount"].get("amount", 0))
-            else:
-                amount_raw = float(tx.get("amount", 0))
+            try:
+                # Enable Banking suit le format PSD2 Berlin Group
+                # Le montant peut etre dans transactionAmount.amount ou amount directement
+                if isinstance(tx.get("transactionAmount"), dict):
+                    amount_raw = float(tx["transactionAmount"].get("amount", 0))
+                else:
+                    amount_raw = float(tx.get("amount", 0))
 
-            if amount_raw >= 0:
-                continue  # Ignorer les credits (revenus)
+                if amount_raw >= 0:
+                    continue  # Ignorer les credits (revenus)
 
-            tx_date = tx.get("bookingDate") or tx.get("valueDate") or tx.get("date", "")
-            label = (tx.get("remittanceInformationUnstructured")
-                     or (tx.get("remittanceInformationUnstructuredArray", [None]) or [None])[0]
-                     or tx.get("creditorName")
-                     or tx.get("debtorName")
-                     or "Transaction")
-            all_transactions.append({
-                "date": tx_date,
-                "label": label.strip(),
-                "amount": round(abs(amount_raw), 2),
-                "category": "",
-                "bank_name": acc.get("bank_name", "Banque"),
-                "account_label": acc.get("iban", ""),
-                "date_import": datetime.now().strftime("%Y-%m-%d %H:%M"),
-            })
+                tx_date = tx.get("bookingDate") or tx.get("valueDate") or tx.get("date", "")
+                label = (tx.get("remittanceInformationUnstructured")
+                         or (tx.get("remittanceInformationUnstructuredArray", [None]) or [None])[0]
+                         or tx.get("creditorName")
+                         or tx.get("debtorName")
+                         or "Transaction")
+                all_transactions.append({
+                    "date": tx_date,
+                    "label": label.strip() if isinstance(label, str) else str(label),
+                    "amount": round(abs(amount_raw), 2),
+                    "category": "",
+                    "bank_name": acc.get("bank_name", "Banque"),
+                    "account_label": acc.get("iban", ""),
+                    "date_import": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                })
+            except Exception:
+                continue
 
     if not all_transactions:
         return 0, None
@@ -1742,69 +1747,86 @@ def eb_connect():
 @app.route("/api/eb-callback")
 def eb_callback():
     """Callback apres authentification bancaire Enable Banking."""
-    code = request.args.get("code", "")
-    state = request.args.get("state", "")
+    try:
+        code = request.args.get("code", "")
+        state = request.args.get("state", "")
 
-    eb_data = _eb_load()
-    pending = eb_data.get("pending_auth")
-    if not pending:
-        flash("Aucune connexion en attente.", "error")
-        return redirect(url_for("index"))
+        eb_data = _eb_load()
+        pending = eb_data.get("pending_auth")
+        if not pending:
+            flash("Aucune connexion en attente.", "error")
+            return redirect(url_for("index"))
 
-    # Verifier le state
-    if state and pending.get("state") and state != pending["state"]:
-        flash("Erreur de securite : state invalide.", "error")
-        return redirect(url_for("index"))
+        # Verifier le state
+        if state and pending.get("state") and state != pending["state"]:
+            flash("Erreur de securite : state invalide.", "error")
+            return redirect(url_for("index"))
 
-    if not code:
-        flash("Erreur : aucun code d'autorisation recu.", "error")
-        return redirect(url_for("index"))
+        if not code:
+            flash("Erreur : aucun code d'autorisation recu.", "error")
+            return redirect(url_for("index"))
 
-    # Creer la session avec le code
-    session_data, err = eb_create_session(code)
-    if err:
-        flash(f"Erreur : {err}", "error")
-        return redirect(url_for("index"))
+        # Creer la session avec le code
+        session_data, err = eb_create_session(code)
+        if err:
+            flash(f"Erreur session : {err}", "error")
+            eb_data.pop("pending_auth", None)
+            _eb_save(eb_data)
+            return redirect(url_for("index"))
 
-    session_id = session_data.get("session_id", "")
-    session_accounts = session_data.get("accounts", [])
+        session_id = session_data.get("session_id", "")
+        session_accounts = session_data.get("accounts", [])
 
-    if not session_accounts:
-        flash("Aucun compte trouve. La connexion a peut-etre echoue.", "warning")
-        return redirect(url_for("index"))
+        if not session_accounts:
+            flash("Aucun compte trouve. La connexion a peut-etre echoue.", "warning")
+            eb_data.pop("pending_auth", None)
+            _eb_save(eb_data)
+            return redirect(url_for("index"))
 
-    # Sauvegarder les comptes connectes
-    accounts = eb_data.get("accounts", [])
-    new_count = 0
-    for acc in session_accounts:
-        acc_uid = acc.get("uid", "")
-        if not acc_uid:
-            continue
-        # Verifier qu'il n'est pas deja connecte
-        if any(a.get("uid") == acc_uid for a in accounts):
-            continue
-        accounts.append({
-            "uid": acc_uid,
-            "session_id": session_id,
-            "iban": acc.get("iban", acc.get("account_id", {}).get("iban", "")),
-            "bank_name": pending.get("bank_name", "Banque"),
-            "bank_country": pending.get("bank_country", "FR"),
-            "connected_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        })
-        new_count += 1
+        # Sauvegarder les comptes connectes
+        accounts = eb_data.get("accounts", [])
+        new_count = 0
+        for acc in session_accounts:
+            acc_uid = acc.get("uid", "")
+            if not acc_uid:
+                continue
+            # Verifier qu'il n'est pas deja connecte
+            if any(a.get("uid") == acc_uid for a in accounts):
+                continue
+            # Extraire l'IBAN (format peut varier)
+            iban = ""
+            if isinstance(acc.get("account_id"), dict):
+                iban = acc["account_id"].get("iban", "")
+            elif isinstance(acc.get("iban"), str):
+                iban = acc["iban"]
+            accounts.append({
+                "uid": acc_uid,
+                "session_id": session_id,
+                "iban": iban,
+                "bank_name": pending.get("bank_name", "Banque"),
+                "bank_country": pending.get("bank_country", "FR"),
+                "connected_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
+            })
+            new_count += 1
 
-    eb_data["accounts"] = accounts
-    eb_data.pop("pending_auth", None)
-    _eb_save(eb_data)
+        eb_data["accounts"] = accounts
+        eb_data.pop("pending_auth", None)
+        _eb_save(eb_data)
 
-    flash(f"{new_count} compte(s) connecte(s) avec succes !", "success")
+        flash(f"{new_count} compte(s) connecte(s) avec succes !", "success")
 
-    # Synchroniser les transactions automatiquement
-    count, sync_err = eb_sync_all_accounts()
-    if count > 0:
-        flash(f"{count} transaction(s) importee(s) automatiquement.", "success")
-    elif sync_err:
-        flash(f"Sync : {sync_err}", "warning")
+        # Synchroniser les transactions automatiquement
+        try:
+            count, sync_err = eb_sync_all_accounts()
+            if count > 0:
+                flash(f"{count} transaction(s) importee(s) automatiquement.", "success")
+            elif sync_err:
+                flash(f"Sync : {sync_err}", "warning")
+        except Exception as sync_exc:
+            flash(f"Compte connecte, mais erreur de sync : {sync_exc}", "warning")
+
+    except Exception as e:
+        flash(f"Erreur callback : {e}", "error")
 
     return redirect(url_for("index"))
 
