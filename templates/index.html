@@ -10,7 +10,7 @@
   <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
   <link rel="apple-touch-icon" href="{{ url_for('static', filename='icon-192.png') }}">
   <title>Scribe — Ton ombudsman personnel</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=3">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=4">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -39,60 +39,82 @@
 {#  ECRAN D'ACCUEIL (ONBOARDING)                                    #}
 {# ================================================================ #}
 <div class="onboarding-screen" id="onboardingScreen">
-  <div class="onboarding-content fade-in">
-    <div class="onboarding-logo">
-      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--accent-mid)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <line x1="16" y1="13" x2="8" y2="13"/>
-        <line x1="16" y1="17" x2="8" y2="17"/>
-        <polyline points="10 9 9 9 8 9"/>
-      </svg>
-    </div>
-    <h1 class="onboarding-title">Bienvenue sur Scribe</h1>
-    <p class="onboarding-subtitle">Ton ombudsman personnel pour tes finances</p>
-    <div class="onboarding-features">
-      <div class="onboarding-feature fade-slide-up" style="animation-delay:.1s">
-        <span class="feature-icon">📄</span>
-        <div>
-          <strong>Analyse tes factures</strong>
-          <p>L'IA detecte les hausses suspectes et t'aide a reclamer</p>
-        </div>
-      </div>
-      <div class="onboarding-feature fade-slide-up" style="animation-delay:.2s">
-        <span class="feature-icon">🏦</span>
-        <div>
-          <strong>Suivi bancaire</strong>
-          <p>Importe tes releves CSV et suis tes depenses par categorie</p>
-        </div>
-      </div>
-      <div class="onboarding-feature fade-slide-up" style="animation-delay:.3s">
-        <span class="feature-icon">💰</span>
-        <div>
-          <strong>Objectifs d'epargne</strong>
-          <p>Fixe-toi des objectifs et suis ta progression</p>
-        </div>
-      </div>
-      <div class="onboarding-feature fade-slide-up" style="animation-delay:.4s">
-        <span class="feature-icon">📊</span>
-        <div>
-          <strong>Bilan annuel</strong>
-          <p>Visualise l'ensemble de tes finances en un coup d'oeil</p>
-        </div>
-      </div>
-      <div class="onboarding-feature fade-slide-up" style="animation-delay:.5s">
-        <span class="feature-icon">🧾</span>
-        <div>
-          <strong>Aide aux impots</strong>
-          <p>Simule ton impot sur le revenu et prepare ta declaration</p>
-        </div>
+  {# Particules flottantes animees #}
+  <div class="ob-particles">
+    <div class="ob-particle ob-p1">💰</div>
+    <div class="ob-particle ob-p2">📊</div>
+    <div class="ob-particle ob-p3">🏦</div>
+    <div class="ob-particle ob-p4">💳</div>
+    <div class="ob-particle ob-p5">🐷</div>
+    <div class="ob-particle ob-p6">📈</div>
+    <div class="ob-particle ob-p7">🧾</div>
+    <div class="ob-particle ob-p8">🔔</div>
+  </div>
+
+  {# Cercles decoratifs animes #}
+  <div class="ob-circle ob-c1"></div>
+  <div class="ob-circle ob-c2"></div>
+  <div class="ob-circle ob-c3"></div>
+
+  <div class="onboarding-content">
+    {# Logo anime avec pulse #}
+    <div class="ob-logo-wrap ob-anim" style="--d:0s">
+      <div class="ob-logo-glow"></div>
+      <div class="ob-logo">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
       </div>
     </div>
+
+    {# Titre avec apparition lettre par lettre #}
+    <h1 class="ob-title ob-anim" style="--d:.2s">Scribe</h1>
+    <p class="ob-tagline ob-anim" style="--d:.4s">Tes finances, sous controle.</p>
+
+    {# Ligne de separation animee #}
+    <div class="ob-divider ob-anim" style="--d:.5s"></div>
+
+    {# Features en grille avec icones animees #}
+    <div class="ob-features">
+      <div class="ob-feat ob-anim" style="--d:.6s">
+        <div class="ob-feat-icon">📄</div>
+        <div class="ob-feat-label">Factures</div>
+      </div>
+      <div class="ob-feat ob-anim" style="--d:.7s">
+        <div class="ob-feat-icon">🏦</div>
+        <div class="ob-feat-label">Banque</div>
+      </div>
+      <div class="ob-feat ob-anim" style="--d:.8s">
+        <div class="ob-feat-icon">💪</div>
+        <div class="ob-feat-label">Score</div>
+      </div>
+      <div class="ob-feat ob-anim" style="--d:.9s">
+        <div class="ob-feat-icon">🔔</div>
+        <div class="ob-feat-label">Alertes</div>
+      </div>
+      <div class="ob-feat ob-anim" style="--d:1s">
+        <div class="ob-feat-icon">🔄</div>
+        <div class="ob-feat-label">Abonnements</div>
+      </div>
+      <div class="ob-feat ob-anim" style="--d:1.1s">
+        <div class="ob-feat-icon">🧾</div>
+        <div class="ob-feat-label">Impots</div>
+      </div>
+    </div>
+
+    {# Bouton CTA anime #}
     <form action="/api/onboard" method="post">
-      <button type="submit" class="btn btn-accent btn-lg onboarding-btn fade-slide-up" style="animation-delay:.6s">
-        C'est parti !
+      <button type="submit" class="ob-cta ob-anim" style="--d:1.3s">
+        <span class="ob-cta-text">C'est parti</span>
+        <span class="ob-cta-arrow">→</span>
       </button>
     </form>
+
+    <p class="ob-footer ob-anim" style="--d:1.5s">Gratuit — Tes donnees restent chez toi</p>
   </div>
 </div>
 
@@ -1359,6 +1381,6 @@
     lightGrads: {{ light_grads | tojson }},
   };
 </script>
-<script src="{{ url_for('static', filename='app.js') }}?v=3"></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=4"></script>
 </body>
 </html>
