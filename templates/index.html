@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=13">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=14">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -50,16 +50,16 @@
   <div class="splash-orb splash-orb-2"></div>
   <div class="splash-orb splash-orb-3"></div>
 
-  {# Vagues SVG en bas #}
+  {# Vagues SVG en bas — couleurs accent du theme #}
   <div class="splash-waves">
     <svg class="splash-wave splash-wave-1" viewBox="0 0 1440 220" preserveAspectRatio="none">
-      <path d="M0,160 C320,220 420,100 720,140 C1020,180 1200,80 1440,120 L1440,220 L0,220 Z"/>
+      <path d="M0,160 C320,220 420,100 720,140 C1020,180 1200,80 1440,120 L1440,220 L0,220 Z" fill="var(--accent-mid)"/>
     </svg>
     <svg class="splash-wave splash-wave-2" viewBox="0 0 1440 220" preserveAspectRatio="none">
-      <path d="M0,180 C280,100 520,200 760,150 C1000,100 1280,190 1440,140 L1440,220 L0,220 Z"/>
+      <path d="M0,180 C280,100 520,200 760,150 C1000,100 1280,190 1440,140 L1440,220 L0,220 Z" fill="var(--accent-light)"/>
     </svg>
     <svg class="splash-wave splash-wave-3" viewBox="0 0 1440 220" preserveAspectRatio="none">
-      <path d="M0,200 C360,140 600,210 900,170 C1100,145 1300,200 1440,180 L1440,220 L0,220 Z"/>
+      <path d="M0,200 C360,140 600,210 900,170 C1100,145 1300,200 1440,180 L1440,220 L0,220 Z" fill="var(--accent-dark)"/>
     </svg>
   </div>
 
@@ -71,20 +71,35 @@
     </div>
 
     <div class="splash-steps" id="splashSteps">
-      <div class="splash-step" data-delay="800">
-        <span class="splash-step-icon">🔐</span>
-        <span class="splash-step-text">Connexion securisee...</span>
-        <span class="splash-step-check">✓</span>
+      <div class="splash-step" data-delay="800" data-delay-fast="400">
+        <span class="splash-step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><circle cx="12" cy="16.5" r="1.5"/></svg>
+        </span>
+        <span class="splash-step-text">Connexion securisee</span>
+        <span class="splash-step-dots"><i></i><i></i><i></i></span>
+        <span class="splash-step-check">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 10 8.5 14.5 16 5.5"/></svg>
+        </span>
       </div>
-      <div class="splash-step" data-delay="2000">
-        <span class="splash-step-icon">📊</span>
-        <span class="splash-step-text">Chargement de tes donnees...</span>
-        <span class="splash-step-check">✓</span>
+      <div class="splash-step" data-delay="2000" data-delay-fast="1100">
+        <span class="splash-step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><polyline points="7 14 11 10 15 13 21 7"/></svg>
+        </span>
+        <span class="splash-step-text">Chargement de tes donnees</span>
+        <span class="splash-step-dots"><i></i><i></i><i></i></span>
+        <span class="splash-step-check">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 10 8.5 14.5 16 5.5"/></svg>
+        </span>
       </div>
-      <div class="splash-step" data-delay="3200">
-        <span class="splash-step-icon">🧠</span>
-        <span class="splash-step-text">Analyse de tes finances...</span>
-        <span class="splash-step-check">✓</span>
+      <div class="splash-step" data-delay="3200" data-delay-fast="1800">
+        <span class="splash-step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.8-3.5 6l-.5.3V18h-6v-2.7l-.5-.3A7 7 0 0 1 12 2z"/><line x1="10" y1="21" x2="14" y2="21"/><line x1="10" y1="24" x2="14" y2="24"/></svg>
+        </span>
+        <span class="splash-step-text">Analyse de tes finances</span>
+        <span class="splash-step-dots"><i></i><i></i><i></i></span>
+        <span class="splash-step-check">
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 10 8.5 14.5 16 5.5"/></svg>
+        </span>
       </div>
     </div>
 
@@ -1877,43 +1892,53 @@
 
   var steps = document.querySelectorAll('.splash-step');
   var welcome = document.getElementById('splashWelcome');
+  var fast = {{ 'true' if returning_user else 'false' }};
+  var dotDelay = fast ? 300 : 700;
+  var checkDelay = dotDelay + (fast ? 200 : 500);
 
-  // Reveler les etapes une par une avec leur data-delay
+  // Reveler les etapes une par une
   steps.forEach(function(step) {
-    var delay = parseInt(step.getAttribute('data-delay'), 10) || 800;
-    // Affiche l'etape
+    var delay = parseInt(step.getAttribute(fast ? 'data-delay-fast' : 'data-delay'), 10) || 800;
     setTimeout(function() {
       step.classList.add('visible');
-      // Coche apres 600ms
+      // Afficher les dots de chargement
       setTimeout(function() {
+        var dots = step.querySelector('.splash-step-dots');
+        if (dots) dots.classList.add('active');
+      }, 200);
+      // Masquer les dots et afficher le check
+      setTimeout(function() {
+        var dots = step.querySelector('.splash-step-dots');
         var check = step.querySelector('.splash-step-check');
+        if (dots) dots.classList.remove('active');
+        if (dots) dots.classList.add('hidden');
         if (check) check.classList.add('done');
-      }, 600);
+      }, checkDelay);
     }, delay);
   });
 
   // Message de bienvenue apres la derniere etape
   var lastDelay = 0;
   steps.forEach(function(s) {
-    var d = parseInt(s.getAttribute('data-delay'), 10) || 800;
+    var d = parseInt(s.getAttribute(fast ? 'data-delay-fast' : 'data-delay'), 10) || 800;
     if (d > lastDelay) lastDelay = d;
   });
-  var welcomeTime = lastDelay + 1200;
+  var welcomeTime = lastDelay + checkDelay + (fast ? 300 : 600);
   setTimeout(function() {
     if (welcome) welcome.classList.add('visible');
   }, welcomeTime);
 
-  // Disparition du splash
-  var totalTime = welcomeTime + 1400;
+  // Sortie slide-up
+  var exitTime = welcomeTime + (fast ? 600 : 1200);
   setTimeout(function() {
-    splash.classList.add('splash-hide');
+    splash.classList.add('splash-exit');
     setTimeout(function() {
       splash.remove();
       if (window.history.replaceState) {
         window.history.replaceState({}, '', window.location.pathname);
       }
-    }, 800);
-  }, totalTime);
+    }, 900);
+  }, exitTime);
 })();
 </script>
 {% endif %}

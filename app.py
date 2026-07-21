@@ -1628,6 +1628,7 @@ def index():
     data["user_email"] = session.get("user_email", "")
     data["user_pseudo"] = session.get("user_pseudo", "")
     data["show_splash"] = logged_in and request.args.get("welcome") == "1"
+    data["returning_user"] = request.args.get("ret") == "1"
     # Parametres landing
     sub_status = request.args.get("sub", "")
     login_error = request.args.get("login_err", "")
@@ -1705,7 +1706,7 @@ def login():
     session["user_email"] = email
     session["user_pseudo"] = user.get("pseudo", "")
     session.permanent = remember
-    return redirect(url_for("index", welcome=1))
+    return redirect(url_for("index", welcome=1, ret=1))
 
 
 @app.route("/api/update-pseudo", methods=["POST"])
