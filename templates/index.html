@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=15">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=16">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -50,16 +50,19 @@
   <div class="splash-orb splash-orb-2"></div>
   <div class="splash-orb splash-orb-3"></div>
 
-  {# Vagues SVG en bas — couleurs accent du theme #}
+  {# Vagues fluides — double largeur pour scroll continu sans coupure #}
   <div class="splash-waves">
-    <svg class="splash-wave splash-wave-1" viewBox="0 0 1440 220" preserveAspectRatio="none">
-      <path d="M0,160 C320,220 420,100 720,140 C1020,180 1200,80 1440,120 L1440,220 L0,220 Z" fill="var(--accent-mid)"/>
+    <svg class="splash-wave splash-wave-1" viewBox="0 0 2880 320" preserveAspectRatio="none">
+      <defs><linearGradient id="wg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-light)" stop-opacity=".25"/><stop offset="100%" stop-color="var(--accent-mid)" stop-opacity=".08"/></linearGradient></defs>
+      <path d="M0,220 C240,180 480,260 720,230 S1200,170 1440,220 S1920,270 2160,220 S2640,170 2880,230 L2880,320 L0,320Z" fill="url(#wg1)"/>
     </svg>
-    <svg class="splash-wave splash-wave-2" viewBox="0 0 1440 220" preserveAspectRatio="none">
-      <path d="M0,180 C280,100 520,200 760,150 C1000,100 1280,190 1440,140 L1440,220 L0,220 Z" fill="var(--accent-light)"/>
+    <svg class="splash-wave splash-wave-2" viewBox="0 0 2880 320" preserveAspectRatio="none">
+      <defs><linearGradient id="wg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-mid)" stop-opacity=".2"/><stop offset="100%" stop-color="var(--accent-dark)" stop-opacity=".06"/></linearGradient></defs>
+      <path d="M0,250 C360,200 600,280 900,240 S1320,190 1440,250 S1800,290 2100,240 S2520,200 2880,260 L2880,320 L0,320Z" fill="url(#wg2)"/>
     </svg>
-    <svg class="splash-wave splash-wave-3" viewBox="0 0 1440 220" preserveAspectRatio="none">
-      <path d="M0,200 C360,140 600,210 900,170 C1100,145 1300,200 1440,180 L1440,220 L0,220 Z" fill="var(--accent-dark)"/>
+    <svg class="splash-wave splash-wave-3" viewBox="0 0 2880 320" preserveAspectRatio="none">
+      <defs><linearGradient id="wg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="var(--accent-dark)" stop-opacity=".15"/><stop offset="100%" stop-color="var(--accent-mid)" stop-opacity=".04"/></linearGradient></defs>
+      <path d="M0,270 C300,230 540,290 840,260 S1260,210 1440,270 S1740,300 2040,260 S2460,230 2880,280 L2880,320 L0,320Z" fill="url(#wg3)"/>
     </svg>
   </div>
 

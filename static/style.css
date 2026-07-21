@@ -79,23 +79,24 @@
   75%      { transform: translate(10px, 25px) scale(1.03); }
 }
 
-/* --- Vagues SVG --- */
+/* --- Vagues SVG fluides --- */
 .splash-waves {
   position: absolute; bottom: 0; left: 0; right: 0;
-  height: 220px;
+  height: 35vh; min-height: 180px; max-height: 320px;
   pointer-events: none;
   z-index: 0;
+  overflow: hidden;
 }
 .splash-wave {
   position: absolute; bottom: 0; left: 0;
-  width: 100%; height: 100%;
+  width: 200%; height: 100%;
 }
-.splash-wave-1 { animation: waveRoll 4s ease-in-out infinite; opacity: .15; }
-.splash-wave-2 { animation: waveRoll 5s ease-in-out infinite reverse; opacity: .1; }
-.splash-wave-3 { animation: waveRoll 7s ease-in-out infinite; opacity: .08; }
-@keyframes waveRoll {
-  0%, 100% { transform: translateX(0); }
-  50%      { transform: translateX(-40px); }
+.splash-wave-1 { animation: waveDrift 8s linear infinite; }
+.splash-wave-2 { animation: waveDrift 12s linear infinite reverse; bottom: -8px; }
+.splash-wave-3 { animation: waveDrift 16s linear infinite; bottom: -16px; }
+@keyframes waveDrift {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
 /* --- Contenu central --- */
