@@ -3,6 +3,18 @@
    Dark/light mode, 6 themes d'accent, responsive
    ================================================================ */
 
+/* ---------- LOGO ICON ---------- */
+.logo-icon {
+  width: 34px; height: 34px;
+  border-radius: 8px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.logo-icon-sm {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+}
+
 /* ---------- LOGO FONT ---------- */
 .logo-text {
   font-family: 'Lora', 'Georgia', 'Times New Roman', serif;
