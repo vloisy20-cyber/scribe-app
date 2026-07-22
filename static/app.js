@@ -418,8 +418,11 @@ function initThemePicker() {
   function applySwatchColor(swatch) {
     const colorEl = swatch.querySelector('.swatch-color');
     if (colorEl) {
-      const bg = colorEl.style.background || colorEl.style.backgroundColor;
-      swatch.style.setProperty('--swatch-color', bg);
+      // Read from inline style attribute directly, or fall back to computed
+      const raw = colorEl.getAttribute('style') || '';
+      const match = raw.match(/background:\s*([^;]+)/i);
+      const bg = match ? match[1].trim() : window.getComputedStyle(colorEl).backgroundColor;
+      if (bg) swatch.style.setProperty('--swatch-color', bg);
     }
   }
 

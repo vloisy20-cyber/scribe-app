@@ -1676,11 +1676,12 @@ body.light .flash-error   { color: #b91c1c; }
   transition: all var(--transition);
   position: relative;
 }
-.theme-swatch:hover { background: var(--bg-input); transform: scale(1.08); }
+.theme-swatch:hover { background: var(--bg-input); transform: scale(1.05); }
 .theme-swatch.active {
   border-color: var(--accent-mid);
-  background: var(--accent-mid)12;
-  transform: scale(1.1);
+  background: var(--bg-input);
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px var(--accent-mid), 0 4px 12px rgba(0,0,0,.2);
 }
 .swatch-color {
   width: 36px; height: 36px; border-radius: 50%;
@@ -1689,25 +1690,35 @@ body.light .flash-error   { color: #b91c1c; }
   border: 2px solid transparent;
 }
 .theme-swatch.active .swatch-color {
-  box-shadow: 0 0 0 3px var(--bg-card), 0 0 0 5px var(--swatch-color, var(--accent-mid)), 0 4px 16px rgba(0,0,0,.3);
-  border-color: rgba(255,255,255,.4);
-  transform: scale(1.1);
+  box-shadow: 0 0 0 3px var(--bg-card), 0 0 0 6px var(--swatch-color, var(--accent-mid)), 0 6px 20px rgba(0,0,0,.35);
+  border-color: #fff;
+  transform: scale(1.15);
 }
 .swatch-check {
-  display: none; position: absolute; top: -.2rem; right: -.2rem;
-  width: 18px; height: 18px; border-radius: 50%;
-  background: var(--swatch-color, var(--accent-mid)); color: #fff;
-  font-size: .65rem; font-weight: 700;
-  line-height: 18px; text-align: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,.35);
+  display: none; position: absolute; top: -.3rem; right: -.3rem;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent-mid); color: #fff;
+  font-size: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
   z-index: 2;
   animation: checkPop .3s cubic-bezier(.34,1.56,.64,1);
+  /* Checkmark via CSS borders */
+  align-items: center; justify-content: center;
+}
+.swatch-check::after {
+  content: '';
+  display: block;
+  width: 6px; height: 10px;
+  border: solid #fff;
+  border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+  margin: 2px auto 0;
 }
 @keyframes checkPop {
   from { transform: scale(0); }
   to   { transform: scale(1); }
 }
-.theme-swatch.active .swatch-check { display: block; }
+.theme-swatch.active .swatch-check { display: flex; }
 .swatch-label { font-size: .7rem; color: var(--text-muted); }
 .theme-swatch.active .swatch-label { color: var(--accent-mid); font-weight: 600; }
 
