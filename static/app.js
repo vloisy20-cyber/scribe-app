@@ -1041,6 +1041,9 @@ function initTrendsChart() {
 
     const ctx = canvas.getContext('2d');
     const accentMid = getComputedStyle(document.documentElement).getPropertyValue('--accent-mid').trim() || '#10b981';
+    const isDark = document.body.classList.contains('dark');
+    const tickColor = isDark ? 'rgba(255,255,255,.5)' : 'rgba(0,0,0,.45)';
+    const gridColor = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.08)';
 
     new Chart(ctx, {
       type: 'line',
@@ -1056,7 +1059,7 @@ function initTrendsChart() {
           pointRadius: 5,
           pointHoverRadius: 7,
           pointBackgroundColor: accentMid,
-          pointBorderColor: '#fff',
+          pointBorderColor: isDark ? '#1e293b' : '#fff',
           pointBorderWidth: 2,
           borderWidth: 2.5,
         }]
@@ -1077,13 +1080,13 @@ function initTrendsChart() {
         scales: {
           x: {
             grid: { display: false },
-            ticks: { color: 'rgba(255,255,255,.5)', font: { size: 11 } }
+            ticks: { color: tickColor, font: { size: 11 } }
           },
           y: {
             beginAtZero: true,
-            grid: { color: 'rgba(255,255,255,.06)' },
+            grid: { color: gridColor },
             ticks: {
-              color: 'rgba(255,255,255,.5)',
+              color: tickColor,
               font: { size: 11 },
               callback: function(v) { return v.toLocaleString('fr-FR') + ' EUR'; }
             }

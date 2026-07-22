@@ -2374,7 +2374,10 @@ body.light .flash-error   { color: #b91c1c; }
    TRENDS
    ================================================================ */
 .trends-chart-wrap {
-  position: relative; height: 200px; margin: .8rem 0;
+  position: relative; height: 260px; margin: .8rem 0;
+}
+.trends-chart-wrap canvas {
+  width: 100% !important; height: 100% !important;
 }
 .trends-stats {
   display: flex; flex-wrap: wrap; gap: .8rem 1.6rem;

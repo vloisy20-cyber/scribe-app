@@ -748,11 +748,11 @@
         </span>
         {% endif %}
       </h3>
+      <script type="application/json" id="trendsChartData">
+        {"labels": {{ trends_data.monthly_totals|map(attribute='month')|list|tojson }}, "values": {{ trends_data.monthly_totals|map(attribute='total')|list|tojson }}}
+      </script>
       <div class="trends-chart-wrap">
-        <canvas id="trendsLineChart" height="200"></canvas>
-        <script type="application/json" id="trendsChartData">
-          {"labels": {{ trends_data.monthly_totals|map(attribute='month')|list|tojson }}, "values": {{ trends_data.monthly_totals|map(attribute='total')|list|tojson }}}
-        </script>
+        <canvas id="trendsLineChart"></canvas>
       </div>
       <div class="trends-stats">
         {% if trends_data.best_month %}
