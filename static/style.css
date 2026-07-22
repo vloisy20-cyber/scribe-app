@@ -216,6 +216,14 @@
   transform: translateY(0);
 }
 
+/* --- Mode clair : splash lisible --- */
+.light .splash-bg {
+  background: linear-gradient(135deg, var(--accent-dark), var(--accent-mid), var(--accent-light));
+}
+.light .splash-orb-1 { background: radial-gradient(circle, rgba(255,255,255,.25) 0%, transparent 70%); }
+.light .splash-orb-2 { background: radial-gradient(circle, rgba(255,255,255,.2) 0%, transparent 70%); }
+.light .splash-orb-3 { background: radial-gradient(circle, rgba(255,255,255,.15) 0%, transparent 70%); }
+
 /* ---------- RESET & BASE ---------- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
