@@ -55,23 +55,9 @@ except ImportError:
 app = Flask(__name__)
 
 # Cle secrete persistante pour les sessions
-# Methode 1 : fichier sur disque (nom sans point pour compatibilite Windows)
-_secret_path = Path(__file__).resolve().parent / "data" / "session_key"
-try:
-    if _secret_path.exists():
-        app.secret_key = _secret_path.read_bytes()
-    else:
-        _secret_path.parent.mkdir(exist_ok=True)
-        _sk = os.urandom(32)
-        _secret_path.write_bytes(_sk)
-        app.secret_key = _sk
-except Exception:
-    pass
-# Methode 2 (fallback) : cle deterministe basee sur le chemin de l'app
-if not app.secret_key:
-    import hashlib
-    _seed = str(Path(__file__).resolve().parent).encode()
-    app.secret_key = hashlib.sha256(b"scribe-session-key-" + _seed).digest()
+# Deterministe : toujours la meme cle sur la meme machine, sans fichier
+import hashlib
+app.secret_key = hashlib.sha256(b"scribe-2024-" + str(Path(__file__).resolve().parent).encode()).digest()
 
 from datetime import timedelta
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=30)
