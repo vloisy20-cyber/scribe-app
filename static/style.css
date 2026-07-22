@@ -674,8 +674,10 @@ a:hover { color: var(--accent-light); }
   display: flex; align-items: center; justify-content: center;
   border-radius: 12px;
   background: color-mix(in srgb, var(--fc) 12%, transparent);
-  font-size: 1.4rem;
   margin-bottom: 1rem;
+}
+.land-feat-icon-wrap svg {
+  width: 24px; height: 24px;
 }
 .land-feat-card h3 {
   font-size: 1rem; font-weight: 600;
@@ -734,7 +736,10 @@ a:hover { color: var(--accent-light); }
 }
 .land-benefit:hover { transform: translateY(-4px); }
 .land-benefit-icon {
-  font-size: 2rem; margin-bottom: .8rem;
+  margin-bottom: .8rem;
+}
+.land-benefit-icon svg {
+  width: 32px; height: 32px;
 }
 .land-benefit h3 {
   font-size: 1rem; font-weight: 600;
