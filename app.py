@@ -14,6 +14,7 @@ import io
 import json
 import mimetypes
 import os
+import sqlite3
 import urllib.parse
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -105,6 +106,102 @@ CATEGORY_BUDGETS_PATH = DATA_DIR / "category_budgets.json"
 USER_PREFS_PATH = DATA_DIR / "user_prefs.json"
 EB_CONFIG_PATH = DATA_DIR / "enable_banking.json"
 SUBSCRIBERS_PATH = DATA_DIR / "subscribers.json"
+DB_PATH = DATA_DIR / "scribe.db"
+
+# --------------------------------------------------------------------------
+# SQLite Database
+# --------------------------------------------------------------------------
+
+def _get_db():
+    """Retourne une connexion SQLite (creee la DB si necessaire)."""
+    db = sqlite3.connect(str(DB_PATH))
+    db.row_factory = sqlite3.Row
+    db.execute("PRAGMA journal_mode=WAL")
+    db.execute("""CREATE TABLE IF NOT EXISTS subscribers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        pseudo TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )""")
+    db.commit()
+    return db
+
+
+def _migrate_json_to_sqlite():
+    """Migre les donnees subscribers.json → SQLite (une seule fois)."""
+    if not SUBSCRIBERS_PATH.exists():
+        return
+    try:
+        subs = json.loads(SUBSCRIBERS_PATH.read_text("utf-8"))
+    except Exception:
+        return
+    if not subs:
+        return
+    db = _get_db()
+    for s in subs:
+        try:
+            db.execute(
+                "INSERT OR IGNORE INTO subscribers (email, pseudo, created_at) VALUES (?, ?, ?)",
+                (s["email"], s.get("pseudo", ""), s.get("date", datetime.now().isoformat()))
+            )
+        except Exception:
+            pass
+    db.commit()
+    db.close()
+    # Renommer l'ancien fichier
+    try:
+        SUBSCRIBERS_PATH.rename(DATA_DIR / "subscribers.json.bak")
+    except Exception:
+        pass
+
+
+# Executer la migration au demarrage
+_get_db().close()  # Cree la table
+_migrate_json_to_sqlite()
+
+
+def db_get_subscribers_count():
+    db = _get_db()
+    count = db.execute("SELECT COUNT(*) FROM subscribers").fetchone()[0]
+    db.close()
+    return count
+
+
+def db_find_subscriber(email):
+    db = _get_db()
+    row = db.execute("SELECT * FROM subscribers WHERE email = ?", (email,)).fetchone()
+    db.close()
+    return dict(row) if row else None
+
+
+def db_add_subscriber(email, pseudo):
+    db = _get_db()
+    db.execute("INSERT INTO subscribers (email, pseudo) VALUES (?, ?)", (email, pseudo))
+    db.commit()
+    db.close()
+
+
+def db_pseudo_exists(pseudo, exclude_email=None):
+    db = _get_db()
+    if exclude_email:
+        row = db.execute(
+            "SELECT 1 FROM subscribers WHERE LOWER(pseudo) = LOWER(?) AND email != ?",
+            (pseudo, exclude_email)
+        ).fetchone()
+    else:
+        row = db.execute(
+            "SELECT 1 FROM subscribers WHERE LOWER(pseudo) = LOWER(?)", (pseudo,)
+        ).fetchone()
+    db.close()
+    return row is not None
+
+
+def db_update_pseudo(email, new_pseudo):
+    db = _get_db()
+    db.execute("UPDATE subscribers SET pseudo = ? WHERE email = ?", (new_pseudo, email))
+    db.commit()
+    db.close()
+
 
 # --------------------------------------------------------------------------
 # Enable Banking (Open Banking)
@@ -1634,13 +1731,7 @@ def index():
     login_error = request.args.get("login_err", "")
     data["sub_status"] = sub_status
     data["login_error"] = login_error
-    subs_count = 0
-    if SUBSCRIBERS_PATH.exists():
-        try:
-            subs_count = len(json.loads(SUBSCRIBERS_PATH.read_text("utf-8")))
-        except Exception:
-            pass
-    data["subscribers_count"] = subs_count
+    data["subscribers_count"] = db_get_subscribers_count()
     return render_template("index.html", **data)
 
 
@@ -1665,22 +1756,13 @@ def subscribe():
         return redirect(url_for("index", sub="invalid"))
     if not pseudo or len(pseudo) < 2 or len(pseudo) > 20:
         return redirect(url_for("index", sub="pseudo"))
-    # Charger les inscrits existants
-    subs = []
-    if SUBSCRIBERS_PATH.exists():
-        try:
-            subs = json.loads(SUBSCRIBERS_PATH.read_text("utf-8"))
-        except Exception:
-            subs = []
     # Verifier doublon email
-    existing_emails = [s["email"] for s in subs]
-    if email not in existing_emails:
+    existing = db_find_subscriber(email)
+    if not existing:
         # Verifier doublon pseudo
-        existing_pseudos = [s.get("pseudo", "").lower() for s in subs]
-        if pseudo.lower() in existing_pseudos:
+        if db_pseudo_exists(pseudo):
             return redirect(url_for("index", sub="pseudo_taken"))
-        subs.append({"email": email, "pseudo": pseudo, "date": _dt.now().isoformat()})
-        SUBSCRIBERS_PATH.write_text(json.dumps(subs, indent=2, ensure_ascii=False), "utf-8")
+        db_add_subscriber(email, pseudo)
     # Connecter l'utilisateur
     session["user_email"] = email
     session["user_pseudo"] = pseudo
@@ -1692,13 +1774,7 @@ def login():
     email = request.form.get("email", "").strip().lower()
     remember = request.form.get("remember", "") == "on"
     # Verifier que l'email existe dans les inscrits
-    subs = []
-    if SUBSCRIBERS_PATH.exists():
-        try:
-            subs = json.loads(SUBSCRIBERS_PATH.read_text("utf-8"))
-        except Exception:
-            subs = []
-    user = next((s for s in subs if s["email"] == email), None)
+    user = db_find_subscriber(email)
     if not user:
         return redirect(url_for("index", login_err="notfound"))
     # Connecter avec le pseudo
@@ -1713,22 +1789,10 @@ def update_pseudo():
     email = session.get("user_email", "")
     if not email or not new_pseudo or len(new_pseudo) < 2 or len(new_pseudo) > 20:
         return redirect(url_for("index"))
-    # Mettre a jour dans subscribers.json
-    subs = []
-    if SUBSCRIBERS_PATH.exists():
-        try:
-            subs = json.loads(SUBSCRIBERS_PATH.read_text("utf-8"))
-        except Exception:
-            subs = []
     # Verifier que le pseudo n'est pas deja pris par quelqu'un d'autre
-    for s in subs:
-        if s.get("pseudo", "").lower() == new_pseudo.lower() and s["email"] != email:
-            return redirect(url_for("index"))
-    for s in subs:
-        if s["email"] == email:
-            s["pseudo"] = new_pseudo
-            break
-    SUBSCRIBERS_PATH.write_text(json.dumps(subs, indent=2, ensure_ascii=False), "utf-8")
+    if db_pseudo_exists(new_pseudo, exclude_email=email):
+        return redirect(url_for("index"))
+    db_update_pseudo(email, new_pseudo)
     session["user_pseudo"] = new_pseudo
     return redirect(url_for("index"))
 

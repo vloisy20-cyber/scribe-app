@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=17">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=18">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -556,10 +556,14 @@
     </button>
     <span class="topbar-title logo-text">Scribe</span>
     <div class="topbar-actions">
+      <button class="notif-bell" id="notifBell" aria-label="Notifications">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        {% if smart_alerts %}<span class="notif-dot"></span>{% endif %}
+      </button>
       <form action="/api/toggle-dark" method="post" style="margin:0;display:inline">
-        <button type="submit" class="topbar-darkbtn" aria-label="Changer le mode">{{ '☀️' if dark_mode else '🌙' }}</button>
+        <button type="submit" class="topbar-darkbtn" aria-label="Changer le mode">{% if dark_mode %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>{% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>{% endif %}</button>
       </form>
-      <button class="topbar-settings" onclick="openSettings()" aria-label="Parametres">⚙️</button>
+      <button class="topbar-settings" onclick="openSettings()" aria-label="Parametres"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
   </header>
 
@@ -570,7 +574,7 @@
     {% for category, message in messages %}
     <div class="flash flash-{{ category }}">
       <span class="flash-icon">
-        {% if category == 'success' %}✅{% elif category == 'warning' %}⚠️{% elif category == 'error' %}❌{% else %}ℹ️{% endif %}
+        {% if category == 'success' %}<svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>{% elif category == 'warning' %}<svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>{% elif category == 'error' %}<svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>{% else %}<svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>{% endif %}
       </span>
       <span class="flash-text">{{ message }}</span>
       <button class="flash-close" onclick="this.parentElement.remove()">&times;</button>
@@ -588,7 +592,7 @@
 
     <div class="stats-grid">
       <div class="stat-card fade-slide-up">
-        <div class="stat-icon" style="background: rgba(59,130,246,.15); color: #3b82f6">💰</div>
+        <div class="stat-icon" style="background: rgba(59,130,246,.15); color: #3b82f6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12"/><path d="M15.5 9.5a3 3 0 0 0-3-2h-1a3 3 0 0 0 0 5h1a3 3 0 0 1 0 5h-1a3 3 0 0 1-3-2"/></svg></div>
         <div class="stat-info">
           <div class="stat-value" data-counter="{{ month_depenses }}">0</div>
           <div class="stat-label">Depenses ce mois</div>
@@ -596,7 +600,7 @@
         <div class="stat-unit">EUR</div>
       </div>
       <div class="stat-card fade-slide-up" style="animation-delay:.1s">
-        <div class="stat-icon" style="background: rgba(34,197,94,.15); color: #22c55e">📈</div>
+        <div class="stat-icon" style="background: rgba(34,197,94,.15); color: #22c55e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
         <div class="stat-info">
           <div class="stat-value" data-counter="{{ revenu_mensuel }}">0</div>
           <div class="stat-label">Revenu mensuel</div>
@@ -605,7 +609,7 @@
       </div>
       <div class="stat-card fade-slide-up" style="animation-delay:.2s">
         <div class="stat-icon" style="background: {{ 'rgba(239,68,68,.15)' if solde < 0 else 'rgba(16,185,129,.15)' }}; color: {{ '#ef4444' if solde < 0 else '#10b981' }}">
-          {{ '📉' if solde < 0 else '✅' }}
+          {% if solde < 0 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>{% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>{% endif %}
         </div>
         <div class="stat-info">
           <div class="stat-value {{ 'negative' if solde < 0 else '' }}" data-counter="{{ solde }}">0</div>
@@ -614,7 +618,7 @@
         <div class="stat-unit">EUR</div>
       </div>
       <div class="stat-card fade-slide-up" style="animation-delay:.3s">
-        <div class="stat-icon" style="background: rgba(139,92,246,.15); color: #8b5cf6">📄</div>
+        <div class="stat-icon" style="background: rgba(139,92,246,.15); color: #8b5cf6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></div>
         <div class="stat-info">
           <div class="stat-value" data-counter="{{ total_factures }}">0</div>
           <div class="stat-label">Factures analysees</div>
@@ -680,7 +684,7 @@
       {% if has_genai and api_key %}
       <form action="/api/upload-invoice" method="post" enctype="multipart/form-data" class="upload-form">
         <div class="upload-area" id="invoiceDropZone">
-          <span class="upload-icon">📤</span>
+          <span class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
           <p>Glisse ta facture ici ou <label for="invoiceFile" class="upload-link">parcourir</label></p>
           <p class="upload-hint">PDF, JPG, PNG — max 10 Mo</p>
           <input type="file" id="invoiceFile" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp" hidden>
@@ -754,7 +758,7 @@
       {% if has_genai and api_key %}
       <form action="/api/upload-payslip" method="post" enctype="multipart/form-data" class="upload-form">
         <div class="upload-area" id="payslipDropZone">
-          <span class="upload-icon">📤</span>
+          <span class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>
           <p>Glisse ta fiche de paie ici ou <label for="payslipFile" class="upload-link">parcourir</label></p>
           <p class="upload-hint">PDF, JPG, PNG — max 10 Mo</p>
           <input type="file" id="payslipFile" name="file" accept=".pdf,.jpg,.jpeg,.png,.webp" hidden>
@@ -779,7 +783,7 @@
     {% if last_salary > 0 %}
     <div class="stats-grid stats-grid-2">
       <div class="stat-card">
-        <div class="stat-icon" style="background: rgba(34,197,94,.15); color: #22c55e">💵</div>
+        <div class="stat-icon" style="background: rgba(34,197,94,.15); color: #22c55e"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M2 10h2"/><path d="M20 10h2"/></svg></div>
         <div class="stat-info">
           <div class="stat-value" data-counter="{{ last_salary }}">0</div>
           <div class="stat-label">Dernier salaire net</div>
@@ -789,7 +793,7 @@
       {% if salary_evolution is not none %}
       <div class="stat-card">
         <div class="stat-icon" style="background: {{ 'rgba(34,197,94,.15)' if salary_evolution >= 0 else 'rgba(239,68,68,.15)' }}; color: {{ '#22c55e' if salary_evolution >= 0 else '#ef4444' }}">
-          {{ '📈' if salary_evolution >= 0 else '📉' }}
+          {% if salary_evolution >= 0 %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>{% else %}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>{% endif %}
         </div>
         <div class="stat-info">
           <div class="stat-value">{{ "%+.1f"|format(salary_evolution) }}%</div>
@@ -844,7 +848,7 @@
 
     {# ---------- CONNEXION BANCAIRE ENABLE BANKING ---------- #}
     <div class="card">
-      <h3 class="card-title">🔗 Connexion bancaire automatique</h3>
+      <h3 class="card-title"><svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Connexion bancaire automatique</h3>
 
       {% if not eb_configured %}
       <div class="info-box" style="margin-bottom:1rem">
@@ -860,7 +864,7 @@
         {% for acc in eb_data.accounts %}
         <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem .8rem;background:var(--bg-input);border-radius:var(--radius-sm);margin-bottom:.4rem">
           <div>
-            <span style="font-weight:600">🏦 {{ acc.bank_name }}</span>
+            <span style="font-weight:600"><svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M12 3l9 7H3l9-7z"/></svg> {{ acc.bank_name }}</span>
             {% if acc.iban %}
             <span style="color:var(--text-muted);font-size:.82rem;margin-left:.5rem">{{ acc.iban[-4:] if acc.iban|length > 4 else acc.iban }}</span>
             {% endif %}
@@ -876,7 +880,7 @@
         {% endfor %}
 
         <form action="/api/eb-sync" method="post" style="margin-top:.8rem">
-          <button type="submit" class="btn btn-accent">🔄 Synchroniser les transactions</button>
+          <button type="submit" class="btn btn-accent"><svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg> Synchroniser</button>
         </form>
       </div>
       {% endif %}
@@ -945,10 +949,10 @@
     </div>
 
     <div class="card">
-      <h3 class="card-title">📄 Importer un releve CSV</h3>
+      <h3 class="card-title"><svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Importer un releve CSV</h3>
       <form action="/api/import-csv" method="post" enctype="multipart/form-data" class="upload-form">
         <div class="upload-area" id="csvDropZone">
-          <span class="upload-icon">🏦</span>
+          <span class="upload-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M12 3l9 7H3l9-7z"/><line x1="5" y1="10" x2="5" y2="21"/><line x1="9" y1="10" x2="9" y2="21"/><line x1="15" y1="10" x2="15" y2="21"/><line x1="19" y1="10" x2="19" y2="21"/></svg></span>
           <p>Glisse ton releve CSV ici ou <label for="csvFile" class="upload-link">parcourir</label></p>
           <p class="upload-hint">Fichier CSV exporte depuis ta banque en ligne</p>
           <input type="file" id="csvFile" name="file" accept=".csv" hidden>
@@ -963,14 +967,14 @@
     {% if tx_data %}
     <div class="stats-grid stats-grid-3">
       <div class="stat-card">
-        <div class="stat-icon" style="background: rgba(59,130,246,.15); color: #3b82f6">📊</div>
+        <div class="stat-icon" style="background: rgba(59,130,246,.15); color: #3b82f6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="12" width="4" height="9" rx="1"/><rect x="10" y="7" width="4" height="14" rx="1"/><rect x="17" y="3" width="4" height="18" rx="1"/></svg></div>
         <div class="stat-info">
           <div class="stat-value" data-counter="{{ tx_data|length }}">0</div>
           <div class="stat-label">Transactions</div>
         </div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: rgba(239,68,68,.15); color: #ef4444">💸</div>
+        <div class="stat-icon" style="background: rgba(239,68,68,.15); color: #ef4444"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
         <div class="stat-info">
           <div class="stat-value" data-counter="{{ month_depenses }}">0</div>
           <div class="stat-label">Ce mois</div>
@@ -978,7 +982,7 @@
         <div class="stat-unit">EUR</div>
       </div>
       <div class="stat-card">
-        <div class="stat-icon" style="background: rgba(16,185,129,.15); color: #10b981">📋</div>
+        <div class="stat-icon" style="background: rgba(16,185,129,.15); color: #10b981"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
         <div class="stat-info">
           <div class="stat-value">{{ cat_totals|length }}</div>
           <div class="stat-label">Categories</div>
@@ -992,7 +996,7 @@
       <h3 class="card-title">Exporter un resume mensuel</h3>
       <div class="export-grid">
         {% for m in export_months[:12] %}
-        <a href="/api/export-csv/{{ m }}" class="btn btn-outline btn-sm">📥 {{ m }}</a>
+        <a href="/api/export-csv/{{ m }}" class="btn btn-outline btn-sm"><svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> {{ m }}</a>
         {% endfor %}
       </div>
     </div>
@@ -1141,13 +1145,13 @@
       </div>
       <div class="score-tips">
         {% if health_score.details.epargne and health_score.details.epargne.pct < 50 %}
-        <div class="score-tip">💡 Essaie de mettre de cote au moins 10% de tes revenus chaque mois.</div>
+        <div class="score-tip"><svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.8-3.5 6l-.5.3V18h-6v-2.7l-.5-.3A7 7 0 0 1 12 2z"/><line x1="10" y1="21" x2="14" y2="21"/></svg> Essaie de mettre de cote au moins 10% de tes revenus chaque mois.</div>
         {% endif %}
         {% if health_score.details.budget and health_score.details.budget.pct < 50 %}
-        <div class="score-tip">💡 Definis un budget mensuel realiste dans les parametres.</div>
+        <div class="score-tip"><svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.8-3.5 6l-.5.3V18h-6v-2.7l-.5-.3A7 7 0 0 1 12 2z"/><line x1="10" y1="21" x2="14" y2="21"/></svg> Definis un budget mensuel realiste dans les parametres.</div>
         {% endif %}
         {% if health_score.details.abonnements and health_score.details.abonnements.pct < 50 %}
-        <div class="score-tip">💡 Tes abonnements pesent lourd. Fais le tri dans l'onglet Abonnements.</div>
+        <div class="score-tip"><svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.8-3.5 6l-.5.3V18h-6v-2.7l-.5-.3A7 7 0 0 1 12 2z"/><line x1="10" y1="21" x2="14" y2="21"/></svg> Tes abonnements pesent lourd. Fais le tri dans l'onglet Abonnements.</div>
         {% endif %}
       </div>
     </div>
@@ -1297,7 +1301,7 @@
       {% set gpct = (goal.saved / goal.target * 100) if goal.target > 0 else 0 %}
       <div class="savings-card card">
         <div class="savings-header">
-          <h4>🐷 {{ goal.name }}</h4>
+          <h4><svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5h-7L9 2H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg> {{ goal.name }}</h4>
           <form action="/api/savings-goal/{{ loop.index0 }}/delete" method="post" style="margin:0">
             <button type="submit" class="btn-icon btn-danger-icon" title="Supprimer">&times;</button>
           </form>
@@ -1313,7 +1317,7 @@
           </div>
         </div>
         {% if gpct >= 100 %}
-        <div class="savings-complete">🎉 Objectif atteint !</div>
+        <div class="savings-complete"><svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Objectif atteint !</div>
         {% else %}
         <form action="/api/savings-goal/{{ loop.index0 }}/add" method="post" class="savings-add-form">
           <input type="number" name="amount" min="1" step="10" placeholder="Montant" class="input-field input-sm" required>
@@ -1444,7 +1448,7 @@
   {#  SECTION: AIDE AUX IMPOTS                                     #}
   {# ============================================================ #}
   <section class="content-section" id="section-impots">
-    <h2 class="section-title">🧾 Aide aux impots</h2>
+    <h2 class="section-title"><svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" rx="1"/><path d="M9 9h6"/><path d="M9 13h6"/><path d="M9 17h4"/><path d="M15 2v4"/><path d="M9 2v4"/></svg> Aide aux impots</h2>
 
     {# --- Recap revenus --- #}
     {% if tax_data.nb_fiches > 0 %}
@@ -1581,35 +1585,35 @@
       <h3 class="card-title">Conseils pour ta declaration</h3>
       <div class="tax-tips">
         <div class="tax-tip">
-          <span class="tax-tip-icon">📅</span>
+          <span class="tax-tip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
           <div>
             <strong>Dates limites</strong>
             <p>La declaration en ligne ouvre generalement en avril. La date limite depend de ton departement (fin mai a mi-juin).</p>
           </div>
         </div>
         <div class="tax-tip">
-          <span class="tax-tip-icon">🏠</span>
+          <span class="tax-tip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
           <div>
             <strong>Frais reels vs abattement 10 %</strong>
             <p>Si tes frais professionnels (transport domicile-travail, repas, etc.) depassent {{ "%.0f"|format(tax_data.abattement) }} EUR, tu peux opter pour les frais reels.</p>
           </div>
         </div>
         <div class="tax-tip">
-          <span class="tax-tip-icon">🎁</span>
+          <span class="tax-tip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></span>
           <div>
             <strong>Reductions d'impot</strong>
             <p>Dons aux associations (66 %), emploi a domicile (50 %), frais de garde d'enfants, investissement PME... Pense a declarer tout ce qui ouvre droit a credit ou reduction.</p>
           </div>
         </div>
         <div class="tax-tip">
-          <span class="tax-tip-icon">💡</span>
+          <span class="tax-tip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.8-3.5 6l-.5.3V18h-6v-2.7l-.5-.3A7 7 0 0 1 12 2z"/><line x1="10" y1="21" x2="14" y2="21"/></svg></span>
           <div>
             <strong>Declaration pre-remplie</strong>
             <p>Verifie bien les montants pre-remplis par l'administration (salaires, revenus financiers). Des erreurs existent.</p>
           </div>
         </div>
         <div class="tax-tip">
-          <span class="tax-tip-icon">📄</span>
+          <span class="tax-tip-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
           <div>
             <strong>Conserve tes justificatifs</strong>
             <p>Garde tes factures et fiches de paie au moins 3 ans. Scribe les archive pour toi !</p>
@@ -1633,7 +1637,7 @@
 <div class="modal-overlay" id="settingsModal">
   <div class="modal-content">
     <div class="modal-header">
-      <h2>⚙️ Parametres</h2>
+      <h2><svg class="title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9"/></svg> Parametres</h2>
       <button class="modal-close" onclick="closeSettings()">&times;</button>
     </div>
     {% if user_pseudo %}
@@ -1675,7 +1679,7 @@
         <div class="form-group">
           <label>Mode</label>
           <div class="toggle-row">
-            <span id="darkModeLabel">{{ '🌙 Sombre' if dark_mode else '☀️ Clair' }}</span>
+            <span id="darkModeLabel">{{ 'Sombre' if dark_mode else 'Clair' }}</span>
             <label class="toggle-switch">
               <input type="checkbox" name="dark_mode_toggle" id="darkModeToggle" {{ 'checked' if dark_mode else '' }} onchange="toggleDarkPreview(this)">
               <span class="toggle-slider"></span>
@@ -1722,6 +1726,26 @@
   </div>
 </div>
 
+{# ---------- NOTIFICATION PANEL ---------- #}
+<div class="notif-overlay" id="notifOverlay"></div>
+<div class="notif-panel" id="notifPanel">
+  <div class="notif-panel-header">
+    <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;vertical-align:-2px;margin-right:6px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Notifications</h3>
+    <button class="notif-panel-close" id="notifClose">&times;</button>
+  </div>
+  <div class="notif-list" id="notifList">
+    <div class="notif-empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <div>Chargement...</div>
+    </div>
+  </div>
+</div>
+
+{# ---------- ONBOARDING FLAG (first visit) ---------- #}
+{% if show_splash and not returning_user %}
+<div id="onboardFlag" style="display:none" data-active="true"></div>
+{% endif %}
+
 {# ---------- SCROLL TO TOP ---------- #}
 <button class="scroll-top-btn" id="scrollTopBtn" title="Retour en haut">↑</button>
 
@@ -1739,7 +1763,7 @@
     lightGrads: {{ light_grads | tojson }},
   };
 </script>
-<script src="{{ url_for('static', filename='app.js') }}?v=6"></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=7"></script>
 
 {% if not onboarded %}
 <script>

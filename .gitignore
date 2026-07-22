@@ -3,3 +3,7 @@ __pycache__/
 data/.secret_key
 data/session_key
 data/subscribers.json
+data/subscribers.json.bak
+data/scribe.db
+data/scribe.db-wal
+data/scribe.db-shm

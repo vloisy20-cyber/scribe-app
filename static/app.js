@@ -18,6 +18,8 @@ document.addEventListener('DOMContentLoaded', () => {
   initScrollTop();
   initFlashAutoDismiss();
   initThemePicker();
+  initNotifications();
+  initOnboarding();
 
   // Auto-load bilan if years exist
   const bilanSelect = document.getElementById('bilanYear');
@@ -454,7 +456,7 @@ function toggleDarkPreview(checkbox) {
   const label = document.getElementById('darkModeLabel');
 
   if (hiddenInput) hiddenInput.value = isDark ? 'true' : 'false';
-  if (label) label.textContent = isDark ? '🌙 Sombre' : '☀️ Clair';
+  if (label) label.textContent = isDark ? 'Sombre' : 'Clair';
 
   // Live preview — switch body class
   document.body.classList.toggle('dark', isDark);
@@ -646,6 +648,252 @@ function renderBilan(container, data) {
 function bilanStat(value, label) {
   return '<div class="bilan-stat"><div class="bilan-stat-value">' + value +
          '</div><div class="bilan-stat-label">' + label + '</div></div>';
+}
+
+/* ================================================================
+   NOTIFICATION PANEL
+   ================================================================ */
+function initNotifications() {
+  const bell = document.getElementById('notifBell');
+  const panel = document.getElementById('notifPanel');
+  const overlay = document.getElementById('notifOverlay');
+  const closeBtn = document.getElementById('notifClose');
+
+  if (!bell || !panel) return;
+
+  function openNotifs() {
+    panel.classList.add('open');
+    if (overlay) overlay.classList.add('open');
+    // Mark dot as read
+    const dot = bell.querySelector('.notif-dot');
+    if (dot) dot.remove();
+    buildNotifList();
+  }
+
+  function closeNotifs() {
+    panel.classList.remove('open');
+    if (overlay) overlay.classList.remove('open');
+  }
+
+  bell.addEventListener('click', openNotifs);
+  if (closeBtn) closeBtn.addEventListener('click', closeNotifs);
+  if (overlay) overlay.addEventListener('click', closeNotifs);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && panel.classList.contains('open')) closeNotifs();
+  });
+}
+
+function buildNotifList() {
+  const list = document.getElementById('notifList');
+  if (!list) return;
+
+  // Build notifications from alerts data if available
+  const alerts = document.querySelectorAll('.alert-card');
+  const items = [];
+
+  alerts.forEach(alert => {
+    const title = alert.querySelector('.alert-title');
+    const msg = alert.querySelector('.alert-message');
+    const badge = alert.querySelector('.alert-severity-badge');
+    let type = 'info';
+    if (alert.classList.contains('alert-serious')) type = 'danger';
+    else if (alert.classList.contains('alert-warning')) type = 'warning';
+
+    items.push({
+      title: title ? title.textContent : 'Alerte',
+      desc: msg ? msg.textContent : '',
+      type: type,
+      time: "Aujourd'hui",
+    });
+  });
+
+  // Add system notifications
+  const statCards = document.querySelectorAll('.stat-card');
+  statCards.forEach(card => {
+    const val = card.querySelector('.stat-value');
+    const label = card.querySelector('.stat-label');
+    if (val && label && label.textContent.includes('Budget')) {
+      const pct = parseFloat(val.textContent);
+      if (pct > 80) {
+        items.push({
+          title: 'Budget presque atteint',
+          desc: 'Tu as utilise ' + val.textContent + ' de ton budget mensuel.',
+          type: pct > 100 ? 'danger' : 'warning',
+          time: "Aujourd'hui",
+        });
+      }
+    }
+  });
+
+  if (items.length === 0) {
+    list.innerHTML = '<div class="notif-empty">' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
+      '<div>Aucune notification</div>' +
+      '<div style="font-size:.78rem;margin-top:.3rem">Tout va bien !</div></div>';
+    return;
+  }
+
+  const iconSvgs = {
+    warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    danger: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  };
+
+  list.innerHTML = items.map(n =>
+    '<div class="notif-item unread">' +
+      '<div class="notif-icon notif-' + n.type + '">' + (iconSvgs[n.type] || iconSvgs.info) + '</div>' +
+      '<div class="notif-body">' +
+        '<div class="notif-title">' + n.title + '</div>' +
+        '<div class="notif-desc">' + n.desc + '</div>' +
+        '<div class="notif-time">' + n.time + '</div>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+}
+
+/* ================================================================
+   ONBOARDING GUIDED TOUR
+   ================================================================ */
+function initOnboarding() {
+  // Only run for first-time users (check flag)
+  if (!document.getElementById('sidebar')) return;
+  try {
+    if (window._scribeOnboardDone) return;
+  } catch(e) {}
+
+  // Check if onboarding flag is set in DOM
+  const onboardFlag = document.getElementById('onboardFlag');
+  if (!onboardFlag) return;
+
+  window._scribeOnboardDone = true;
+
+  const steps = [
+    {
+      target: '[data-section="section-dashboard"]',
+      title: 'Tableau de bord',
+      text: 'Vue d\'ensemble de tes finances : depenses du mois, graphiques et repartition par categorie.',
+    },
+    {
+      target: '[data-section="section-factures"]',
+      title: 'Analyse de factures',
+      text: 'Importe tes factures (photo ou PDF) et l\'IA les analyse automatiquement pour detecter les hausses.',
+    },
+    {
+      target: '[data-section="section-banque"]',
+      title: 'Suivi bancaire',
+      text: 'Importe ton releve CSV ou connecte ta banque pour categoriser automatiquement tes depenses.',
+    },
+    {
+      target: '[data-section="section-budgets"]',
+      title: 'Budgets par categorie',
+      text: 'Definis un budget pour chaque categorie et suis ta progression en temps reel.',
+    },
+    {
+      target: '[data-section="section-score"]',
+      title: 'Score financier',
+      text: 'Un score sur 100 qui evalue ta sante financiere avec des conseils personnalises.',
+    },
+    {
+      target: '.sidebar-footer .nav-item:first-child',
+      title: 'Parametres',
+      text: 'Change ton theme, configure ta cle API Gemini et ajuste ton budget mensuel.',
+    },
+  ];
+
+  let current = 0;
+
+  function createOverlay() {
+    const ov = document.createElement('div');
+    ov.className = 'onboard-overlay';
+    ov.id = 'onboardOverlay';
+    document.body.appendChild(ov);
+    return ov;
+  }
+
+  function showStep(idx) {
+    // Remove previous
+    const old = document.getElementById('onboardTooltip');
+    if (old) old.remove();
+    const oldHighlight = document.querySelector('.onboard-highlight');
+    if (oldHighlight) oldHighlight.classList.remove('onboard-highlight');
+
+    if (idx >= steps.length) {
+      // Done
+      const ov = document.getElementById('onboardOverlay');
+      if (ov) { ov.style.opacity = '0'; setTimeout(() => ov.remove(), 300); }
+      return;
+    }
+
+    const step = steps[idx];
+    const target = document.querySelector(step.target);
+    if (target) target.classList.add('onboard-highlight');
+
+    const tooltip = document.createElement('div');
+    tooltip.className = 'onboard-tooltip';
+    tooltip.id = 'onboardTooltip';
+
+    // Dots
+    let dotsHtml = '<div class="onboard-dots">';
+    for (let i = 0; i < steps.length; i++) {
+      dotsHtml += '<div class="onboard-dot' + (i === idx ? ' active' : '') + '"></div>';
+    }
+    dotsHtml += '</div>';
+
+    tooltip.innerHTML =
+      '<h4>' + step.title + '</h4>' +
+      '<p>' + step.text + '</p>' +
+      '<div class="onboard-actions">' + dotsHtml +
+        '<div class="onboard-btns">' +
+          '<button class="onboard-skip" id="onboardSkip">Passer</button>' +
+          '<button class="onboard-next" id="onboardNext">' +
+            (idx === steps.length - 1 ? 'Terminer' : 'Suivant') +
+          '</button>' +
+        '</div>' +
+      '</div>';
+
+    document.body.appendChild(tooltip);
+
+    // Position tooltip near target
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      const tooltipW = 320;
+      let left = rect.right + 16;
+      let top = rect.top;
+
+      // If overflowing right, place below
+      if (left + tooltipW > window.innerWidth) {
+        left = Math.max(16, rect.left);
+        top = rect.bottom + 12;
+      }
+      // If overflowing bottom
+      if (top + 200 > window.innerHeight) {
+        top = Math.max(16, rect.top - 200);
+      }
+
+      tooltip.style.left = left + 'px';
+      tooltip.style.top = top + 'px';
+    } else {
+      tooltip.style.left = '50%';
+      tooltip.style.top = '50%';
+      tooltip.style.transform = 'translate(-50%,-50%)';
+    }
+
+    // Buttons
+    document.getElementById('onboardSkip').addEventListener('click', () => {
+      showStep(steps.length); // skip all
+    });
+    document.getElementById('onboardNext').addEventListener('click', () => {
+      current++;
+      showStep(current);
+    });
+  }
+
+  // Start after a short delay
+  setTimeout(() => {
+    createOverlay();
+    showStep(0);
+  }, 800);
 }
 
 /* ================================================================

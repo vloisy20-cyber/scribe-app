@@ -3,11 +3,20 @@
   "short_name": "Scribe",
   "description": "Ton ombudsman personnel pour tes finances",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0f1117",
   "theme_color": "#2a78d6",
   "orientation": "portrait-primary",
+  "categories": ["finance", "productivity"],
+  "lang": "fr",
+  "dir": "ltr",
   "icons": [
+    {
+      "src": "/static/favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
     {
       "src": "/static/icon-192.png",
       "sizes": "192x192",
@@ -19,6 +28,19 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Tableau de bord",
+      "url": "/#section-dashboard",
+      "description": "Voir le tableau de bord"
+    },
+    {
+      "name": "Transactions",
+      "url": "/#section-transactions",
+      "description": "Voir les transactions"
     }
   ]
 }
