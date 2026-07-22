@@ -484,6 +484,9 @@
     <a href="#section-dashboard" class="nav-item active" data-section="section-dashboard">
       <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="4" rx="1"/><rect x="3" y="14" width="7" height="4" rx="1"/><rect x="14" y="11" width="7" height="7" rx="1"/></svg></span> Tableau de bord
     </a>
+    <a href="#section-defis" class="nav-item" data-section="section-defis">
+      <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span> Defis{% if challenges %} <span class="nav-badge nav-badge-success">{{ challenges|selectattr('status','equalto','completed')|list|length }}/{{ challenges|length }}</span>{% endif %}
+    </a>
     <a href="#section-factures" class="nav-item" data-section="section-factures">
       <span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></span> Factures
     </a>
@@ -550,6 +553,48 @@
 
 {# ---------- OVERLAY MOBILE ---------- #}
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+{# ---------- ONBOARDING TUTORIAL ---------- #}
+{% if not tx_data and not history_data %}
+<div class="onboard-tutorial" id="onboardTutorial">
+  <div class="onboard-overlay" onclick="closeOnboarding()"></div>
+  <div class="onboard-modal">
+    <button class="onboard-close" onclick="closeOnboarding()">&times;</button>
+    <div class="onboard-steps">
+      <div class="onboard-step active" data-step="1">
+        <div class="onboard-step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-mid)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M12 3l9 7H3l9-7z"/><line x1="5" y1="10" x2="5" y2="21"/><line x1="9" y1="10" x2="9" y2="21"/><line x1="15" y1="10" x2="15" y2="21"/><line x1="19" y1="10" x2="19" y2="21"/></svg>
+        </div>
+        <h3 class="onboard-step-title">1. Connecte ta banque</h3>
+        <p class="onboard-step-desc">Importe tes releves bancaires (CSV) ou connecte ta banque directement. Scribe analysera automatiquement tes depenses.</p>
+      </div>
+      <div class="onboard-step" data-step="2">
+        <div class="onboard-step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-mid)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        </div>
+        <h3 class="onboard-step-title">2. Decouvre ton score</h3>
+        <p class="onboard-step-desc">Scribe calcule ton score de sante financiere et te donne des conseils personnalises pour l'ameliorer.</p>
+      </div>
+      <div class="onboard-step" data-step="3">
+        <div class="onboard-step-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-mid)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:48px;height:48px"><path d="M19 5h-7L9 2H5a2 2 0 0 0-2 2v14c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z"/><line x1="12" y1="10" x2="12" y2="16"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+        </div>
+        <h3 class="onboard-step-title">3. Fixe tes objectifs</h3>
+        <p class="onboard-step-desc">Definis un budget mensuel, cree des objectifs d'epargne et releve des defis pour economiser plus chaque mois !</p>
+      </div>
+    </div>
+    <div class="onboard-dots">
+      <span class="onboard-dot active" data-dot="1"></span>
+      <span class="onboard-dot" data-dot="2"></span>
+      <span class="onboard-dot" data-dot="3"></span>
+    </div>
+    <div class="onboard-actions">
+      <button class="btn btn-ghost onboard-prev" onclick="onboardPrev()" style="display:none">Precedent</button>
+      <button class="btn btn-accent onboard-next" onclick="onboardNext()">Suivant</button>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 {# ---------- MAIN CONTENT ---------- #}
 <main class="main-content" id="mainContent">
@@ -631,6 +676,21 @@
       </div>
     </div>
 
+    {# --- Messages positifs --- #}
+    {% if positive_messages %}
+    <div class="positive-banner fade-slide-up" style="animation-delay:.35s">
+      {% for msg in positive_messages[:3] %}
+      <div class="positive-msg">
+        <span class="positive-icon">{{ msg.icon }}</span>
+        <div class="positive-text">
+          <div class="positive-title">{{ msg.title }}</div>
+          <div class="positive-detail">{{ msg.message }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
     {% if monthly_budget > 0 %}
     <div class="card budget-gauge-card fade-slide-up" style="animation-delay:.4s">
       <h3 class="card-title">Budget mensuel</h3>
@@ -674,6 +734,156 @@
           {% endfor %}
         </div>
       </div>
+    </div>
+    {% endif %}
+
+    {# --- Tendances 90 jours --- #}
+    {% if trends_data and trends_data.monthly_totals|length > 1 %}
+    <div class="card fade-slide-up" style="animation-delay:.6s">
+      <h3 class="card-title">
+        Evolution des depenses
+        {% if trends_data.vs_last_month is not none %}
+        <span class="trend-badge {{ 'trend-down' if trends_data.vs_last_month < 0 else 'trend-up' }}">
+          {{ "%.0f"|format(trends_data.vs_last_month) }}% vs mois dernier
+        </span>
+        {% endif %}
+      </h3>
+      <div class="trends-chart-wrap">
+        <canvas id="trendsLineChart" height="200"></canvas>
+        <script type="application/json" id="trendsChartData">
+          {"labels": {{ trends_data.monthly_totals|map(attribute='month')|list|tojson }}, "values": {{ trends_data.monthly_totals|map(attribute='total')|list|tojson }}}
+        </script>
+      </div>
+      <div class="trends-stats">
+        {% if trends_data.best_month %}
+        <div class="trend-stat">
+          <span class="trend-stat-icon good">▼</span>
+          <span>Meilleur mois : {{ trends_data.best_month.month }} ({{ "%.0f"|format(trends_data.best_month.total) }} EUR)</span>
+        </div>
+        {% endif %}
+        {% if trends_data.worst_month %}
+        <div class="trend-stat">
+          <span class="trend-stat-icon bad">▲</span>
+          <span>Plus gros mois : {{ trends_data.worst_month.month }} ({{ "%.0f"|format(trends_data.worst_month.total) }} EUR)</span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# --- Top categories : evolution --- #}
+    {% if trends_data.category_trends %}
+    <div class="card fade-slide-up" style="animation-delay:.7s">
+      <h3 class="card-title">Evolution par categorie</h3>
+      <div class="cat-trends-grid">
+        {% for cat, info in trends_data.category_trends.items() %}
+        <div class="cat-trend-item">
+          <div class="cat-trend-name">{{ cat }}</div>
+          <div class="cat-trend-amounts">
+            <span>{{ "%.0f"|format(info.current) }} EUR</span>
+            {% if info.change_pct is not none %}
+            <span class="cat-trend-change {{ 'trend-down' if info.change_pct < 0 else 'trend-up' }}">
+              {{ "%+.0f"|format(info.change_pct) }}%
+            </span>
+            {% endif %}
+          </div>
+          <div class="cat-trend-bar-bg">
+            <div class="cat-trend-bar" style="width: {{ [info.current / (trends_data.category_trends.values()|map(attribute='current')|max or 1) * 100, 100]|min }}%"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    {# --- Conseils contextuels --- #}
+    {% if contextual_tips %}
+    <div class="card fade-slide-up" style="animation-delay:.8s">
+      <h3 class="card-title">Conseils pour toi</h3>
+      <div class="tips-list">
+        {% for tip in contextual_tips[:4] %}
+        <div class="tip-item">
+          <span class="tip-icon">{{ tip.icon }}</span>
+          <div class="tip-text">
+            <div class="tip-title">{{ tip.title }}</div>
+            <div class="tip-message">{{ tip.message }}</div>
+            {% if tip.potential_savings %}
+            <div class="tip-savings">Economie potentielle : {{ "%.0f"|format(tip.potential_savings) }} EUR/mois</div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {# --- Export PDF rapide --- #}
+    {% if export_months %}
+    <div class="card fade-slide-up" style="animation-delay:.9s">
+      <div class="export-pdf-row">
+        <div class="export-pdf-info">
+          <h3 class="card-title" style="margin:0">Exporter ton bilan</h3>
+          <p class="export-pdf-desc">Telecharge un recapitulatif mensuel en PDF</p>
+        </div>
+        <div class="export-pdf-actions">
+          <select id="pdfMonthSelect" class="input-field input-sm">
+            {% for m in export_months[:6] %}
+            <option value="{{ m }}">{{ m }}</option>
+            {% endfor %}
+          </select>
+          <a id="pdfDownloadBtn" href="/api/export-pdf/{{ export_months[0] }}" class="btn btn-accent btn-sm" download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            PDF
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </section>
+
+  {# ============================================================ #}
+  {#  SECTION: DEFIS                                                #}
+  {# ============================================================ #}
+  <section class="content-section" id="section-defis">
+    <h2 class="section-title">Defis du mois</h2>
+
+    {% if challenges %}
+    <div class="challenges-grid">
+      {% for ch in challenges %}
+      <div class="card challenge-card fade-slide-up {{ 'challenge-completed' if ch.status == 'completed' else '' }}" style="animation-delay:{{ loop.index0 * 0.1 }}s">
+        <div class="challenge-header">
+          <span class="challenge-icon">{{ ch.icon }}</span>
+          <div class="challenge-info">
+            <div class="challenge-title">{{ ch.title }}</div>
+            <div class="challenge-desc">{{ ch.description }}</div>
+          </div>
+          {% if ch.status == 'completed' %}
+          <span class="challenge-badge completed">Reussi !</span>
+          {% endif %}
+        </div>
+        <div class="challenge-progress-wrap">
+          <div class="challenge-progress-bar-bg">
+            <div class="challenge-progress-bar" style="width: {{ [ch.progress_pct, 100]|min }}%;
+              background: {{ 'var(--color-success)' if ch.status == 'completed' else 'var(--accent-mid)' }}">
+            </div>
+          </div>
+          <div class="challenge-progress-labels">
+            <span>{{ "%.0f"|format(ch.current) }} EUR</span>
+            <span>{{ "%.0f"|format(ch.progress_pct) }}%</span>
+            <span>Objectif : {{ "%.0f"|format(ch.target) }} EUR</span>
+          </div>
+        </div>
+        {% if ch.status == 'completed' and ch.reward_text %}
+        <div class="challenge-reward">{{ ch.reward_text }}</div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <span class="empty-icon">🎯</span>
+      <p>Les defis apparaitront quand tu auras au moins 2 mois de donnees.</p>
+      <p class="empty-hint">Importe tes releves bancaires pour debloquer les defis !</p>
     </div>
     {% endif %}
   </section>
@@ -1180,7 +1390,7 @@
             <div class="alert-message">{{ alert.message }}</div>
           </div>
           <span class="alert-severity-badge alert-badge-{{ alert.severity }}">
-            {% if alert.severity == 'serious' %}Urgent{% elif alert.severity == 'warning' %}Attention{% else %}Info{% endif %}
+            {% if alert.severity == 'serious' %}Urgent{% elif alert.severity == 'warning' %}Attention{% elif alert.severity == 'positive' %}Bravo{% else %}Info{% endif %}
           </span>
         </div>
       </div>
@@ -1768,7 +1978,7 @@
     lightGrads: {{ light_grads | tojson }},
   };
 </script>
-<script src="{{ url_for('static', filename='app.js') }}?v=8"></script>
+<script src="{{ url_for('static', filename='app.js') }}?v=9"></script>
 
 {% if not onboarded %}
 <script>

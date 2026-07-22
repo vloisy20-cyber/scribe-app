@@ -20,6 +20,9 @@ document.addEventListener('DOMContentLoaded', () => {
   initThemePicker();
   initNotifications();
   initOnboarding();
+  initTrendsChart();
+  initPdfExport();
+  initOnboardingTutorial();
 
   // Auto-load bilan if years exist
   const bilanSelect = document.getElementById('bilanYear');
@@ -1019,4 +1022,133 @@ function renderTaxResult(container, data) {
 
   container.innerHTML = html;
   container.style.display = 'block';
+}
+
+/* ================================================================
+   TRENDS LINE CHART
+   ================================================================ */
+function initTrendsChart() {
+  const canvas = document.getElementById('trendsLineChart');
+  if (!canvas) return;
+
+  // Get data from a hidden script tag
+  const dataEl = document.getElementById('trendsChartData');
+  if (!dataEl) return;
+
+  try {
+    const data = JSON.parse(dataEl.textContent);
+    if (!data.labels || !data.values || data.labels.length < 2) return;
+
+    const ctx = canvas.getContext('2d');
+    const accentMid = getComputedStyle(document.documentElement).getPropertyValue('--accent-mid').trim() || '#10b981';
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: 'Depenses',
+          data: data.values,
+          borderColor: accentMid,
+          backgroundColor: accentMid + '20',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: accentMid,
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2,
+          borderWidth: 2.5,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function(ctx) {
+                return ctx.parsed.y.toLocaleString('fr-FR') + ' EUR';
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: 'rgba(255,255,255,.5)', font: { size: 11 } }
+          },
+          y: {
+            beginAtZero: true,
+            grid: { color: 'rgba(255,255,255,.06)' },
+            ticks: {
+              color: 'rgba(255,255,255,.5)',
+              font: { size: 11 },
+              callback: function(v) { return v.toLocaleString('fr-FR') + ' EUR'; }
+            }
+          }
+        }
+      }
+    });
+  } catch (e) {
+    console.warn('Trends chart error:', e);
+  }
+}
+
+/* ================================================================
+   PDF EXPORT — month selector
+   ================================================================ */
+function initPdfExport() {
+  const select = document.getElementById('pdfMonthSelect');
+  const btn = document.getElementById('pdfDownloadBtn');
+  if (!select || !btn) return;
+
+  select.addEventListener('change', () => {
+    btn.href = '/api/export-pdf/' + select.value;
+  });
+}
+
+/* ================================================================
+   ONBOARDING TUTORIAL
+   ================================================================ */
+let onboardStep = 1;
+function initOnboardingTutorial() {
+  const tut = document.getElementById('onboardTutorial');
+  if (!tut) return;
+  // Show after a short delay
+  setTimeout(() => tut.classList.add('visible'), 600);
+}
+function onboardNext() {
+  if (onboardStep < 3) {
+    onboardStep++;
+    updateOnboardStep();
+  } else {
+    closeOnboarding();
+  }
+}
+function onboardPrev() {
+  if (onboardStep > 1) {
+    onboardStep--;
+    updateOnboardStep();
+  }
+}
+function updateOnboardStep() {
+  document.querySelectorAll('.onboard-step').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.step) === onboardStep);
+  });
+  document.querySelectorAll('.onboard-dot').forEach(el => {
+    el.classList.toggle('active', parseInt(el.dataset.dot) === onboardStep);
+  });
+  const prev = document.querySelector('.onboard-prev');
+  const next = document.querySelector('.onboard-next');
+  if (prev) prev.style.display = onboardStep > 1 ? '' : 'none';
+  if (next) next.textContent = onboardStep === 3 ? 'C\'est parti !' : 'Suivant';
+}
+function closeOnboarding() {
+  const tut = document.getElementById('onboardTutorial');
+  if (tut) {
+    tut.classList.remove('visible');
+    setTimeout(() => tut.remove(), 400);
+  }
 }

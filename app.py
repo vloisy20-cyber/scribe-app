@@ -49,6 +49,12 @@ try:
 except ImportError:
     _HAS_PYJWT = False
 
+try:
+    from fpdf import FPDF
+    _HAS_FPDF = True
+except ImportError:
+    _HAS_FPDF = False
+
 # --------------------------------------------------------------------------
 # Flask app
 # --------------------------------------------------------------------------
@@ -1020,7 +1026,7 @@ def compute_smart_alerts(tx_df, subscriptions, month_depenses, revenu_mensuel,
                 pct = round((spent / budget_val - 1) * 100, 0)
                 alerts.append({
                     "type": "budget_exceeded",
-                    "severity": "serious",
+                    "severity": "warning",
                     "icon": "🚨",
                     "title": f"Budget depasse : {cat}",
                     "message": f"{spent:.0f} EUR depenses sur {budget_val:.0f} EUR prevus (+{pct:.0f}%).",
@@ -1030,26 +1036,45 @@ def compute_smart_alerts(tx_df, subscriptions, month_depenses, revenu_mensuel,
                 alerts.append({
                     "type": "budget_warning",
                     "severity": "info",
-                    "icon": "📊",
+                    "icon": "\U0001f4ca",
                     "title": f"Budget presque atteint : {cat}",
                     "message": f"{spent:.0f} EUR / {budget_val:.0f} EUR ({pct:.0f}%). Attention ce mois-ci.",
                 })
+            elif budget_val > 0 and spent <= budget_val * 0.80:
+                # Message positif : budget bien respecte
+                pct = round((spent / budget_val) * 100, 0)
+                alerts.append({
+                    "type": "budget_ok",
+                    "severity": "positive",
+                    "icon": "✅",
+                    "title": f"Budget bien gere : {cat}",
+                    "message": f"{spent:.0f} EUR / {budget_val:.0f} EUR ({pct:.0f}%). Tu geres bien cette categorie !",
+                })
 
-    # 4) Taux d'epargne faible
+    # 4) Taux d'epargne
     if revenu_mensuel > 0 and month_depenses > 0:
         taux_epargne = ((revenu_mensuel - month_depenses) / revenu_mensuel) * 100
         if taux_epargne < 5:
             alerts.append({
                 "type": "low_savings",
-                "severity": "warning",
-                "icon": "🐷",
-                "title": "Taux d'epargne tres faible",
+                "severity": "info",
+                "icon": "\U0001f437",
+                "title": "Taux d'epargne faible",
                 "message": f"Seulement {taux_epargne:.1f}% d'epargne ce mois. Objectif recommande : 10-20%.",
             })
+        elif taux_epargne > 15:
+            # Felicitations pour un bon taux d'epargne
+            alerts.append({
+                "type": "good_savings",
+                "severity": "positive",
+                "icon": "\U0001f389",
+                "title": "Excellent taux d'epargne !",
+                "message": f"Bravo ! {taux_epargne:.1f}% d'epargne ce mois. Continue comme ca !",
+            })
 
-    # Trier par severite
-    severity_order = {"serious": 0, "warning": 1, "info": 2}
-    alerts.sort(key=lambda a: severity_order.get(a["severity"], 3))
+    # Trier par severite (positif en dernier pour ne pas noyer les alertes)
+    severity_order = {"serious": 0, "warning": 1, "info": 2, "positive": 3}
+    alerts.sort(key=lambda a: severity_order.get(a["severity"], 4))
     return alerts
 
 
@@ -1195,6 +1220,492 @@ def compute_health_score(tx_df, revenu_mensuel, month_depenses, monthly_budget,
         "color": color,
         "details": details,
     }
+
+
+# --------------------------------------------------------------------------
+# Messages positifs / encouragements
+# --------------------------------------------------------------------------
+
+def compute_positive_messages(tx_df, month_depenses, revenu_mensuel,
+                              subscriptions, savings_goals):
+    """Genere des messages positifs et encourageants pour l'utilisateur."""
+    messages = []
+
+    # 1) Taux d'epargne > 10%
+    if revenu_mensuel > 0 and month_depenses >= 0:
+        taux_epargne = ((revenu_mensuel - month_depenses) / revenu_mensuel) * 100
+        if taux_epargne > 10:
+            messages.append({
+                "type": "savings_rate",
+                "icon": "\U0001f4b0",
+                "title": "Bon taux d'epargne !",
+                "message": f"Bravo ! Tu epargnes {taux_epargne:.1f}% de tes revenus ce mois.",
+            })
+
+    # 2) Depenses ce mois < mois dernier
+    if not tx_df.empty:
+        tx = tx_df.copy()
+        tx["amount"] = pd.to_numeric(tx["amount"], errors="coerce")
+        tx["date"] = pd.to_datetime(tx["date"], errors="coerce", dayfirst=True)
+        tx = tx.dropna(subset=["amount", "date"])
+        now = pd.Timestamp.now()
+
+        # Depenses mois precedent
+        prev_start = (now - pd.DateOffset(months=1)).replace(day=1)
+        prev_end = now.replace(day=1) - pd.Timedelta(days=1)
+        prev_month_tx = tx[(tx["date"] >= prev_start) & (tx["date"] <= prev_end)]
+        prev_month_total = float(prev_month_tx["amount"].sum()) if not prev_month_tx.empty else 0
+
+        if prev_month_total > 0 and month_depenses < prev_month_total:
+            baisse_pct = round(((prev_month_total - month_depenses) / prev_month_total) * 100, 1)
+            if baisse_pct > 1:
+                messages.append({
+                    "type": "spending_decrease",
+                    "icon": "\U0001f4c9",
+                    "title": "Depenses en baisse !",
+                    "message": f"Tes depenses ont baisse de {baisse_pct}% par rapport au mois dernier. Continue !",
+                })
+
+        # 3) Baisse par categorie
+        if "auto_category" in tx.columns:
+            cur_month_tx = tx[
+                (tx["date"].dt.month == now.month) & (tx["date"].dt.year == now.year)
+            ]
+            cur_cat = cur_month_tx.groupby("auto_category")["amount"].sum() if not cur_month_tx.empty else pd.Series(dtype=float)
+            prev_cat = prev_month_tx.groupby("auto_category")["amount"].sum() if not prev_month_tx.empty else pd.Series(dtype=float)
+
+            for cat in prev_cat.index:
+                prev_val = float(prev_cat.get(cat, 0))
+                cur_val = float(cur_cat.get(cat, 0)) if cat in cur_cat.index else 0
+                if prev_val > 10 and cur_val < prev_val:
+                    reduction_pct = round(((prev_val - cur_val) / prev_val) * 100, 1)
+                    if reduction_pct > 10:
+                        messages.append({
+                            "type": "category_decrease",
+                            "icon": "⬇️",
+                            "title": f"Baisse en {cat}",
+                            "message": f"Tu as reduit tes depenses en {cat} de {reduction_pct}%. Bien joue !",
+                        })
+
+    # 4) Progression des objectifs d'epargne
+    if savings_goals:
+        for goal in savings_goals:
+            target = float(goal.get("target", 0))
+            current = float(goal.get("current", 0))
+            name = goal.get("name", "objectif")
+            if target > 0:
+                progress = round((current / target) * 100, 1)
+                remaining = round(target - current, 2)
+                if 0 < progress < 100:
+                    messages.append({
+                        "type": "savings_goal_progress",
+                        "icon": "\U0001f3af",
+                        "title": f"Objectif : {name}",
+                        "message": f"Tu as atteint {progress}% de ton objectif {name}. Encore {remaining:.0f} EUR !",
+                    })
+                elif progress >= 100:
+                    messages.append({
+                        "type": "savings_goal_complete",
+                        "icon": "\U0001f389",
+                        "title": f"Objectif atteint : {name}",
+                        "message": f"Felicitations ! Tu as atteint ton objectif {name} !",
+                    })
+
+    # 5) Pas d'abonnements oublies
+    if subscriptions:
+        nb_oublies = sum(1 for s in subscriptions if s.get("statut") == "oublie")
+        if nb_oublies == 0:
+            messages.append({
+                "type": "subscriptions_ok",
+                "icon": "✅",
+                "title": "Abonnements a jour",
+                "message": "Tous tes abonnements sont a jour. Aucun oublie !",
+            })
+
+    return messages
+
+
+# --------------------------------------------------------------------------
+# Conseils contextuels
+# --------------------------------------------------------------------------
+
+# Moyennes recommandees par categorie (en % du budget total)
+_RECOMMENDED_PCT = {
+    "Alimentation": 25,
+    "Transport": 15,
+    "Logement": 35,
+    "Loisirs": 10,
+    "Sante": 5,
+    "Shopping": 10,
+    "Abonnements": 10,
+}
+
+
+def compute_contextual_tips(tx_df, month_depenses, revenu_mensuel,
+                            cat_totals, month_cat_totals, subscriptions):
+    """Genere des conseils contextuels bases sur l'analyse des depenses."""
+    tips = []
+
+    # 1) Categorie > 30% du total des depenses
+    if month_cat_totals and month_depenses > 0:
+        for cat, spent in month_cat_totals.items():
+            pct_of_total = (spent / month_depenses) * 100
+            if pct_of_total > 30:
+                recommended = _RECOMMENDED_PCT.get(cat, 20)
+                tips.append({
+                    "type": "category_heavy",
+                    "icon": "\U0001f4ca",
+                    "title": f"Poids eleve : {cat}",
+                    "message": f"Tu depenses {pct_of_total:.0f}% en {cat}. La moyenne recommandee est de {recommended}%.",
+                    "potential_savings": round(spent - (month_depenses * recommended / 100), 2) if pct_of_total > recommended else None,
+                })
+
+    # 2) Projection annuelle
+    if month_depenses > 0:
+        projection = round(month_depenses * 12, 2)
+        tips.append({
+            "type": "annual_projection",
+            "icon": "\U0001f4c5",
+            "title": "Projection annuelle",
+            "message": f"A ce rythme, tu depenseras {projection:.0f} EUR cette annee.",
+            "potential_savings": None,
+        })
+
+    # 3) Abonnements > 15% des revenus
+    if subscriptions and revenu_mensuel > 0:
+        total_subs = sum(s.get("cout_mensuel", 0) for s in subscriptions)
+        pct_subs = (total_subs / revenu_mensuel) * 100
+        if pct_subs > 15:
+            tips.append({
+                "type": "subscriptions_heavy",
+                "icon": "\U0001f4b3",
+                "title": "Abonnements eleves",
+                "message": f"Tes abonnements representent {pct_subs:.1f}% de tes revenus ({total_subs:.0f} EUR/mois). Tu pourrais economiser en revisant les moins utilises.",
+                "potential_savings": round(total_subs * 0.2, 2),
+            })
+
+    # 4) Comparaison semaine vs weekend
+    if not tx_df.empty:
+        tx = tx_df.copy()
+        tx["amount"] = pd.to_numeric(tx["amount"], errors="coerce")
+        tx["date"] = pd.to_datetime(tx["date"], errors="coerce", dayfirst=True)
+        tx = tx.dropna(subset=["amount", "date"])
+        now = pd.Timestamp.now()
+        tx_month = tx[
+            (tx["date"].dt.month == now.month) & (tx["date"].dt.year == now.year)
+        ]
+        if not tx_month.empty and len(tx_month) >= 5:
+            tx_month = tx_month.copy()
+            tx_month["dow"] = tx_month["date"].dt.dayofweek
+            weekday_tx = tx_month[tx_month["dow"] < 5]
+            weekend_tx = tx_month[tx_month["dow"] >= 5]
+            nb_weekdays = max(tx_month["date"].dt.date.apply(lambda d: d.weekday() < 5).sum(), 1)
+            nb_weekends = max(tx_month["date"].dt.date.apply(lambda d: d.weekday() >= 5).sum(), 1)
+            avg_weekday = float(weekday_tx["amount"].sum()) / nb_weekdays if not weekday_tx.empty else 0
+            avg_weekend = float(weekend_tx["amount"].sum()) / nb_weekends if not weekend_tx.empty else 0
+            if avg_weekend > 0 and avg_weekday > 0:
+                if avg_weekend > avg_weekday * 1.3:
+                    tips.append({
+                        "type": "weekend_spending",
+                        "icon": "\U0001f4c6",
+                        "title": "Depenses le weekend",
+                        "message": f"Tu depenses en moyenne {avg_weekend:.0f} EUR/jour le weekend contre {avg_weekday:.0f} EUR/jour en semaine.",
+                        "potential_savings": None,
+                    })
+
+    # 5) Depenses en hausse mois apres mois
+    if not tx_df.empty:
+        tx = tx_df.copy()
+        tx["amount"] = pd.to_numeric(tx["amount"], errors="coerce")
+        tx["date"] = pd.to_datetime(tx["date"], errors="coerce", dayfirst=True)
+        tx = tx.dropna(subset=["amount", "date"])
+        monthly = tx.groupby(tx["date"].dt.to_period("M"))["amount"].sum().sort_index()
+        if len(monthly) >= 3:
+            last_3 = monthly.tail(3).values
+            if all(last_3[i] < last_3[i + 1] for i in range(len(last_3) - 1)):
+                tips.append({
+                    "type": "spending_increase",
+                    "icon": "\U0001f4c8",
+                    "title": "Tendance a la hausse",
+                    "message": f"Tes depenses augmentent depuis {len(last_3)} mois. Attention a la tendance.",
+                    "potential_savings": None,
+                })
+
+    return tips
+
+
+# --------------------------------------------------------------------------
+# Systeme de challenges / gamification
+# --------------------------------------------------------------------------
+
+def load_challenges():
+    """Charge les challenges depuis les preferences utilisateur."""
+    prefs = load_user_prefs()
+    return prefs.get("challenges", [])
+
+
+def save_challenges(challenges):
+    """Sauvegarde les challenges dans les preferences utilisateur."""
+    prefs = load_user_prefs()
+    prefs["challenges"] = challenges
+    save_user_prefs(prefs)
+
+
+def compute_active_challenges(tx_df, month_depenses, revenu_mensuel,
+                              month_cat_totals, cat_budgets):
+    """Genere et met a jour les challenges actifs."""
+    now = pd.Timestamp.now()
+    current_month = now.strftime("%Y-%m")
+    challenges = load_challenges()
+
+    # Filtrer les challenges du mois en cours
+    active = [c for c in challenges if c.get("month") == current_month]
+
+    # Si pas de challenges pour ce mois, en generer automatiquement
+    if not active:
+        active = _generate_challenges(tx_df, month_depenses, revenu_mensuel,
+                                      month_cat_totals, cat_budgets, current_month)
+
+    # Mettre a jour la progression
+    for ch in active:
+        ch = _update_challenge_progress(ch, month_depenses, revenu_mensuel,
+                                        month_cat_totals, cat_budgets)
+
+    # Sauvegarder les challenges mis a jour
+    # Garder les anciens mois + le mois courant
+    old = [c for c in challenges if c.get("month") != current_month]
+    save_challenges(old + active)
+
+    return active
+
+
+def _generate_challenges(tx_df, month_depenses, revenu_mensuel,
+                         month_cat_totals, cat_budgets, current_month):
+    """Genere automatiquement des challenges pour le mois."""
+    challenges = []
+    now = pd.Timestamp.now()
+
+    # Challenge 1 : Reduire la top categorie de 10%
+    if month_cat_totals:
+        # Chercher les depenses du mois precedent par categorie
+        if not tx_df.empty:
+            tx = tx_df.copy()
+            tx["amount"] = pd.to_numeric(tx["amount"], errors="coerce")
+            tx["date"] = pd.to_datetime(tx["date"], errors="coerce", dayfirst=True)
+            tx = tx.dropna(subset=["amount", "date"])
+            prev_start = (now - pd.DateOffset(months=1)).replace(day=1)
+            prev_end = now.replace(day=1) - pd.Timedelta(days=1)
+            prev_tx = tx[(tx["date"] >= prev_start) & (tx["date"] <= prev_end)]
+            if not prev_tx.empty and "auto_category" in prev_tx.columns:
+                prev_cat = prev_tx.groupby("auto_category")["amount"].sum()
+                # Prendre la categorie la plus elevee le mois dernier
+                if not prev_cat.empty:
+                    top_cat = prev_cat.idxmax()
+                    top_val = float(prev_cat.max())
+                    target = round(top_val * 0.9, 2)  # -10%
+                    if target > 0:
+                        challenges.append({
+                            "id": f"reduce_{top_cat.lower().replace(' ', '_')}_{current_month}",
+                            "title": f"Reduire {top_cat}",
+                            "description": f"Depense moins de {target:.0f} EUR en {top_cat} ce mois",
+                            "icon": "\U0001f3af",
+                            "target": target,
+                            "current": float(month_cat_totals.get(top_cat, 0)),
+                            "progress_pct": 0,
+                            "status": "active",
+                            "reward_text": f"Champion de l'economie en {top_cat} !",
+                            "month": current_month,
+                            "category": top_cat,
+                            "challenge_type": "category_reduce",
+                        })
+
+    # Challenge 2 : Epargner X% (taux actuel + 2%)
+    if revenu_mensuel > 0:
+        current_rate = ((revenu_mensuel - month_depenses) / revenu_mensuel) * 100 if month_depenses >= 0 else 0
+        target_rate = max(round(current_rate + 2, 1), 5)
+        target_depense = round(revenu_mensuel * (1 - target_rate / 100), 2)
+        challenges.append({
+            "id": f"savings_rate_{current_month}",
+            "title": f"Epargner {target_rate}%",
+            "description": f"Epargne au moins {target_rate}% de tes revenus ce mois",
+            "icon": "\U0001f4b0",
+            "target": target_rate,
+            "current": round(max(current_rate, 0), 1),
+            "progress_pct": 0,
+            "status": "active",
+            "reward_text": f"Objectif d'epargne de {target_rate}% atteint !",
+            "month": current_month,
+            "challenge_type": "savings_rate",
+        })
+
+    # Challenge 3 : Rester sous le budget global
+    if cat_budgets:
+        total_budget = sum(v for v in cat_budgets.values() if v > 0)
+        if total_budget > 0:
+            challenges.append({
+                "id": f"budget_global_{current_month}",
+                "title": "Respecter le budget",
+                "description": "Reste sous ton budget global ce mois",
+                "icon": "\U0001f6e1️",
+                "target": total_budget,
+                "current": month_depenses,
+                "progress_pct": 0,
+                "status": "active",
+                "reward_text": "Budget respecte ce mois ! Bravo !",
+                "month": current_month,
+                "challenge_type": "budget_global",
+            })
+
+    return challenges
+
+
+def _update_challenge_progress(challenge, month_depenses, revenu_mensuel,
+                               month_cat_totals, cat_budgets):
+    """Met a jour la progression d'un challenge."""
+    ch_type = challenge.get("challenge_type", "")
+
+    if ch_type == "category_reduce":
+        cat = challenge.get("category", "")
+        current = float(month_cat_totals.get(cat, 0))
+        target = challenge.get("target", 1)
+        challenge["current"] = current
+        if target > 0:
+            # Progression inversee : moins on depense, plus on progresse
+            if current <= target:
+                challenge["progress_pct"] = 100
+                challenge["status"] = "completed"
+            else:
+                # Montrer combien il reste a economiser
+                challenge["progress_pct"] = max(0, round((1 - (current - target) / target) * 100, 1))
+                challenge["status"] = "active"
+
+    elif ch_type == "savings_rate":
+        if revenu_mensuel > 0:
+            current_rate = max(0, round(((revenu_mensuel - month_depenses) / revenu_mensuel) * 100, 1))
+            target_rate = challenge.get("target", 10)
+            challenge["current"] = current_rate
+            if current_rate >= target_rate:
+                challenge["progress_pct"] = 100
+                challenge["status"] = "completed"
+            else:
+                challenge["progress_pct"] = round((current_rate / target_rate) * 100, 1) if target_rate > 0 else 0
+                challenge["status"] = "active"
+
+    elif ch_type == "budget_global":
+        target = challenge.get("target", 1)
+        challenge["current"] = month_depenses
+        if target > 0:
+            if month_depenses <= target:
+                challenge["progress_pct"] = 100
+                challenge["status"] = "completed"
+            else:
+                challenge["progress_pct"] = max(0, round((1 - (month_depenses - target) / target) * 100, 1))
+                challenge["status"] = "active"
+
+    return challenge
+
+
+# --------------------------------------------------------------------------
+# Donnees de tendances (trends)
+# --------------------------------------------------------------------------
+
+def compute_trends_data(tx_df):
+    """Calcule les donnees de tendances pour les graphiques et stats."""
+    result = {
+        "monthly_totals": [],
+        "vs_last_month": 0,
+        "vs_last_month_amount": 0,
+        "category_trends": {},
+        "daily_spending": [],
+        "best_month": {"month": "", "total": 0},
+        "worst_month": {"month": "", "total": 0},
+    }
+
+    if tx_df.empty:
+        return result
+
+    tx = tx_df.copy()
+    tx["amount"] = pd.to_numeric(tx["amount"], errors="coerce")
+    tx["date"] = pd.to_datetime(tx["date"], errors="coerce", dayfirst=True)
+    tx = tx.dropna(subset=["amount", "date"])
+
+    if tx.empty:
+        return result
+
+    now = pd.Timestamp.now()
+
+    # 1) Totaux mensuels (6 derniers mois)
+    tx["period"] = tx["date"].dt.to_period("M")
+    monthly = tx.groupby("period")["amount"].sum().sort_index()
+
+    # Garder les 6 derniers mois
+    last_6 = monthly.tail(6)
+    result["monthly_totals"] = [
+        {"month": str(m), "total": round(float(v), 2)}
+        for m, v in last_6.items()
+    ]
+
+    # 2) Comparaison vs mois precedent
+    if len(monthly) >= 2:
+        current_period = now.to_period("M")
+        prev_period = (now - pd.DateOffset(months=1)).to_period("M")
+
+        current_total = float(monthly.get(current_period, 0))
+        prev_total = float(monthly.get(prev_period, 0))
+
+        if prev_total > 0:
+            result["vs_last_month"] = round(((current_total - prev_total) / prev_total) * 100, 1)
+            result["vs_last_month_amount"] = round(current_total - prev_total, 2)
+
+    # 3) Tendances par categorie (top 5)
+    if "auto_category" in tx.columns:
+        current_period = now.to_period("M")
+        prev_period = (now - pd.DateOffset(months=1)).to_period("M")
+
+        cur_tx = tx[tx["period"] == current_period]
+        prev_tx = tx[tx["period"] == prev_period]
+
+        cur_cat = cur_tx.groupby("auto_category")["amount"].sum() if not cur_tx.empty else pd.Series(dtype=float)
+        prev_cat = prev_tx.groupby("auto_category")["amount"].sum() if not prev_tx.empty else pd.Series(dtype=float)
+
+        # Toutes les categories presentes
+        all_cats = set(cur_cat.index.tolist() + prev_cat.index.tolist())
+        cat_trends = {}
+        for cat in all_cats:
+            cur_val = float(cur_cat.get(cat, 0))
+            prev_val = float(prev_cat.get(cat, 0))
+            change_pct = 0
+            if prev_val > 0:
+                change_pct = round(((cur_val - prev_val) / prev_val) * 100, 1)
+            cat_trends[cat] = {
+                "current": round(cur_val, 2),
+                "previous": round(prev_val, 2),
+                "change_pct": change_pct,
+            }
+
+        # Garder le top 5 par depense courante
+        sorted_cats = sorted(cat_trends.items(), key=lambda x: x[1]["current"], reverse=True)
+        result["category_trends"] = dict(sorted_cats[:5])
+
+    # 4) Depenses quotidiennes du mois en cours (pour sparkline)
+    cur_month_tx = tx[
+        (tx["date"].dt.month == now.month) & (tx["date"].dt.year == now.year)
+    ]
+    if not cur_month_tx.empty:
+        daily = cur_month_tx.groupby(cur_month_tx["date"].dt.date)["amount"].sum().sort_index()
+        result["daily_spending"] = [
+            {"day": str(d), "amount": round(float(v), 2)}
+            for d, v in daily.items()
+        ]
+
+    # 5) Meilleur et pire mois
+    if len(monthly) >= 1:
+        best_idx = monthly.idxmin()
+        worst_idx = monthly.idxmax()
+        result["best_month"] = {"month": str(best_idx), "total": round(float(monthly[best_idx]), 2)}
+        result["worst_month"] = {"month": str(worst_idx), "total": round(float(monthly[worst_idx]), 2)}
+
+    return result
 
 
 # --------------------------------------------------------------------------
@@ -1663,6 +2174,35 @@ def compute_dashboard_data():
         tax_data["net_mensuel_apres_impot"] = 0
         tax_data["ir_mensuel"] = 0
 
+    # ------------------------------------------------------------------
+    # Messages positifs
+    # ------------------------------------------------------------------
+    positive_messages = compute_positive_messages(
+        tx_df, month_depenses, revenu_mensuel,
+        subscriptions, savings_goals,
+    )
+
+    # ------------------------------------------------------------------
+    # Conseils contextuels
+    # ------------------------------------------------------------------
+    contextual_tips = compute_contextual_tips(
+        tx_df, month_depenses, revenu_mensuel,
+        cat_totals, month_cat_totals_data, subscriptions,
+    )
+
+    # ------------------------------------------------------------------
+    # Challenges / gamification
+    # ------------------------------------------------------------------
+    challenges = compute_active_challenges(
+        tx_df, month_depenses, revenu_mensuel,
+        month_cat_totals_data, cat_budgets,
+    )
+
+    # ------------------------------------------------------------------
+    # Donnees de tendances
+    # ------------------------------------------------------------------
+    trends_data = compute_trends_data(tx_df)
+
     return {
         "onboarded": onboarded,
         "theme_name": theme_name,
@@ -1706,6 +2246,11 @@ def compute_dashboard_data():
         # Alertes & Score
         "smart_alerts": smart_alerts,
         "health_score": health_score,
+        # Messages positifs, conseils, challenges, tendances
+        "positive_messages": positive_messages,
+        "contextual_tips": contextual_tips,
+        "challenges": challenges,
+        "trends_data": trends_data,
         # Enable Banking (Open Banking)
         "eb_data": _eb_load(),
         "eb_configured": _eb_configured(),
@@ -2074,6 +2619,154 @@ def export_csv(month):
     return send_file(
         output, mimetype="text/csv", as_attachment=True,
         download_name=f"scribe_resume_{month}.csv",
+    )
+
+
+@app.route("/api/export-pdf/<month>")
+def export_pdf(month):
+    """Genere un bilan mensuel en PDF pour le mois donne (format YYYY-MM)."""
+    if not _HAS_FPDF:
+        flash("Module fpdf2 non installe. Installe-le avec : pip install fpdf2", "error")
+        return redirect(url_for("index"))
+
+    tx_df = load_bank_transactions()
+    if tx_df.empty:
+        flash("Aucune transaction a exporter.", "error")
+        return redirect(url_for("index"))
+
+    tx_all = categorize_all_transactions(tx_df)
+    tx_all["amount"] = pd.to_numeric(tx_all["amount"], errors="coerce")
+    tx_all["date"] = pd.to_datetime(tx_all["date"], errors="coerce", dayfirst=True)
+    tx_all = tx_all.dropna(subset=["amount", "date"])
+
+    exp = tx_all[tx_all["date"].dt.to_period("M").astype(str) == month].copy()
+    if exp.empty:
+        flash(f"Aucune transaction pour {month}.", "error")
+        return redirect(url_for("index"))
+
+    # Calcul des donnees du mois
+    month_total = float(exp["amount"].sum())
+    month_count = len(exp)
+
+    # Revenus (dernier salaire connu)
+    payslips_df = load_payslips()
+    revenu = 0
+    if not payslips_df.empty:
+        payslips_df["salaire_net"] = pd.to_numeric(payslips_df["salaire_net"], errors="coerce")
+        sorted_ps = payslips_df.dropna(subset=["salaire_net"]).sort_values("date_ajout")
+        if not sorted_ps.empty:
+            revenu = float(sorted_ps.iloc[-1]["salaire_net"])
+
+    solde = revenu - month_total if revenu > 0 else 0
+    taux_epargne = round(((revenu - month_total) / revenu) * 100, 1) if revenu > 0 else 0
+
+    # Top 5 categories
+    cat_sums = exp.groupby("auto_category")["amount"].sum().sort_values(ascending=False)
+    top_cats = list(cat_sums.head(5).items())
+
+    # Abonnements
+    subs_df = detect_subscriptions(tx_df)
+    total_subs = 0
+    if not subs_df.empty:
+        total_subs = float(subs_df["cout_mensuel"].sum())
+
+    # Score de sante
+    cat_budgets = load_category_budgets()
+    month_cat_totals_pdf = {cat: round(float(amt), 2) for cat, amt in cat_sums.items()}
+    monthly_budget = load_user_prefs().get("monthly_budget", 0.0)
+    subs_list = subs_df.to_dict("records") if not subs_df.empty else []
+    health = compute_health_score(
+        tx_df, revenu, month_total, monthly_budget,
+        subs_list, cat_budgets, month_cat_totals_pdf,
+    )
+
+    # Nom du mois en francais
+    _month_names_fr = {
+        "01": "Janvier", "02": "Fevrier", "03": "Mars", "04": "Avril",
+        "05": "Mai", "06": "Juin", "07": "Juillet", "08": "Aout",
+        "09": "Septembre", "10": "Octobre", "11": "Novembre", "12": "Decembre",
+    }
+    parts = month.split("-")
+    year_str = parts[0] if len(parts) >= 1 else ""
+    month_num = parts[1] if len(parts) >= 2 else ""
+    month_label = _month_names_fr.get(month_num, month_num)
+
+    # Generation PDF
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+
+    # Titre
+    pdf.set_font("Helvetica", "B", 18)
+    pdf.cell(0, 12, f"Bilan mensuel - {month_label} {year_str}", ln=True, align="C")
+    pdf.ln(8)
+
+    # Ligne de separation
+    pdf.set_draw_color(100, 100, 100)
+    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+    pdf.ln(6)
+
+    # Resume
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 10, "Resume", ln=True)
+    pdf.set_font("Helvetica", "", 11)
+
+    pdf.cell(95, 8, f"Revenus : {revenu:.2f} EUR", ln=False)
+    pdf.cell(95, 8, f"Depenses : {month_total:.2f} EUR", ln=True)
+    pdf.cell(95, 8, f"Solde : {solde:.2f} EUR", ln=False)
+    pdf.cell(95, 8, f"Taux d'epargne : {taux_epargne}%", ln=True)
+    pdf.cell(95, 8, f"Nombre de transactions : {month_count}", ln=True)
+    pdf.ln(6)
+
+    # Top 5 categories
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 10, "Top 5 categories", ln=True)
+    pdf.set_font("Helvetica", "B", 10)
+    pdf.set_fill_color(230, 230, 230)
+    pdf.cell(120, 8, "Categorie", border=1, fill=True)
+    pdf.cell(70, 8, "Montant (EUR)", border=1, fill=True, align="R")
+    pdf.ln()
+    pdf.set_font("Helvetica", "", 10)
+    for cat, amt in top_cats:
+        cat_display = cat.encode("latin-1", errors="replace").decode("latin-1")
+        pdf.cell(120, 8, cat_display, border=1)
+        pdf.cell(70, 8, f"{float(amt):.2f}", border=1, align="R")
+        pdf.ln()
+    pdf.ln(6)
+
+    # Abonnements
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 10, "Abonnements", ln=True)
+    pdf.set_font("Helvetica", "", 11)
+    pdf.cell(0, 8, f"Total abonnements mensuels : {total_subs:.2f} EUR", ln=True)
+    pdf.ln(6)
+
+    # Score de sante
+    pdf.set_font("Helvetica", "B", 14)
+    pdf.cell(0, 10, "Score de sante financiere", ln=True)
+    pdf.set_font("Helvetica", "", 11)
+    pdf.cell(0, 8, f"Score : {health['score']}/100 ({health['grade']})", ln=True)
+    if health.get("details"):
+        for key, detail in health["details"].items():
+            label = detail.get("label", key)
+            score = detail.get("score", 0)
+            max_pts = detail.get("max", 0)
+            label_safe = label.encode("latin-1", errors="replace").decode("latin-1")
+            pdf.cell(0, 7, f"  - {label_safe} : {score:.0f}/{max_pts}", ln=True)
+    pdf.ln(6)
+
+    # Pied de page
+    pdf.set_font("Helvetica", "I", 9)
+    pdf.cell(0, 8, f"Genere par Scribe le {datetime.now().strftime('%d/%m/%Y a %H:%M')}", ln=True, align="C")
+
+    # Envoyer le PDF
+    pdf_output = io.BytesIO()
+    pdf.output(pdf_output)
+    pdf_output.seek(0)
+
+    return send_file(
+        pdf_output, mimetype="application/pdf", as_attachment=True,
+        download_name=f"scribe_bilan_{month}.pdf",
     )
 
 

@@ -2346,3 +2346,263 @@ body.light .flash-error   { color: #b91c1c; }
 .hamburger.active span:nth-child(3) {
   transform: translateY(-6px) rotate(-45deg);
 }
+
+/* ================================================================
+   POSITIVE MESSAGES BANNER
+   ================================================================ */
+.positive-banner {
+  display: flex; flex-direction: column; gap: .6rem;
+  background: var(--bg-card);
+  border: 1px solid rgba(34,197,94,.25);
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+}
+.positive-msg {
+  display: flex; align-items: flex-start; gap: .7rem;
+}
+.positive-icon {
+  font-size: 1.3rem; flex-shrink: 0; margin-top: .1rem;
+}
+.positive-title {
+  font-weight: 600; font-size: .92rem; color: #22c55e;
+}
+.positive-detail {
+  font-size: .84rem; color: var(--text-secondary); margin-top: .15rem;
+}
+
+/* ================================================================
+   TRENDS
+   ================================================================ */
+.trends-chart-wrap {
+  position: relative; height: 200px; margin: .8rem 0;
+}
+.trends-stats {
+  display: flex; flex-wrap: wrap; gap: .8rem 1.6rem;
+  font-size: .84rem; color: var(--text-secondary);
+}
+.trend-stat {
+  display: flex; align-items: center; gap: .4rem;
+}
+.trend-stat-icon {
+  font-weight: 700; font-size: .9rem;
+}
+.trend-stat-icon.good { color: #22c55e; }
+.trend-stat-icon.bad { color: #ef4444; }
+.trend-badge {
+  font-size: .75rem; font-weight: 600; padding: .15rem .5rem;
+  border-radius: 999px; margin-left: .5rem;
+}
+.trend-badge.trend-down {
+  background: rgba(34,197,94,.15); color: #22c55e;
+}
+.trend-badge.trend-up {
+  background: rgba(239,68,68,.15); color: #ef4444;
+}
+
+/* Category trends */
+.cat-trends-grid {
+  display: flex; flex-direction: column; gap: .7rem;
+}
+.cat-trend-item {
+  display: flex; align-items: center; gap: .8rem; flex-wrap: wrap;
+}
+.cat-trend-name {
+  font-weight: 600; font-size: .88rem; min-width: 110px;
+  color: var(--text-primary);
+}
+.cat-trend-amounts {
+  display: flex; align-items: center; gap: .5rem;
+  font-size: .84rem; color: var(--text-secondary); min-width: 120px;
+}
+.cat-trend-change {
+  font-weight: 700; font-size: .78rem; padding: .1rem .4rem;
+  border-radius: 4px;
+}
+.cat-trend-change.trend-down {
+  color: #22c55e; background: rgba(34,197,94,.12);
+}
+.cat-trend-change.trend-up {
+  color: #ef4444; background: rgba(239,68,68,.12);
+}
+.cat-trend-bar-bg {
+  flex: 1; height: 6px; background: var(--bg-input); border-radius: 3px;
+  min-width: 60px;
+}
+.cat-trend-bar {
+  height: 100%; background: var(--accent-mid); border-radius: 3px;
+  transition: width .6s ease;
+}
+
+/* ================================================================
+   CONTEXTUAL TIPS
+   ================================================================ */
+.tips-list {
+  display: flex; flex-direction: column; gap: .7rem;
+}
+.tip-item {
+  display: flex; align-items: flex-start; gap: .7rem;
+  padding: .7rem; border-radius: 8px;
+  background: rgba(59,130,246,.06);
+  border-left: 3px solid var(--accent-mid);
+}
+.tip-icon {
+  font-size: 1.2rem; flex-shrink: 0; margin-top: .1rem;
+}
+.tip-title {
+  font-weight: 600; font-size: .88rem; color: var(--text-primary);
+}
+.tip-message {
+  font-size: .82rem; color: var(--text-secondary); margin-top: .15rem;
+}
+.tip-savings {
+  font-size: .78rem; color: #22c55e; font-weight: 600;
+  margin-top: .3rem;
+}
+
+/* ================================================================
+   EXPORT PDF
+   ================================================================ */
+.export-pdf-row {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: .8rem;
+}
+.export-pdf-desc {
+  font-size: .82rem; color: var(--text-secondary); margin: .2rem 0 0;
+}
+.export-pdf-actions {
+  display: flex; align-items: center; gap: .5rem;
+}
+
+/* ================================================================
+   CHALLENGES / GAMIFICATION
+   ================================================================ */
+.challenges-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1rem;
+}
+.challenge-card {
+  border-left: 4px solid var(--accent-mid);
+  transition: border-color .3s, transform .2s;
+}
+.challenge-card:hover {
+  transform: translateY(-2px);
+}
+.challenge-card.challenge-completed {
+  border-left-color: #22c55e;
+}
+.challenge-header {
+  display: flex; align-items: flex-start; gap: .7rem;
+}
+.challenge-icon {
+  font-size: 1.6rem; flex-shrink: 0;
+}
+.challenge-info { flex: 1; }
+.challenge-title {
+  font-weight: 700; font-size: .95rem; color: var(--text-primary);
+}
+.challenge-desc {
+  font-size: .82rem; color: var(--text-secondary); margin-top: .2rem;
+}
+.challenge-badge {
+  font-size: .72rem; font-weight: 700; padding: .2rem .6rem;
+  border-radius: 999px; white-space: nowrap;
+}
+.challenge-badge.completed {
+  background: rgba(34,197,94,.15); color: #22c55e;
+}
+.challenge-progress-wrap {
+  margin-top: .8rem;
+}
+.challenge-progress-bar-bg {
+  height: 10px; background: var(--bg-input); border-radius: 5px;
+  overflow: hidden;
+}
+.challenge-progress-bar {
+  height: 100%; border-radius: 5px;
+  transition: width .8s cubic-bezier(.22,1,.36,1);
+}
+.challenge-progress-labels {
+  display: flex; justify-content: space-between;
+  font-size: .75rem; color: var(--text-muted); margin-top: .3rem;
+}
+.challenge-reward {
+  margin-top: .6rem; padding: .5rem .7rem;
+  background: rgba(34,197,94,.08); border-radius: 6px;
+  font-size: .82rem; color: #22c55e; font-weight: 600;
+  text-align: center;
+}
+
+/* ================================================================
+   ONBOARDING TUTORIAL
+   ================================================================ */
+.onboard-tutorial {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none;
+  transition: opacity .4s ease;
+}
+.onboard-tutorial.visible {
+  opacity: 1; pointer-events: auto;
+}
+.onboard-overlay {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,.6); backdrop-filter: blur(4px);
+}
+.onboard-modal {
+  position: relative; z-index: 1;
+  background: var(--bg-card); border-radius: 16px;
+  padding: 2rem; max-width: 420px; width: 90%;
+  box-shadow: 0 20px 60px rgba(0,0,0,.4);
+}
+.onboard-close {
+  position: absolute; top: .8rem; right: 1rem;
+  background: none; border: none; color: var(--text-muted);
+  font-size: 1.5rem; cursor: pointer;
+}
+.onboard-step {
+  display: none; text-align: center;
+  animation: fadeSlideUp .4s ease;
+}
+.onboard-step.active { display: block; }
+.onboard-step-icon { margin-bottom: 1rem; }
+.onboard-step-title {
+  font-size: 1.2rem; font-weight: 700; color: var(--text-primary);
+  margin-bottom: .5rem;
+}
+.onboard-step-desc {
+  font-size: .9rem; color: var(--text-secondary); line-height: 1.5;
+}
+.onboard-dots {
+  display: flex; justify-content: center; gap: .5rem;
+  margin: 1.2rem 0;
+}
+.onboard-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--bg-input); cursor: pointer;
+  transition: background .3s, transform .3s;
+}
+.onboard-dot.active {
+  background: var(--accent-mid); transform: scale(1.3);
+}
+.onboard-actions {
+  display: flex; justify-content: center; gap: .8rem;
+}
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ================================================================
+   ALERT POSITIVE SEVERITY
+   ================================================================ */
+.alert-positive {
+  border-left: 4px solid #22c55e;
+}
+.alert-badge-positive {
+  background: rgba(34,197,94,.15); color: #22c55e;
+}
+
+/* Nav badge success */
+.nav-badge-success {
+  background: rgba(34,197,94,.2); color: #22c55e;
+}
