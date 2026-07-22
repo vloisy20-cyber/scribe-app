@@ -412,6 +412,8 @@ function initFlashAutoDismiss() {
    ================================================================ */
 function initThemePicker() {
   const swatches = document.querySelectorAll('.theme-swatch');
+  const modal = document.getElementById('settingsModal');
+
   swatches.forEach(s => {
     s.addEventListener('click', () => {
       swatches.forEach(sw => sw.classList.remove('active'));
@@ -433,7 +435,6 @@ function initThemePicker() {
         root.style.setProperty('--gradient2', s.dataset.g2);
         root.style.setProperty('--gradient3', s.dataset.g3);
       } else {
-        // Use light gradients if available
         const themeName = s.querySelector('input[name="accent_theme"]').value;
         const lightGrads = window.SCRIBE_DATA && window.SCRIBE_DATA.lightGrads;
         if (lightGrads && lightGrads[themeName]) {
@@ -442,6 +443,16 @@ function initThemePicker() {
           root.style.setProperty('--gradient2', lg[1]);
           root.style.setProperty('--gradient3', lg[2]);
         }
+      }
+
+      // Make modal translucent so user sees the preview behind
+      if (modal) {
+        modal.classList.add('theme-preview');
+        // Back to opaque after 3s or on hover
+        clearTimeout(window._themePreviewTimer);
+        window._themePreviewTimer = setTimeout(() => {
+          modal.classList.remove('theme-preview');
+        }, 3000);
       }
     });
   });

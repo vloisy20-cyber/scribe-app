@@ -1659,23 +1659,33 @@ body.light .flash-error   { color: #b91c1c; }
 
 /* Theme picker */
 .theme-picker {
-  display: flex; gap: .5rem; flex-wrap: wrap;
+  display: flex; gap: .6rem; flex-wrap: wrap;
 }
 .theme-swatch {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
-  cursor: pointer; padding: .4rem; border-radius: var(--radius-sm);
+  cursor: pointer; padding: .5rem; border-radius: var(--radius-sm);
   border: 2px solid transparent;
   transition: all var(--transition);
   position: relative;
 }
-.theme-swatch:hover { background: var(--bg-input); }
-.theme-swatch.active { border-color: var(--accent-mid); background: var(--bg-input); }
+.theme-swatch:hover { background: var(--bg-input); transform: scale(1.08); }
+.theme-swatch.active {
+  border-color: var(--accent-mid);
+  background: var(--accent-mid)12;
+  transform: scale(1.1);
+}
 .swatch-color {
-  width: 32px; height: 32px; border-radius: 50%;
+  width: 36px; height: 36px; border-radius: 50%;
   display: block; position: relative;
+  transition: box-shadow .3s ease, transform .2s ease;
+  border: 2px solid transparent;
+}
+.theme-swatch.active .swatch-color {
+  box-shadow: 0 0 0 3px var(--bg-card), 0 0 0 5px currentColor, 0 4px 16px rgba(0,0,0,.25);
+  border-color: rgba(255,255,255,.3);
 }
 .swatch-check {
-  display: none; position: absolute; top: .25rem; right: .25rem;
+  display: none; position: absolute; top: .3rem; right: .3rem;
   width: 16px; height: 16px; border-radius: 50%;
   background: var(--accent-mid); color: #fff;
   font-size: .6rem; font-weight: 700;
@@ -1685,6 +1695,18 @@ body.light .flash-error   { color: #b91c1c; }
 .theme-swatch.active .swatch-check { display: block; }
 .swatch-label { font-size: .7rem; color: var(--text-muted); }
 .theme-swatch.active .swatch-label { color: var(--accent-mid); font-weight: 600; }
+
+/* Preview mode: modal becomes translucent when picking a theme */
+.modal-overlay.theme-preview { background: rgba(0,0,0,.3); }
+.modal-overlay.theme-preview .modal-content {
+  opacity: .85;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: opacity .3s ease;
+}
+.modal-overlay.theme-preview .modal-content:hover {
+  opacity: 1;
+}
 
 /* Toggle switch */
 .toggle-row { display: flex; align-items: center; gap: .8rem; }
