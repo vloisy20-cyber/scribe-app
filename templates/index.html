@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=19">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -69,6 +69,7 @@
   {# Contenu central #}
   <div class="splash-content">
     <div class="splash-logo-wrap">
+      <img src="{{ url_for('static', filename='icon-192.png') }}" alt="Scribe" class="splash-logo-icon">
       <span class="splash-logo" id="splashLogo">Scribe</span>
       <p class="splash-tagline" id="splashTagline">Ton assistant financier</p>
     </div>

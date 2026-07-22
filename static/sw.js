@@ -1,8 +1,8 @@
 // Service Worker — Scribe PWA
-const CACHE_NAME = 'scribe-v4';
+const CACHE_NAME = 'scribe-v5';
 const ASSETS = [
   '/',
-  '/static/style.css?v=19',
+  '/static/style.css?v=20',
   '/static/app.js?v=8',
   '/static/manifest.json',
   '/static/icon-192.png',
