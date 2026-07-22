@@ -1676,12 +1676,24 @@ body.light .flash-error   { color: #b91c1c; }
   transition: all var(--transition);
   position: relative;
 }
-.theme-swatch:hover { background: var(--bg-input); transform: scale(1.05); }
-.theme-swatch.active {
-  border-color: var(--accent-mid);
+.theme-swatch:hover {
   background: var(--bg-input);
-  transform: scale(1.12);
-  box-shadow: 0 0 0 2px var(--accent-mid), 0 4px 12px rgba(0,0,0,.2);
+  transform: scale(1.05);
+}
+.theme-swatch.active {
+  border-color: var(--swatch-color, var(--accent-mid));
+  background: var(--bg-input);
+  transform: scale(1.1);
+  box-shadow:
+    0 0 0 2px var(--swatch-color, var(--accent-mid)),
+    0 0 16px color-mix(in srgb, var(--swatch-color, var(--accent-mid)) 40%, transparent),
+    0 4px 12px rgba(0,0,0,.2);
+  animation: swatchSelect .35s cubic-bezier(.22,1,.36,1);
+}
+@keyframes swatchSelect {
+  0%   { transform: scale(1); box-shadow: none; }
+  50%  { transform: scale(1.18); }
+  100% { transform: scale(1.1); }
 }
 .swatch-color {
   width: 36px; height: 36px; border-radius: 50%;
@@ -1690,9 +1702,13 @@ body.light .flash-error   { color: #b91c1c; }
   border: 2px solid transparent;
 }
 .theme-swatch.active .swatch-color {
-  box-shadow: 0 0 0 3px var(--bg-card), 0 0 0 6px var(--swatch-color, var(--accent-mid)), 0 6px 20px rgba(0,0,0,.35);
+  box-shadow:
+    0 0 0 3px var(--bg-card),
+    0 0 0 6px var(--swatch-color, var(--accent-mid)),
+    0 0 12px var(--swatch-color, var(--accent-mid)),
+    0 4px 16px rgba(0,0,0,.3);
   border-color: #fff;
-  transform: scale(1.15);
+  transform: scale(1.1);
 }
 .swatch-check {
   display: none; position: absolute; top: -.3rem; right: -.3rem;
@@ -1719,8 +1735,8 @@ body.light .flash-error   { color: #b91c1c; }
   to   { transform: scale(1); }
 }
 .theme-swatch.active .swatch-check { display: flex; }
-.swatch-label { font-size: .7rem; color: var(--text-muted); }
-.theme-swatch.active .swatch-label { color: var(--accent-mid); font-weight: 600; }
+.swatch-label { font-size: .7rem; color: var(--text-muted); transition: all .2s ease; }
+.theme-swatch.active .swatch-label { color: var(--swatch-color, var(--accent-mid)); font-weight: 700; }
 
 /* Preview mode: modal becomes translucent when picking a theme */
 .modal-overlay.theme-preview { background: rgba(0,0,0,.3); }
