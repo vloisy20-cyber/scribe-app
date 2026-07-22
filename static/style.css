@@ -1311,6 +1311,7 @@ a:hover { color: var(--accent-light); }
   border-color: var(--accent-mid); background: var(--accent-mid)08;
 }
 .upload-icon { font-size: 2rem; display: block; margin-bottom: .5rem; }
+.upload-icon svg { width: 36px; height: 36px; display: inline-block; vertical-align: middle; }
 .upload-area p { color: var(--text-secondary); margin: .3rem 0; }
 .upload-link {
   color: var(--accent-mid); cursor: pointer; font-weight: 500;
