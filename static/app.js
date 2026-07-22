@@ -414,6 +414,18 @@ function initThemePicker() {
   const swatches = document.querySelectorAll('.theme-swatch');
   const modal = document.getElementById('settingsModal');
 
+  // Set --swatch-color on each swatch from its actual background
+  function applySwatchColor(swatch) {
+    const colorEl = swatch.querySelector('.swatch-color');
+    if (colorEl) {
+      const bg = colorEl.style.background || colorEl.style.backgroundColor;
+      swatch.style.setProperty('--swatch-color', bg);
+    }
+  }
+
+  // Apply to all swatches on init (for the initially active one)
+  swatches.forEach(applySwatchColor);
+
   swatches.forEach(s => {
     s.addEventListener('click', () => {
       swatches.forEach(sw => sw.classList.remove('active'));
@@ -448,11 +460,11 @@ function initThemePicker() {
       // Make modal translucent so user sees the preview behind
       if (modal) {
         modal.classList.add('theme-preview');
-        // Back to opaque after 3s or on hover
+        // Back to opaque after 4s
         clearTimeout(window._themePreviewTimer);
         window._themePreviewTimer = setTimeout(() => {
           modal.classList.remove('theme-preview');
-        }, 3000);
+        }, 4000);
       }
     });
   });
