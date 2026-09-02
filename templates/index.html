@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=21">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=22">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -2144,9 +2144,13 @@
      ================================================================ */
   gsap.registerPlugin(ScrollTrigger);
 
+  // Hide all reveal elements first, then animate
+  var heroReveals = document.querySelectorAll('.land-hero .land-reveal');
+  gsap.set(heroReveals, { y: 50, opacity: 0 });
+
   // Hero content — staggered entrance
-  gsap.from('.land-hero .land-reveal', {
-    y: 50, opacity: 0, duration: 1,
+  gsap.to(heroReveals, {
+    y: 0, opacity: 1, duration: 1,
     stagger: 0.15,
     ease: 'power3.out',
     delay: 0.3
@@ -2156,13 +2160,14 @@
   document.querySelectorAll('.land-section').forEach(function(sec) {
     var items = sec.querySelectorAll('.land-reveal');
     if (!items.length) return;
-    gsap.from(items, {
+    gsap.set(items, { y: 40, opacity: 0 });
+    gsap.to(items, {
       scrollTrigger: {
         trigger: sec,
         start: 'top 80%',
         toggleActions: 'play none none none'
       },
-      y: 40, opacity: 0, duration: 0.8,
+      y: 0, opacity: 1, duration: 0.8,
       stagger: 0.1,
       ease: 'power2.out'
     });

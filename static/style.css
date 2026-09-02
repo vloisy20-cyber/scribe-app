@@ -1025,13 +1025,11 @@ a:hover { color: var(--accent-light); }
 }
 
 /* --- GSAP REVEAL CLASSES --- */
+/* GSAP handles opacity/transform via inline styles.
+   This class is only a hook; no default hiding in CSS
+   so content shows even if JS fails to load. */
 .land-reveal {
-  opacity: 0;
-  transform: translateY(40px);
-}
-.land-reveal.land-visible {
-  opacity: 1;
-  transform: translateY(0);
+  will-change: transform, opacity;
 }
 
 /* --- RESPONSIVE --- */
