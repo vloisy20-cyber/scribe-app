@@ -13,8 +13,8 @@
   <title>Scribe — Ton ombudsman personnel</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=20">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=21">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -118,47 +118,62 @@
 {# ================================================================ #}
 <div class="landing" id="onboardingScreen">
 
+  {# 3D Particle canvas — rendered by Three.js #}
+  <canvas id="landCanvas"></canvas>
+
+  {# ========== STICKY NAV ========== #}
+  <nav class="land-nav">
+    <div class="land-nav-logo">
+      <img src="{{ url_for('static', filename='icon-192.png') }}" alt="Scribe" class="logo-icon">
+      <span class="logo-text">Scribe</span>
+    </div>
+    <a href="#land-features" class="land-nav-link">Fonctionnalites</a>
+    <a href="#land-how" class="land-nav-link">Comment ca marche</a>
+    <a href="#land-why" class="land-nav-link">Pourquoi Scribe</a>
+  </nav>
+
   {# ========== SECTION 1 : HERO ========== #}
   <section class="land-hero">
-    <div class="land-hero-bg"></div>
-    <nav class="land-nav">
-      <div class="land-nav-logo">
-        <img src="{{ url_for('static', filename='icon-192.png') }}" alt="Scribe" class="logo-icon">
-        <span class="logo-text">Scribe</span>
-      </div>
-      <a href="#land-features" class="land-nav-link">Fonctionnalites</a>
-      <a href="#land-how" class="land-nav-link">Comment ca marche</a>
-    </nav>
-
     <div class="land-hero-content">
-      <h1 class="land-h1">Reprends le controle<br>de tes <span class="land-gradient-text">finances</span></h1>
-      <p class="land-hero-sub">Scribe analyse tes depenses, detecte les abonnements oublies, surveille les hausses de prix et t'aide a mieux gerer ton argent — automatiquement.</p>
-      <div class="land-hero-cta-wrap" id="heroCta">
-        <button type="button" class="land-cta-primary" id="heroCtaBtn">
-          Commencer gratuitement <span class="land-cta-arrow">→</span>
-        </button>
+      <div class="land-badge land-reveal">
+        <span class="land-badge-dot"></span> 100% gratuit — Zero pub
+      </div>
 
-        {# Formulaire inscription (visible apres clic sur Commencer) #}
+      <h1 class="land-h1 land-reveal">Reprends le controle<br>de tes <span class="land-gradient-text">finances</span></h1>
+      <p class="land-hero-sub land-reveal">Scribe analyse tes depenses, detecte les abonnements oublies, surveille les hausses de prix et t'aide a mieux gerer ton argent — automatiquement.</p>
+
+      <div class="land-hero-cta-wrap land-reveal" id="heroCta">
+        <div class="land-hero-btns">
+          <button type="button" class="land-cta-primary" id="heroCtaBtn">
+            Commencer gratuitement <span class="land-cta-arrow">&rarr;</span>
+          </button>
+          <a href="#land-features" class="land-cta-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Decouvrir
+          </a>
+        </div>
+
+        {# Formulaire inscription #}
         <form action="/api/subscribe" method="post" class="land-hero-subscribe" id="heroSubForm">
           <p class="land-hero-subscribe-label">Cree ton compte en 10 secondes :</p>
           {% if sub_status == 'pseudo' %}
           <div class="land-sub-msg land-sub-error" style="font-size:.85rem;">
-            <span>✗</span> Pseudo requis (2 a 20 caracteres).
+            <span>&#x2717;</span> Pseudo requis (2 a 20 caracteres).
           </div>
           {% elif sub_status == 'pseudo_taken' %}
           <div class="land-sub-msg land-sub-error" style="font-size:.85rem;">
-            <span>✗</span> Ce pseudo est deja pris.
+            <span>&#x2717;</span> Ce pseudo est deja pris.
           </div>
           {% elif sub_status == 'invalid' %}
           <div class="land-sub-msg land-sub-error" style="font-size:.85rem;">
-            <span>✗</span> Email invalide.
+            <span>&#x2717;</span> Email invalide.
           </div>
           {% endif %}
           <input type="text" name="pseudo" placeholder="Ton pseudo" required minlength="2" maxlength="20" class="land-subscribe-input land-subscribe-input-dark land-input-full">
           <div class="land-subscribe-form">
             <input type="email" name="email" placeholder="ton@email.com" required class="land-subscribe-input land-subscribe-input-dark">
             <button type="submit" class="land-cta-primary land-subscribe-btn">
-              S'inscrire <span class="land-cta-arrow">→</span>
+              S'inscrire <span class="land-cta-arrow">&rarr;</span>
             </button>
           </div>
           <label class="land-remember">
@@ -166,18 +181,18 @@
           </label>
         </form>
 
-        {# Formulaire connexion (visible apres clic sur "Deja inscrit") #}
+        {# Formulaire connexion #}
         <form action="/api/login" method="post" class="land-hero-subscribe" id="heroLoginForm">
           <p class="land-hero-subscribe-label">Content de te revoir !</p>
           {% if login_error == 'notfound' %}
           <div class="land-sub-msg land-sub-error" style="font-size:.85rem;">
-            <span>✗</span> Email non trouve. <a href="#" id="switchToSignup" class="land-auth-link">Creer un compte ?</a>
+            <span>&#x2717;</span> Email non trouve. <a href="#" id="switchToSignup" class="land-auth-link">Creer un compte ?</a>
           </div>
           {% endif %}
           <div class="land-subscribe-form">
             <input type="email" name="email" placeholder="ton@email.com" required class="land-subscribe-input land-subscribe-input-dark">
             <button type="submit" class="land-cta-primary land-subscribe-btn">
-              Se connecter <span class="land-cta-arrow">→</span>
+              Se connecter <span class="land-cta-arrow">&rarr;</span>
             </button>
           </div>
           <label class="land-remember">
@@ -185,83 +200,84 @@
           </label>
         </form>
 
-        {# Lien pour basculer entre inscription et connexion #}
         <p class="land-auth-switch" id="authSwitch">
           <a href="#" id="showLogin" class="land-auth-link">Deja inscrit ? Se connecter</a>
         </p>
       </div>
-      <p class="land-hero-trust">100% gratuit — Aucune carte bancaire requise</p>
+
+      <p class="land-hero-trust land-reveal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Donnees chiffrees &middot; Aucune carte bancaire requise
+      </p>
+
+      {# Social proof #}
+      <div class="land-social-proof land-reveal">
+        <div class="land-avatars">
+          <div class="land-avatar" style="background:linear-gradient(135deg,#22d3ee,#06b6d4)">V</div>
+          <div class="land-avatar" style="background:linear-gradient(135deg,#a78bfa,#8b5cf6)">M</div>
+          <div class="land-avatar" style="background:linear-gradient(135deg,#34d399,#10b981)">S</div>
+          <div class="land-avatar" style="background:linear-gradient(135deg,#fbbf24,#f59e0b)">L</div>
+        </div>
+        <p class="land-social-text">
+          {% if subscribers_count > 0 %}
+          <strong>{{ subscribers_count }}+</strong> utilisateurs nous font confiance
+          {% else %}
+          Rejoins les premiers utilisateurs
+          {% endif %}
+        </p>
+      </div>
     </div>
 
-    {# Mockup du dashboard #}
-    <div class="land-mockup">
-      <div class="land-mockup-window">
-        <div class="land-mockup-bar">
-          <span class="land-dot land-dot-r"></span>
-          <span class="land-dot land-dot-y"></span>
-          <span class="land-dot land-dot-g"></span>
-          <span class="land-mockup-url">scribe-app.onrender.com</span>
-        </div>
-        <div class="land-mockup-body">
-          {# Sidebar mini #}
-          <div class="land-mock-sidebar">
-            <div class="land-mock-logo">S</div>
-            <div class="land-mock-nav-item land-mock-active"></div>
-            <div class="land-mock-nav-item"></div>
-            <div class="land-mock-nav-item"></div>
-            <div class="land-mock-nav-item"></div>
-            <div class="land-mock-nav-item"></div>
+    {# Mockup du dashboard — perspective 3D #}
+    <div class="land-mockup-wrap land-reveal">
+      <div class="land-mockup-glow"></div>
+      <div class="land-mockup" id="landMockup">
+        <div class="land-mockup-window">
+          <div class="land-mockup-bar">
+            <span class="land-dot land-dot-r"></span>
+            <span class="land-dot land-dot-y"></span>
+            <span class="land-dot land-dot-g"></span>
+            <span class="land-mockup-url">scribe-app.onrender.com</span>
           </div>
-          {# Contenu mini #}
-          <div class="land-mock-content">
-            <div class="land-mock-stats">
-              <div class="land-mock-stat">
-                <div class="land-mock-stat-val land-green" data-count="78">0</div>
-                <div class="land-mock-stat-lbl">Score</div>
-              </div>
-              <div class="land-mock-stat">
-                <div class="land-mock-stat-val" data-count="1544" data-suffix=" EUR">0</div>
-                <div class="land-mock-stat-lbl">Depenses</div>
-              </div>
-              <div class="land-mock-stat">
-                <div class="land-mock-stat-val" data-count="13">0</div>
-                <div class="land-mock-stat-lbl">Abonnements</div>
-              </div>
-              <div class="land-mock-stat">
-                <div class="land-mock-stat-val land-orange" data-count="4">0</div>
-                <div class="land-mock-stat-lbl">Alertes</div>
-              </div>
+          <div class="land-mockup-body">
+            <div class="land-mock-sidebar">
+              <div class="land-mock-logo">S</div>
+              <div class="land-mock-nav-item land-mock-active"></div>
+              <div class="land-mock-nav-item"></div>
+              <div class="land-mock-nav-item"></div>
+              <div class="land-mock-nav-item"></div>
+              <div class="land-mock-nav-item"></div>
             </div>
-            {# Mini graphique barre #}
-            <div class="land-mock-chart">
-              <div class="land-mock-bar-group">
-                <div class="land-mock-bar" style="--h:45%"></div>
-                <div class="land-mock-bar-lbl">Fev</div>
+            <div class="land-mock-content">
+              <div class="land-mock-stats">
+                <div class="land-mock-stat">
+                  <div class="land-mock-stat-val land-green" data-count="78">0</div>
+                  <div class="land-mock-stat-lbl">Score</div>
+                </div>
+                <div class="land-mock-stat">
+                  <div class="land-mock-stat-val" data-count="1544" data-suffix=" EUR">0</div>
+                  <div class="land-mock-stat-lbl">Depenses</div>
+                </div>
+                <div class="land-mock-stat">
+                  <div class="land-mock-stat-val" data-count="13">0</div>
+                  <div class="land-mock-stat-lbl">Abonnements</div>
+                </div>
+                <div class="land-mock-stat">
+                  <div class="land-mock-stat-val land-orange" data-count="4">0</div>
+                  <div class="land-mock-stat-lbl">Alertes</div>
+                </div>
               </div>
-              <div class="land-mock-bar-group">
-                <div class="land-mock-bar" style="--h:60%"></div>
-                <div class="land-mock-bar-lbl">Mar</div>
+              <div class="land-mock-chart">
+                <div class="land-mock-bar-group"><div class="land-mock-bar" style="--h:45%"></div><div class="land-mock-bar-lbl">Fev</div></div>
+                <div class="land-mock-bar-group"><div class="land-mock-bar" style="--h:60%"></div><div class="land-mock-bar-lbl">Mar</div></div>
+                <div class="land-mock-bar-group"><div class="land-mock-bar" style="--h:38%"></div><div class="land-mock-bar-lbl">Avr</div></div>
+                <div class="land-mock-bar-group"><div class="land-mock-bar" style="--h:72%"></div><div class="land-mock-bar-lbl">Mai</div></div>
+                <div class="land-mock-bar-group"><div class="land-mock-bar" style="--h:55%"></div><div class="land-mock-bar-lbl">Jun</div></div>
+                <div class="land-mock-bar-group"><div class="land-mock-bar land-mock-bar-current" style="--h:65%"></div><div class="land-mock-bar-lbl">Jul</div></div>
               </div>
-              <div class="land-mock-bar-group">
-                <div class="land-mock-bar" style="--h:38%"></div>
-                <div class="land-mock-bar-lbl">Avr</div>
+              <div class="land-mock-alert">
+                <svg style="width:14px;height:14px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Netflix : hausse de +18% detectee
               </div>
-              <div class="land-mock-bar-group">
-                <div class="land-mock-bar" style="--h:72%"></div>
-                <div class="land-mock-bar-lbl">Mai</div>
-              </div>
-              <div class="land-mock-bar-group">
-                <div class="land-mock-bar" style="--h:55%"></div>
-                <div class="land-mock-bar-lbl">Jun</div>
-              </div>
-              <div class="land-mock-bar-group">
-                <div class="land-mock-bar land-mock-bar-current" style="--h:65%"></div>
-                <div class="land-mock-bar-lbl">Jul</div>
-              </div>
-            </div>
-            {# Mini alerte #}
-            <div class="land-mock-alert">
-              <svg style="width:14px;height:14px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Netflix : hausse de +18% detectee
             </div>
           </div>
         </div>
@@ -269,7 +285,7 @@
     </div>
   </section>
 
-  {# ========== SECTION 2 : FONCTIONNALITES ========== #}
+  {# ========== SECTION 2 : FONCTIONNALITES (glass cards) ========== #}
   <section class="land-section" id="land-features">
     <div class="land-container">
       <p class="land-section-tag land-reveal">Fonctionnalites</p>
@@ -277,7 +293,7 @@
 
       <div class="land-features-grid">
         <div class="land-feat-card land-reveal">
-          <div class="land-feat-icon-wrap" style="--fc: #3b82f6">
+          <div class="land-feat-icon-wrap" style="--fc: #22d3ee">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--fc)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 10h18"/><path d="M12 3l9 7H3l9-7z"/><line x1="5" y1="10" x2="5" y2="21"/><line x1="9" y1="10" x2="9" y2="21"/><line x1="15" y1="10" x2="15" y2="21"/><line x1="19" y1="10" x2="19" y2="21"/></svg>
           </div>
           <h3>Suivi bancaire</h3>
@@ -285,7 +301,7 @@
         </div>
 
         <div class="land-feat-card land-reveal">
-          <div class="land-feat-icon-wrap" style="--fc: #8b5cf6">
+          <div class="land-feat-icon-wrap" style="--fc: #a78bfa">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--fc)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           </div>
           <h3>Alertes intelligentes</h3>
@@ -293,7 +309,7 @@
         </div>
 
         <div class="land-feat-card land-reveal">
-          <div class="land-feat-icon-wrap" style="--fc: #10b981">
+          <div class="land-feat-icon-wrap" style="--fc: #34d399">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--fc)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           </div>
           <h3>Score de sante financiere</h3>
@@ -301,7 +317,7 @@
         </div>
 
         <div class="land-feat-card land-reveal">
-          <div class="land-feat-icon-wrap" style="--fc: #f59e0b">
+          <div class="land-feat-icon-wrap" style="--fc: #fbbf24">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--fc)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10"/><path d="M20.49 15a9 9 0 0 1-14.85 3.36L1 14"/></svg>
           </div>
           <h3>Detection d'abonnements</h3>
@@ -309,7 +325,7 @@
         </div>
 
         <div class="land-feat-card land-reveal">
-          <div class="land-feat-icon-wrap" style="--fc: #ef4444">
+          <div class="land-feat-icon-wrap" style="--fc: #f87171">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--fc)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
           </div>
           <h3>Analyse de factures</h3>
@@ -317,11 +333,31 @@
         </div>
 
         <div class="land-feat-card land-reveal">
-          <div class="land-feat-icon-wrap" style="--fc: #06b6d4">
+          <div class="land-feat-icon-wrap" style="--fc: #60a5fa">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--fc)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z" rx="1"/><path d="M9 9h6"/><path d="M9 13h6"/><path d="M9 17h4"/><path d="M15 2v4"/><path d="M9 2v4"/></svg>
           </div>
           <h3>Simulateur d'impots</h3>
           <p>Estime ton impot sur le revenu avec le bareme officiel et optimise ta declaration.</p>
+        </div>
+      </div>
+
+      {# Stats row #}
+      <div class="land-stats-row">
+        <div class="land-stat-item land-reveal">
+          <div class="land-stat-num" data-count="6">0</div>
+          <div class="land-stat-label">Outils integres</div>
+        </div>
+        <div class="land-stat-item land-reveal">
+          <div class="land-stat-num" data-count="100" data-suffix="%">0</div>
+          <div class="land-stat-label">Gratuit pour toujours</div>
+        </div>
+        <div class="land-stat-item land-reveal">
+          <div class="land-stat-num" data-count="10" data-suffix="s">0</div>
+          <div class="land-stat-label">Pour s'inscrire</div>
+        </div>
+        <div class="land-stat-item land-reveal">
+          <div class="land-stat-num" data-count="0" data-suffix=" pub">0</div>
+          <div class="land-stat-label">Zero publicite</div>
         </div>
       </div>
     </div>
@@ -331,7 +367,7 @@
   <section class="land-section land-section-alt" id="land-how">
     <div class="land-container">
       <p class="land-section-tag land-reveal">Simple comme bonjour</p>
-      <h2 class="land-h2 land-reveal">Comment ca marche ?</h2>
+      <h2 class="land-h2 land-reveal">3 etapes pour tout changer</h2>
 
       <div class="land-steps">
         <div class="land-step land-reveal">
@@ -354,32 +390,32 @@
           <div class="land-step-num">3</div>
           <div class="land-step-body">
             <h3>Tu reprends le controle</h3>
-            <p>Dashboard complet, alertes en temps reel, objectifs d'epargne et simulateur d'impots a portee de main.</p>
+            <p>Dashboard complet, alertes en temps reel, defis d'epargne et simulateur d'impots a portee de main.</p>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  {# ========== SECTION 4 : CHIFFRES / AVANTAGES ========== #}
-  <section class="land-section">
+  {# ========== SECTION 4 : POURQUOI SCRIBE ========== #}
+  <section class="land-section" id="land-why">
     <div class="land-container">
       <p class="land-section-tag land-reveal">Pourquoi Scribe ?</p>
       <h2 class="land-h2 land-reveal">Tes finances meritent mieux<br>qu'un tableau Excel</h2>
 
       <div class="land-benefits">
         <div class="land-benefit land-reveal">
-          <div class="land-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-mid)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+          <div class="land-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
           <h3>Tes donnees restent chez toi</h3>
           <p>Aucun envoi vers des serveurs tiers. Tout est stocke localement sur ton espace.</p>
         </div>
         <div class="land-benefit land-reveal">
-          <div class="land-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-mid)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+          <div class="land-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
           <h3>Gratuit et sans pub</h3>
           <p>Pas de premium cache, pas de publicite. Scribe est un outil fait pour toi.</p>
         </div>
         <div class="land-benefit land-reveal">
-          <div class="land-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-mid)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.8-3.5 6l-.5.3V18h-6v-2.7l-.5-.3A7 7 0 0 1 12 2z"/><line x1="10" y1="21" x2="14" y2="21"/></svg></div>
+          <div class="land-benefit-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 2.5-1.3 4.8-3.5 6l-.5.3V18h-6v-2.7l-.5-.3A7 7 0 0 1 12 2z"/><line x1="10" y1="21" x2="14" y2="21"/></svg></div>
           <h3>Propulse par l'IA</h3>
           <p>Categorisation intelligente, detection d'anomalies et generation de courriers automatique.</p>
         </div>
@@ -387,32 +423,32 @@
     </div>
   </section>
 
-  {# ========== SECTION 5 : CTA FINAL + INSCRIPTION ========== #}
+  {# ========== SECTION 5 : CTA FINAL ========== #}
   <section class="land-section land-cta-section">
     <div class="land-container land-cta-final">
-      <h2 class="land-h2 land-h2-white">Pret a reprendre le controle ?</h2>
-      <p class="land-cta-sub">Laisse ton email pour etre informe du lancement et acceder en avant-premiere.</p>
+      <h2 class="land-h2 land-h2-white land-reveal">Pret a reprendre le controle ?</h2>
+      <p class="land-cta-sub land-reveal">Cree ton compte en quelques secondes et decouvre ce que Scribe peut faire pour toi.</p>
 
       {% if sub_status == 'ok' %}
       <div class="land-sub-msg land-sub-success">
-        <span>✓</span> Merci ! Tu es inscrit. On te tient au courant.
+        <span>&#x2713;</span> Merci ! Tu es inscrit. On te tient au courant.
       </div>
       {% elif sub_status == 'exists' %}
       <div class="land-sub-msg land-sub-info">
-        <span>ℹ</span> Cet email est deja inscrit.
+        <span>&#x2139;</span> Cet email est deja inscrit.
       </div>
       {% elif sub_status == 'invalid' %}
       <div class="land-sub-msg land-sub-error">
-        <span>✗</span> Email invalide. Verifie le format.
+        <span>&#x2717;</span> Email invalide. Verifie le format.
       </div>
       {% endif %}
 
-      <form action="/api/subscribe" method="post" class="land-bottom-sub">
+      <form action="/api/subscribe" method="post" class="land-bottom-sub land-reveal">
         <input type="text" name="pseudo" placeholder="Ton pseudo" required minlength="2" maxlength="20" class="land-subscribe-input land-input-full land-input-bottom-pseudo">
         <div class="land-subscribe-form">
           <input type="email" name="email" placeholder="ton@email.com" required class="land-subscribe-input">
-          <button type="submit" class="land-cta-primary land-cta-white land-subscribe-btn">
-            S'inscrire <span class="land-cta-arrow">→</span>
+          <button type="submit" class="land-cta-primary land-subscribe-btn">
+            S'inscrire <span class="land-cta-arrow">&rarr;</span>
           </button>
         </div>
         <label class="land-remember land-remember-light">
@@ -447,7 +483,7 @@
         <span>Impots</span>
         <span>Epargne</span>
       </div>
-      <p class="land-footer-copy">Fait avec ❤️ en France — Tes donnees restent privees, toujours.</p>
+      <p class="land-footer-copy">Fait avec &#x2764;&#xFE0F; en France — Tes donnees restent privees, toujours.</p>
     </div>
   </footer>
 
@@ -1981,111 +2017,225 @@
 <script src="{{ url_for('static', filename='app.js') }}?v=9"></script>
 
 {% if not onboarded %}
+{# GSAP + ScrollTrigger CDN #}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+{# Three.js for 3D particle background #}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function() {
-  /* --- Smooth scroll pour les liens de nav --- */
-  document.querySelectorAll('.land-nav-link').forEach(function(link) {
-    link.addEventListener('click', function(e) {
-      e.preventDefault();
-      var target = document.querySelector(this.getAttribute('href'));
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  'use strict';
+
+  /* ================================================================
+     THREE.JS — PARTICLE MESH BACKGROUND
+     ================================================================ */
+  (function initParticles() {
+    var canvas = document.getElementById('landCanvas');
+    if (!canvas || typeof THREE === 'undefined') return;
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.z = 30;
+
+    var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+    // Particle field
+    var count = 600;
+    var positions = new Float32Array(count * 3);
+    var colors = new Float32Array(count * 3);
+    var cyan = new THREE.Color('#22d3ee');
+    var purple = new THREE.Color('#a78bfa');
+
+    for (var i = 0; i < count; i++) {
+      positions[i * 3]     = (Math.random() - 0.5) * 60;
+      positions[i * 3 + 1] = (Math.random() - 0.5) * 60;
+      positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
+      var mix = Math.random();
+      var c = cyan.clone().lerp(purple, mix);
+      colors[i * 3]     = c.r;
+      colors[i * 3 + 1] = c.g;
+      colors[i * 3 + 2] = c.b;
+    }
+
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    var material = new THREE.PointsMaterial({
+      size: 0.12,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.6,
+      sizeAttenuation: true
+    });
+    var particles = new THREE.Points(geometry, material);
+    scene.add(particles);
+
+    // Connection lines
+    var lineGeo = new THREE.BufferGeometry();
+    var linePositions = new Float32Array(count * count * 3);
+    lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+    var lineMat = new THREE.LineBasicMaterial({
+      color: 0x22d3ee,
+      transparent: true,
+      opacity: 0.06
+    });
+    var lines = new THREE.LineSegments(lineGeo, lineMat);
+    scene.add(lines);
+
+    var mouseX = 0, mouseY = 0;
+    document.addEventListener('mousemove', function(e) {
+      mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      var time = Date.now() * 0.0003;
+      var pos = geometry.attributes.position.array;
+      for (var i = 0; i < count; i++) {
+        pos[i * 3 + 1] += Math.sin(time + i * 0.1) * 0.005;
+        pos[i * 3]     += Math.cos(time + i * 0.05) * 0.003;
+      }
+      geometry.attributes.position.needsUpdate = true;
+
+      // Update connection lines (nearest neighbors)
+      var lp = lineGeo.attributes.position.array;
+      var li = 0;
+      var maxDist = 5;
+      for (var a = 0; a < Math.min(count, 100); a++) {
+        for (var b = a + 1; b < Math.min(count, 100); b++) {
+          var dx = pos[a*3] - pos[b*3];
+          var dy = pos[a*3+1] - pos[b*3+1];
+          var dz = pos[a*3+2] - pos[b*3+2];
+          var d = dx*dx + dy*dy + dz*dz;
+          if (d < maxDist * maxDist) {
+            lp[li++] = pos[a*3]; lp[li++] = pos[a*3+1]; lp[li++] = pos[a*3+2];
+            lp[li++] = pos[b*3]; lp[li++] = pos[b*3+1]; lp[li++] = pos[b*3+2];
+          }
+        }
+      }
+      lineGeo.setDrawRange(0, li / 3);
+      lineGeo.attributes.position.needsUpdate = true;
+
+      // Camera follows mouse subtly
+      camera.position.x += (mouseX * 2 - camera.position.x) * 0.02;
+      camera.position.y += (-mouseY * 2 - camera.position.y) * 0.02;
+      camera.lookAt(scene.position);
+
+      particles.rotation.y = time * 0.2;
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', function() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  })();
+
+  /* ================================================================
+     GSAP SCROLL ANIMATIONS
+     ================================================================ */
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Hero content — staggered entrance
+  gsap.from('.land-hero .land-reveal', {
+    y: 50, opacity: 0, duration: 1,
+    stagger: 0.15,
+    ease: 'power3.out',
+    delay: 0.3
+  });
+
+  // Section reveals — each .land-reveal inside sections
+  document.querySelectorAll('.land-section').forEach(function(sec) {
+    var items = sec.querySelectorAll('.land-reveal');
+    if (!items.length) return;
+    gsap.from(items, {
+      scrollTrigger: {
+        trigger: sec,
+        start: 'top 80%',
+        toggleActions: 'play none none none'
+      },
+      y: 40, opacity: 0, duration: 0.8,
+      stagger: 0.1,
+      ease: 'power2.out'
     });
   });
 
-  /* --- Hero CTA → formulaire inscription / connexion --- */
-  var heroBtn = document.getElementById('heroCtaBtn');
-  var heroSubForm = document.getElementById('heroSubForm');
-  var heroLoginForm = document.getElementById('heroLoginForm');
-  var authSwitch = document.getElementById('authSwitch');
-  var showLoginLink = document.getElementById('showLogin');
-  var switchToSignup = document.getElementById('switchToSignup');
+  // Feature cards — hover tilt effect
+  document.querySelectorAll('.land-feat-card').forEach(function(card) {
+    card.addEventListener('mousemove', function(e) {
+      var rect = card.getBoundingClientRect();
+      var x = (e.clientX - rect.left) / rect.width - 0.5;
+      var y = (e.clientY - rect.top) / rect.height - 0.5;
+      gsap.to(card, {
+        rotateY: x * 8, rotateX: -y * 8,
+        duration: 0.3, ease: 'power2.out',
+        transformPerspective: 800
+      });
+    });
+    card.addEventListener('mouseleave', function() {
+      gsap.to(card, { rotateY: 0, rotateX: 0, duration: 0.5, ease: 'elastic.out(1, 0.4)' });
+    });
+  });
 
-  function showForm(formToShow, formToHide) {
-    if (heroBtn) heroBtn.style.display = 'none';
-    if (formToHide) formToHide.classList.remove('land-hero-subscribe-visible');
-    if (formToShow) {
-      formToShow.classList.add('land-hero-subscribe-visible');
-      var input = formToShow.querySelector('input[type="email"]');
-      if (input) setTimeout(function() { input.focus(); }, 350);
+  // Mockup parallax on scroll
+  var mockup = document.getElementById('landMockup');
+  if (mockup) {
+    gsap.to(mockup, {
+      scrollTrigger: {
+        trigger: '.land-hero',
+        start: 'top top',
+        end: 'bottom top',
+        scrub: 1
+      },
+      y: -60,
+      rotateX: 0,
+      rotateY: 0,
+      scale: 0.92,
+      ease: 'none'
+    });
+  }
+
+  // Stats counter animation — triggered by GSAP ScrollTrigger
+  ScrollTrigger.create({
+    trigger: '.land-stats-row',
+    start: 'top 85%',
+    once: true,
+    onEnter: function() { animateCounters('.land-stats-row [data-count]'); }
+  });
+
+  // Mockup counters
+  ScrollTrigger.create({
+    trigger: '.land-mockup',
+    start: 'top 80%',
+    once: true,
+    onEnter: function() {
+      animateCounters('.land-mock-stat-val[data-count]');
+      // Animate bars
+      document.querySelectorAll('.land-mock-bar').forEach(function(bar, i) {
+        bar.style.height = '0%';
+        setTimeout(function() {
+          bar.style.height = bar.style.getPropertyValue('--h');
+        }, 400 + i * 120);
+      });
     }
-    // Update le lien
-    if (authSwitch) {
-      var isLogin = formToShow === heroLoginForm;
-      authSwitch.innerHTML = isLogin
-        ? '<a href="#" id="showSignup" class="land-auth-link">Pas encore inscrit ? Creer un compte</a>'
-        : '<a href="#" id="showLogin" class="land-auth-link">Deja inscrit ? Se connecter</a>';
-      authSwitch.querySelector('a').addEventListener('click', function(e) {
-        e.preventDefault();
-        showForm(isLogin ? heroSubForm : heroLoginForm, isLogin ? heroLoginForm : heroSubForm);
-      });
-      authSwitch.style.display = '';
-    }
-  }
+  });
 
-  // Bouton "Commencer gratuitement" → inscription
-  if (heroBtn) {
-    heroBtn.addEventListener('click', function() {
-      showForm(heroSubForm, heroLoginForm);
-    });
-  }
-  // Lien "Deja inscrit ? Se connecter"
-  if (showLoginLink) {
-    showLoginLink.addEventListener('click', function(e) {
-      e.preventDefault();
-      showForm(heroLoginForm, heroSubForm);
-    });
-  }
-  // Lien "Creer un compte ?" dans l'erreur login
-  if (switchToSignup) {
-    switchToSignup.addEventListener('click', function(e) {
-      e.preventDefault();
-      showForm(heroSubForm, heroLoginForm);
-    });
-  }
-
-  // Si erreur login → afficher le formulaire de connexion
-  {% if login_error %}
-  showForm(heroLoginForm, heroSubForm);
-  {% endif %}
-  // Si erreur inscription (pseudo) → afficher le formulaire d'inscription
-  {% if sub_status in ('pseudo', 'pseudo_taken', 'invalid') %}
-  showForm(heroSubForm, heroLoginForm);
-  {% endif %}
-
-  /* --- Animations au scroll (IntersectionObserver) --- */
-  var reveals = document.querySelectorAll('.land-reveal');
-  if (reveals.length > 0 && 'IntersectionObserver' in window) {
-    var delay = 0;
-    var observer = new IntersectionObserver(function(entries) {
-      entries.forEach(function(entry) {
-        if (entry.isIntersecting) {
-          var el = entry.target;
-          var d = parseFloat(el.dataset.revealDelay || 0);
-          setTimeout(function() { el.classList.add('land-visible'); }, d * 1000);
-          observer.unobserve(el);
-        }
-      });
-    }, { threshold: 0.15 });
-
-    /* Ajouter des delais en cascade par groupe */
-    var sections = document.querySelectorAll('.land-section');
-    sections.forEach(function(sec) {
-      var items = sec.querySelectorAll('.land-reveal');
-      items.forEach(function(item, i) {
-        item.dataset.revealDelay = (i * 0.1).toFixed(1);
-        observer.observe(item);
-      });
-    });
-  }
-
-  /* --- Compteurs animes --- */
-  function animateCounters() {
-    var counters = document.querySelectorAll('[data-count]');
-    counters.forEach(function(el) {
+  /* ================================================================
+     ANIMATED COUNTERS
+     ================================================================ */
+  function animateCounters(selector) {
+    document.querySelectorAll(selector).forEach(function(el) {
       var target = parseInt(el.dataset.count);
       var suffix = el.dataset.suffix || '';
-      var duration = 1500;
-      var start = 0;
+      var duration = 1800;
       var startTime = null;
 
       function step(timestamp) {
@@ -2100,28 +2250,74 @@
     });
   }
 
-  /* Lancer les compteurs quand le mockup est visible */
-  var mockup = document.querySelector('.land-mockup');
-  if (mockup && 'IntersectionObserver' in window) {
-    var cObs = new IntersectionObserver(function(entries) {
-      if (entries[0].isIntersecting) {
-        animateCounters();
-        cObs.unobserve(mockup);
-      }
-    }, { threshold: 0.3 });
-    cObs.observe(mockup);
-  } else {
-    setTimeout(animateCounters, 800);
+  /* ================================================================
+     SMOOTH SCROLL NAV
+     ================================================================ */
+  document.querySelectorAll('.land-nav-link').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      var target = document.querySelector(this.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  /* ================================================================
+     HERO CTA → FORMS
+     ================================================================ */
+  var heroBtn = document.getElementById('heroCtaBtn');
+  var heroSubForm = document.getElementById('heroSubForm');
+  var heroLoginForm = document.getElementById('heroLoginForm');
+  var authSwitch = document.getElementById('authSwitch');
+  var showLoginLink = document.getElementById('showLogin');
+  var switchToSignup = document.getElementById('switchToSignup');
+  var heroBtns = document.querySelector('.land-hero-btns');
+
+  function showForm(formToShow, formToHide) {
+    if (heroBtns) heroBtns.style.display = 'none';
+    if (formToHide) formToHide.classList.remove('land-hero-subscribe-visible');
+    if (formToShow) {
+      formToShow.classList.add('land-hero-subscribe-visible');
+      var input = formToShow.querySelector('input[type="email"]');
+      if (input) setTimeout(function() { input.focus(); }, 350);
+    }
+    if (authSwitch) {
+      var isLogin = formToShow === heroLoginForm;
+      authSwitch.innerHTML = isLogin
+        ? '<a href="#" id="showSignup" class="land-auth-link">Pas encore inscrit ? Creer un compte</a>'
+        : '<a href="#" id="showLogin" class="land-auth-link">Deja inscrit ? Se connecter</a>';
+      authSwitch.querySelector('a').addEventListener('click', function(e) {
+        e.preventDefault();
+        showForm(isLogin ? heroSubForm : heroLoginForm, isLogin ? heroLoginForm : heroSubForm);
+      });
+      authSwitch.style.display = '';
+    }
   }
 
-  /* --- Animation des barres du mini chart --- */
-  var bars = document.querySelectorAll('.land-mock-bar');
-  bars.forEach(function(bar, i) {
-    bar.style.height = '0%';
-    setTimeout(function() {
-      bar.style.height = bar.style.getPropertyValue('--h');
-    }, 600 + i * 150);
-  });
+  if (heroBtn) {
+    heroBtn.addEventListener('click', function() {
+      showForm(heroSubForm, heroLoginForm);
+    });
+  }
+  if (showLoginLink) {
+    showLoginLink.addEventListener('click', function(e) {
+      e.preventDefault();
+      showForm(heroLoginForm, heroSubForm);
+    });
+  }
+  if (switchToSignup) {
+    switchToSignup.addEventListener('click', function(e) {
+      e.preventDefault();
+      showForm(heroSubForm, heroLoginForm);
+    });
+  }
+
+  {% if login_error %}
+  showForm(heroLoginForm, heroSubForm);
+  {% endif %}
+  {% if sub_status in ('pseudo', 'pseudo_taken', 'invalid') %}
+  showForm(heroSubForm, heroLoginForm);
+  {% endif %}
+
 })();
 </script>
 {% endif %}
