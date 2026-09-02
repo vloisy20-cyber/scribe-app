@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=25">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=26">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -2061,7 +2061,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 {# Three.js for 3D premium background #}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
 <script>
 (function() {
   'use strict';
@@ -2319,8 +2319,8 @@
 
     function animate() {
       requestAnimationFrame(animate);
-      var t = clock.getElapsedTime();
       var dt = clock.getDelta();
+      var t = clock.elapsedTime;
 
       sm.x += (mouse.x - sm.x) * 0.04;
       sm.y += (mouse.y - sm.y) * 0.04;
@@ -2399,15 +2399,17 @@
     gsap.registerPlugin(ScrollTrigger);
 
     // Text reveal — split h1 and subtitle into lines/words
+    // Preserves inline HTML tags (e.g. <span class="land-gradient-text">)
     document.querySelectorAll('.land-text-reveal').forEach(function(el) {
       var html = el.innerHTML;
-      // Wrap each line (split by <br>) in a span, then wrap words
       var lines = html.split(/<br\s*\/?>/gi);
       el.innerHTML = lines.map(function(line) {
-        var words = line.trim().split(/\s+/).map(function(word) {
-          return '<span class="land-word" style="display:inline-block;opacity:0;transform:translateY(30px) rotateX(-10deg);filter:blur(4px)">' + word + '</span>';
+        // Regex: match complete HTML elements OR plain words, keeping tags intact
+        var tokens = line.trim().match(/<[^>]+>[^<]*<\/[^>]+>|<[^/][^>]*\/>|\S+/g) || [];
+        var wrapped = tokens.map(function(token) {
+          return '<span class="land-word" style="display:inline-block;opacity:0;transform:translateY(30px) rotateX(-10deg);filter:blur(4px)">' + token + '</span>';
         }).join(' ');
-        return '<span class="land-line" style="display:block;overflow:hidden">' + words + '</span>';
+        return '<span class="land-line" style="display:block;overflow:hidden">' + wrapped + '</span>';
       }).join('');
       // Animate each word with stagger
       var words = el.querySelectorAll('.land-word');
