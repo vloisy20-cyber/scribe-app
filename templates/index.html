@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=22">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=23">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -2142,96 +2142,108 @@
   /* ================================================================
      GSAP SCROLL ANIMATIONS
      ================================================================ */
-  gsap.registerPlugin(ScrollTrigger);
+  // GSAP — wrapped in safety check
+  if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
+    gsap.registerPlugin(ScrollTrigger);
 
-  // Hide all reveal elements first, then animate
-  var heroReveals = document.querySelectorAll('.land-hero .land-reveal');
-  gsap.set(heroReveals, { y: 50, opacity: 0 });
-
-  // Hero content — staggered entrance
-  gsap.to(heroReveals, {
-    y: 0, opacity: 1, duration: 1,
-    stagger: 0.15,
-    ease: 'power3.out',
-    delay: 0.3
-  });
-
-  // Section reveals — each .land-reveal inside sections
-  document.querySelectorAll('.land-section').forEach(function(sec) {
-    var items = sec.querySelectorAll('.land-reveal');
-    if (!items.length) return;
-    gsap.set(items, { y: 40, opacity: 0 });
-    gsap.to(items, {
-      scrollTrigger: {
-        trigger: sec,
-        start: 'top 80%',
-        toggleActions: 'play none none none'
-      },
-      y: 0, opacity: 1, duration: 0.8,
-      stagger: 0.1,
-      ease: 'power2.out'
+    // Hero content — staggered entrance (from invisible to visible)
+    gsap.from('.land-hero .land-reveal', {
+      y: 50, opacity: 0, duration: 1,
+      stagger: 0.15,
+      ease: 'power3.out',
+      delay: 0.3,
+      clearProps: 'all'
     });
-  });
 
-  // Feature cards — hover tilt effect
-  document.querySelectorAll('.land-feat-card').forEach(function(card) {
-    card.addEventListener('mousemove', function(e) {
-      var rect = card.getBoundingClientRect();
-      var x = (e.clientX - rect.left) / rect.width - 0.5;
-      var y = (e.clientY - rect.top) / rect.height - 0.5;
-      gsap.to(card, {
-        rotateY: x * 8, rotateX: -y * 8,
-        duration: 0.3, ease: 'power2.out',
-        transformPerspective: 800
+    // Section reveals
+    document.querySelectorAll('.land-section').forEach(function(sec) {
+      var items = sec.querySelectorAll('.land-reveal');
+      if (!items.length) return;
+      gsap.from(items, {
+        scrollTrigger: {
+          trigger: sec,
+          start: 'top 85%',
+          toggleActions: 'play none none none'
+        },
+        y: 40, opacity: 0, duration: 0.8,
+        stagger: 0.1,
+        ease: 'power2.out',
+        clearProps: 'all'
       });
-    });
-    card.addEventListener('mouseleave', function() {
-      gsap.to(card, { rotateY: 0, rotateX: 0, duration: 0.5, ease: 'elastic.out(1, 0.4)' });
-    });
-  });
-
-  // Mockup parallax on scroll
-  var mockup = document.getElementById('landMockup');
-  if (mockup) {
-    gsap.to(mockup, {
-      scrollTrigger: {
-        trigger: '.land-hero',
-        start: 'top top',
-        end: 'bottom top',
-        scrub: 1
-      },
-      y: -60,
-      rotateX: 0,
-      rotateY: 0,
-      scale: 0.92,
-      ease: 'none'
     });
   }
 
-  // Stats counter animation — triggered by GSAP ScrollTrigger
-  ScrollTrigger.create({
-    trigger: '.land-stats-row',
-    start: 'top 85%',
-    once: true,
-    onEnter: function() { animateCounters('.land-stats-row [data-count]'); }
-  });
+  // Feature cards — hover tilt effect (works with or without GSAP)
+  if (typeof gsap !== 'undefined') {
+    document.querySelectorAll('.land-feat-card').forEach(function(card) {
+      card.addEventListener('mousemove', function(e) {
+        var rect = card.getBoundingClientRect();
+        var x = (e.clientX - rect.left) / rect.width - 0.5;
+        var y = (e.clientY - rect.top) / rect.height - 0.5;
+        gsap.to(card, {
+          rotateY: x * 8, rotateX: -y * 8,
+          duration: 0.3, ease: 'power2.out',
+          transformPerspective: 800
+        });
+      });
+      card.addEventListener('mouseleave', function() {
+        gsap.to(card, { rotateY: 0, rotateX: 0, duration: 0.5, ease: 'elastic.out(1, 0.4)' });
+      });
+    });
 
-  // Mockup counters
-  ScrollTrigger.create({
-    trigger: '.land-mockup',
-    start: 'top 80%',
-    once: true,
-    onEnter: function() {
-      animateCounters('.land-mock-stat-val[data-count]');
-      // Animate bars
-      document.querySelectorAll('.land-mock-bar').forEach(function(bar, i) {
-        bar.style.height = '0%';
-        setTimeout(function() {
-          bar.style.height = bar.style.getPropertyValue('--h');
-        }, 400 + i * 120);
+    // Mockup parallax on scroll
+    var mockup = document.getElementById('landMockup');
+    if (mockup) {
+      gsap.to(mockup, {
+        scrollTrigger: {
+          trigger: '.land-hero',
+          start: 'top top',
+          end: 'bottom top',
+          scrub: 1
+        },
+        y: -60,
+        rotateX: 0,
+        rotateY: 0,
+        scale: 0.92,
+        ease: 'none'
       });
     }
-  });
+  }
+
+  // Counter animations — use IntersectionObserver (no GSAP dependency)
+  if ('IntersectionObserver' in window) {
+    var statsRow = document.querySelector('.land-stats-row');
+    if (statsRow) {
+      var sObs = new IntersectionObserver(function(entries) {
+        if (entries[0].isIntersecting) {
+          animateCounters('.land-stats-row [data-count]');
+          sObs.unobserve(statsRow);
+        }
+      }, { threshold: 0.2 });
+      sObs.observe(statsRow);
+    }
+
+    var mockupEl = document.querySelector('.land-mockup');
+    if (mockupEl) {
+      var mObs = new IntersectionObserver(function(entries) {
+        if (entries[0].isIntersecting) {
+          animateCounters('.land-mock-stat-val[data-count]');
+          document.querySelectorAll('.land-mock-bar').forEach(function(bar, i) {
+            bar.style.height = '0%';
+            setTimeout(function() {
+              bar.style.height = bar.style.getPropertyValue('--h');
+            }, 400 + i * 120);
+          });
+          mObs.unobserve(mockupEl);
+        }
+      }, { threshold: 0.2 });
+      mObs.observe(mockupEl);
+    }
+  } else {
+    setTimeout(function() {
+      animateCounters('[data-count]');
+    }, 800);
+  }
 
   /* ================================================================
      ANIMATED COUNTERS
