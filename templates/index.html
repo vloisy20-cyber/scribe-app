@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=23">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=24">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -2020,118 +2020,368 @@
 {# GSAP + ScrollTrigger CDN #}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-{# Three.js for 3D particle background #}
+{# Three.js for 3D premium background #}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function() {
   'use strict';
 
   /* ================================================================
-     THREE.JS — PARTICLE MESH BACKGROUND
+     THREE.JS — PREMIUM GLASS/CHROME 3D SCENE
      ================================================================ */
-  (function initParticles() {
+  (function initPremiumScene() {
     var canvas = document.getElementById('landCanvas');
     if (!canvas || typeof THREE === 'undefined') return;
 
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.z = 30;
-
+    /* ---------- renderer ---------- */
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
 
-    // Particle field
-    var count = 600;
-    var positions = new Float32Array(count * 3);
-    var colors = new Float32Array(count * 3);
-    var cyan = new THREE.Color('#22d3ee');
-    var purple = new THREE.Color('#a78bfa');
+    /* ---------- scene & camera ---------- */
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(0, 0, 22);
 
-    for (var i = 0; i < count; i++) {
-      positions[i * 3]     = (Math.random() - 0.5) * 60;
-      positions[i * 3 + 1] = (Math.random() - 0.5) * 60;
-      positions[i * 3 + 2] = (Math.random() - 0.5) * 40;
-      var mix = Math.random();
-      var c = cyan.clone().lerp(purple, mix);
-      colors[i * 3]     = c.r;
-      colors[i * 3 + 1] = c.g;
-      colors[i * 3 + 2] = c.b;
+    /* ---------- colors ---------- */
+    var CYAN    = new THREE.Color('#22d3ee');
+    var PURPLE  = new THREE.Color('#a78bfa');
+    var NAVY    = new THREE.Color('#060b18');
+    var PINK    = new THREE.Color('#f472b6');
+    var WHITE   = new THREE.Color('#ffffff');
+
+    /* ---------- studio lighting ---------- */
+    var ambLight = new THREE.AmbientLight(0x1a1a2e, 0.5);
+    scene.add(ambLight);
+
+    // Key light — cyan
+    var keyLight = new THREE.DirectionalLight(CYAN, 1.8);
+    keyLight.position.set(5, 8, 10);
+    scene.add(keyLight);
+
+    // Fill light — purple
+    var fillLight = new THREE.DirectionalLight(PURPLE, 1.2);
+    fillLight.position.set(-6, 3, 8);
+    scene.add(fillLight);
+
+    // Rim light — pink from behind
+    var rimLight = new THREE.DirectionalLight(PINK, 0.9);
+    rimLight.position.set(0, -4, -10);
+    scene.add(rimLight);
+
+    // Top accent
+    var topLight = new THREE.PointLight(CYAN, 1.4, 50);
+    topLight.position.set(0, 12, 5);
+    scene.add(topLight);
+
+    // Bottom accent
+    var botLight = new THREE.PointLight(PURPLE, 1.0, 50);
+    botLight.position.set(0, -10, 5);
+    scene.add(botLight);
+
+    /* ---------- env map (fake studio HDR via cube render) ---------- */
+    var cubeRT = new THREE.WebGLCubeRenderTarget(256);
+    var cubeCamera = new THREE.CubeCamera(0.1, 100, cubeRT);
+    // Build a gradient env scene
+    var envScene = new THREE.Scene();
+    var envGeo = new THREE.SphereGeometry(40, 32, 32);
+    var envMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide,
+      uniforms: {
+        colorTop:    { value: new THREE.Color('#0e1630') },
+        colorMid:    { value: new THREE.Color('#1a103a') },
+        colorBottom: { value: new THREE.Color('#060b18') }
+      },
+      vertexShader: [
+        'varying vec3 vWorldPos;',
+        'void main() {',
+        '  vec4 wp = modelMatrix * vec4(position, 1.0);',
+        '  vWorldPos = wp.xyz;',
+        '  gl_Position = projectionMatrix * viewMatrix * wp;',
+        '}'
+      ].join('\n'),
+      fragmentShader: [
+        'uniform vec3 colorTop;',
+        'uniform vec3 colorMid;',
+        'uniform vec3 colorBottom;',
+        'varying vec3 vWorldPos;',
+        'void main() {',
+        '  float y = normalize(vWorldPos).y;',
+        '  vec3 col = mix(colorBottom, colorMid, smoothstep(-0.5, 0.0, y));',
+        '  col = mix(col, colorTop, smoothstep(0.0, 0.8, y));',
+        '  gl_FragColor = vec4(col, 1.0);',
+        '}'
+      ].join('\n')
+    });
+    envScene.add(new THREE.Mesh(envGeo, envMat));
+    // Add glowing orbs to env for reflections
+    var orbGeo = new THREE.SphereGeometry(3, 16, 16);
+    var orbCyan = new THREE.Mesh(orbGeo, new THREE.MeshBasicMaterial({ color: CYAN }));
+    orbCyan.position.set(15, 10, -20);
+    envScene.add(orbCyan);
+    var orbPurple = new THREE.Mesh(orbGeo, new THREE.MeshBasicMaterial({ color: PURPLE }));
+    orbPurple.position.set(-15, -5, -20);
+    envScene.add(orbPurple);
+    var orbPink = new THREE.Mesh(orbGeo, new THREE.MeshBasicMaterial({ color: PINK }));
+    orbPink.position.set(0, -12, -15);
+    envScene.add(orbPink);
+    cubeCamera.update(renderer, envScene);
+    var envMap = cubeRT.texture;
+
+    /* ---------- materials ---------- */
+    var glassMat = new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color('#88ccff'),
+      metalness: 0.1,
+      roughness: 0.05,
+      transmission: 0.92,
+      thickness: 1.5,
+      transparent: true,
+      opacity: 0.7,
+      envMap: envMap,
+      envMapIntensity: 2.5,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.05,
+      side: THREE.DoubleSide
+    });
+
+    var chromeMat = new THREE.MeshPhysicalMaterial({
+      color: new THREE.Color('#c0d0e8'),
+      metalness: 0.95,
+      roughness: 0.08,
+      envMap: envMap,
+      envMapIntensity: 3.0,
+      clearcoat: 0.5,
+      clearcoatRoughness: 0.1
+    });
+
+    var glowCyanMat = new THREE.MeshPhysicalMaterial({
+      color: CYAN,
+      emissive: CYAN,
+      emissiveIntensity: 0.6,
+      metalness: 0.3,
+      roughness: 0.15,
+      envMap: envMap,
+      envMapIntensity: 1.5,
+      transparent: true,
+      opacity: 0.85
+    });
+
+    var glowPurpleMat = new THREE.MeshPhysicalMaterial({
+      color: PURPLE,
+      emissive: PURPLE,
+      emissiveIntensity: 0.6,
+      metalness: 0.3,
+      roughness: 0.15,
+      envMap: envMap,
+      envMapIntensity: 1.5,
+      transparent: true,
+      opacity: 0.85
+    });
+
+    /* wireframe overlay for glass shapes */
+    var wireMat = new THREE.MeshBasicMaterial({
+      color: CYAN,
+      wireframe: true,
+      transparent: true,
+      opacity: 0.08
+    });
+
+    /* ---------- geometric shapes ---------- */
+    var shapes = [];
+
+    // Central icosahedron — glass
+    var icoGeo = new THREE.IcosahedronGeometry(3.2, 1);
+    var icoMesh = new THREE.Mesh(icoGeo, glassMat);
+    var icoWire = new THREE.Mesh(icoGeo, wireMat.clone());
+    icoMesh.add(icoWire);
+    scene.add(icoMesh);
+    shapes.push({
+      mesh: icoMesh,
+      basePos: new THREE.Vector3(0, 0.5, 0),
+      floatAmp: new THREE.Vector3(0, 0.8, 0),
+      floatSpeed: 0.6,
+      rotSpeed: new THREE.Vector3(0.15, 0.25, 0.05),
+      phase: 0
+    });
+
+    // Torus knot — chrome, top-right
+    var tkGeo = new THREE.TorusKnotGeometry(1.2, 0.35, 100, 16, 2, 3);
+    var tkMesh = new THREE.Mesh(tkGeo, chromeMat);
+    scene.add(tkMesh);
+    shapes.push({
+      mesh: tkMesh,
+      basePos: new THREE.Vector3(7, 3.5, -4),
+      floatAmp: new THREE.Vector3(0.3, 0.6, 0.2),
+      floatSpeed: 0.4,
+      rotSpeed: new THREE.Vector3(0.1, 0.3, 0.08),
+      phase: 1.2
+    });
+
+    // Octahedron — glowing cyan, left
+    var octGeo = new THREE.OctahedronGeometry(1.8, 0);
+    var octMesh = new THREE.Mesh(octGeo, glowCyanMat);
+    var octWire = new THREE.Mesh(octGeo, wireMat.clone());
+    octWire.material.opacity = 0.12;
+    octMesh.add(octWire);
+    scene.add(octMesh);
+    shapes.push({
+      mesh: octMesh,
+      basePos: new THREE.Vector3(-7, -1, -2),
+      floatAmp: new THREE.Vector3(0.4, 0.5, 0.3),
+      floatSpeed: 0.5,
+      rotSpeed: new THREE.Vector3(0.2, 0.15, 0.1),
+      phase: 2.5
+    });
+
+    // Torus — glass, bottom-right
+    var torGeo = new THREE.TorusGeometry(1.5, 0.45, 24, 48);
+    var torMesh = new THREE.Mesh(torGeo, glassMat.clone());
+    torMesh.material.color = new THREE.Color('#bb99ff');
+    scene.add(torMesh);
+    shapes.push({
+      mesh: torMesh,
+      basePos: new THREE.Vector3(5.5, -4, -3),
+      floatAmp: new THREE.Vector3(0.3, 0.7, 0.15),
+      floatSpeed: 0.45,
+      rotSpeed: new THREE.Vector3(0.3, 0.1, 0.2),
+      phase: 3.8
+    });
+
+    // Dodecahedron — glowing purple, top-left
+    var dodGeo = new THREE.DodecahedronGeometry(1.4, 0);
+    var dodMesh = new THREE.Mesh(dodGeo, glowPurpleMat);
+    scene.add(dodMesh);
+    shapes.push({
+      mesh: dodMesh,
+      basePos: new THREE.Vector3(-6, 4, -5),
+      floatAmp: new THREE.Vector3(0.35, 0.5, 0.25),
+      floatSpeed: 0.55,
+      rotSpeed: new THREE.Vector3(0.12, 0.18, 0.25),
+      phase: 5.1
+    });
+
+    // Small sphere — chrome accent, center-right
+    var sphGeo = new THREE.SphereGeometry(0.8, 32, 32);
+    var sphMesh = new THREE.Mesh(sphGeo, chromeMat.clone());
+    scene.add(sphMesh);
+    shapes.push({
+      mesh: sphMesh,
+      basePos: new THREE.Vector3(3, 5, -6),
+      floatAmp: new THREE.Vector3(0.5, 0.4, 0.3),
+      floatSpeed: 0.65,
+      rotSpeed: new THREE.Vector3(0.3, 0.2, 0.1),
+      phase: 0.7
+    });
+
+    // Cone — glass accent, bottom-left
+    var coneGeo = new THREE.ConeGeometry(1.0, 2.2, 6);
+    var coneMesh = new THREE.Mesh(coneGeo, glassMat.clone());
+    coneMesh.material.color = new THREE.Color('#66eedd');
+    scene.add(coneMesh);
+    shapes.push({
+      mesh: coneMesh,
+      basePos: new THREE.Vector3(-4, -5, -4),
+      floatAmp: new THREE.Vector3(0.25, 0.55, 0.2),
+      floatSpeed: 0.5,
+      rotSpeed: new THREE.Vector3(0.08, 0.3, 0.15),
+      phase: 4.2
+    });
+
+    /* ---------- floating particles (subtle, behind shapes) ---------- */
+    var pCount = 200;
+    var pPositions = new Float32Array(pCount * 3);
+    var pColors = new Float32Array(pCount * 3);
+    for (var i = 0; i < pCount; i++) {
+      pPositions[i*3]   = (Math.random() - 0.5) * 50;
+      pPositions[i*3+1] = (Math.random() - 0.5) * 40;
+      pPositions[i*3+2] = (Math.random() - 0.5) * 30 - 10;
+      var c = CYAN.clone().lerp(PURPLE, Math.random());
+      pColors[i*3] = c.r; pColors[i*3+1] = c.g; pColors[i*3+2] = c.b;
     }
-
-    var geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-    var material = new THREE.PointsMaterial({
-      size: 0.12,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.6,
-      sizeAttenuation: true
+    var pGeo = new THREE.BufferGeometry();
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+    pGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
+    var pMat = new THREE.PointsMaterial({
+      size: 0.08, vertexColors: true, transparent: true, opacity: 0.4, sizeAttenuation: true
     });
-    var particles = new THREE.Points(geometry, material);
-    scene.add(particles);
+    scene.add(new THREE.Points(pGeo, pMat));
 
-    // Connection lines
-    var lineGeo = new THREE.BufferGeometry();
-    var linePositions = new Float32Array(count * count * 3);
-    lineGeo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-    var lineMat = new THREE.LineBasicMaterial({
-      color: 0x22d3ee,
-      transparent: true,
-      opacity: 0.06
-    });
-    var lines = new THREE.LineSegments(lineGeo, lineMat);
-    scene.add(lines);
-
-    var mouseX = 0, mouseY = 0;
+    /* ---------- mouse tracking with inertia ---------- */
+    var mouse = { x: 0, y: 0 };
+    var smoothMouse = { x: 0, y: 0 };
+    var INERTIA = 0.04;
     document.addEventListener('mousemove', function(e) {
-      mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
-      mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+      mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
+      mouse.y = (e.clientY / window.innerHeight - 0.5) * 2;
     });
+
+    /* ---------- scroll tracking ---------- */
+    var scrollY = 0;
+    var smoothScroll = 0;
+    window.addEventListener('scroll', function() {
+      scrollY = window.pageYOffset || document.documentElement.scrollTop;
+    });
+
+    /* ---------- animation loop ---------- */
+    var clock = new THREE.Clock();
 
     function animate() {
       requestAnimationFrame(animate);
+      var t = clock.getElapsedTime();
 
-      var time = Date.now() * 0.0003;
-      var pos = geometry.attributes.position.array;
-      for (var i = 0; i < count; i++) {
-        pos[i * 3 + 1] += Math.sin(time + i * 0.1) * 0.005;
-        pos[i * 3]     += Math.cos(time + i * 0.05) * 0.003;
+      // Smooth mouse with inertia
+      smoothMouse.x += (mouse.x - smoothMouse.x) * INERTIA;
+      smoothMouse.y += (mouse.y - smoothMouse.y) * INERTIA;
+      smoothScroll += (scrollY - smoothScroll) * 0.05;
+
+      // Animate each shape
+      for (var i = 0; i < shapes.length; i++) {
+        var s = shapes[i];
+        var phase = t * s.floatSpeed + s.phase;
+
+        // Float movement
+        s.mesh.position.x = s.basePos.x + Math.sin(phase) * s.floatAmp.x;
+        s.mesh.position.y = s.basePos.y + Math.sin(phase * 1.3 + 0.5) * s.floatAmp.y;
+        s.mesh.position.z = s.basePos.z + Math.cos(phase * 0.7) * s.floatAmp.z;
+
+        // Self rotation
+        s.mesh.rotation.x += s.rotSpeed.x * 0.01;
+        s.mesh.rotation.y += s.rotSpeed.y * 0.01;
+        s.mesh.rotation.z += s.rotSpeed.z * 0.01;
+
+        // Mouse reaction — shapes tilt toward cursor
+        s.mesh.rotation.x += smoothMouse.y * 0.003 * (i % 2 === 0 ? 1 : -1);
+        s.mesh.rotation.y += smoothMouse.x * 0.003 * (i % 2 === 0 ? 1 : -1);
+
+        // Scroll parallax — shapes drift as you scroll
+        var scrollFactor = (i % 3 === 0) ? -0.003 : (i % 3 === 1) ? 0.002 : -0.001;
+        s.mesh.position.y += smoothScroll * scrollFactor;
       }
-      geometry.attributes.position.needsUpdate = true;
 
-      // Update connection lines (nearest neighbors)
-      var lp = lineGeo.attributes.position.array;
-      var li = 0;
-      var maxDist = 5;
-      for (var a = 0; a < Math.min(count, 100); a++) {
-        for (var b = a + 1; b < Math.min(count, 100); b++) {
-          var dx = pos[a*3] - pos[b*3];
-          var dy = pos[a*3+1] - pos[b*3+1];
-          var dz = pos[a*3+2] - pos[b*3+2];
-          var d = dx*dx + dy*dy + dz*dz;
-          if (d < maxDist * maxDist) {
-            lp[li++] = pos[a*3]; lp[li++] = pos[a*3+1]; lp[li++] = pos[a*3+2];
-            lp[li++] = pos[b*3]; lp[li++] = pos[b*3+1]; lp[li++] = pos[b*3+2];
-          }
-        }
+      // Camera responds to mouse with inertia
+      camera.position.x += (smoothMouse.x * 1.8 - camera.position.x) * 0.02;
+      camera.position.y += (-smoothMouse.y * 1.2 - camera.position.y) * 0.02;
+      camera.lookAt(0, 0, 0);
+
+      // Subtle particle drift
+      var pp = pGeo.attributes.position.array;
+      for (var j = 0; j < pCount; j++) {
+        pp[j*3+1] += Math.sin(t * 0.3 + j * 0.2) * 0.002;
+        pp[j*3]   += Math.cos(t * 0.2 + j * 0.15) * 0.001;
       }
-      lineGeo.setDrawRange(0, li / 3);
-      lineGeo.attributes.position.needsUpdate = true;
+      pGeo.attributes.position.needsUpdate = true;
 
-      // Camera follows mouse subtly
-      camera.position.x += (mouseX * 2 - camera.position.x) * 0.02;
-      camera.position.y += (-mouseY * 2 - camera.position.y) * 0.02;
-      camera.lookAt(scene.position);
-
-      particles.rotation.y = time * 0.2;
+      // Animate lights subtly
+      topLight.intensity = 1.4 + Math.sin(t * 0.8) * 0.3;
+      botLight.intensity = 1.0 + Math.cos(t * 0.6) * 0.2;
 
       renderer.render(scene, camera);
     }
     animate();
 
+    /* ---------- resize ---------- */
     window.addEventListener('resize', function() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
