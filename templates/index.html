@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=24">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=25">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -134,24 +134,30 @@
 
   {# ========== SECTION 1 : HERO ========== #}
   <section class="land-hero">
-    <div class="land-hero-content">
-      <div class="land-badge land-reveal">
-        <span class="land-badge-dot"></span> 100% gratuit — Zero pub
-      </div>
+    {# Noise + fog overlays #}
+    <div class="land-noise"></div>
+    <div class="land-fog"></div>
 
-      <h1 class="land-h1 land-reveal">Reprends le controle<br>de tes <span class="land-gradient-text">finances</span></h1>
-      <p class="land-hero-sub land-reveal">Scribe analyse tes depenses, detecte les abonnements oublies, surveille les hausses de prix et t'aide a mieux gerer ton argent — automatiquement.</p>
-
-      <div class="land-hero-cta-wrap land-reveal" id="heroCta">
-        <div class="land-hero-btns">
-          <button type="button" class="land-cta-primary" id="heroCtaBtn">
-            Commencer gratuitement <span class="land-cta-arrow">&rarr;</span>
-          </button>
-          <a href="#land-features" class="land-cta-secondary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Decouvrir
-          </a>
+    <div class="land-hero-split">
+      {# Left column — text & forms #}
+      <div class="land-hero-left">
+        <div class="land-badge land-reveal">
+          <span class="land-badge-dot"></span> 100% gratuit — Zero pub
         </div>
+
+        <h1 class="land-h1 land-text-reveal">Reprends le controle<br>de tes <span class="land-gradient-text">finances</span></h1>
+        <p class="land-hero-sub land-text-reveal">Scribe analyse tes depenses, detecte les abonnements oublies, surveille les hausses de prix et t'aide a mieux gerer ton argent — automatiquement.</p>
+
+        <div class="land-hero-cta-wrap land-reveal" id="heroCta">
+          <div class="land-hero-btns">
+            <button type="button" class="land-cta-primary land-glow-btn" id="heroCtaBtn">
+              Commencer gratuitement <span class="land-cta-arrow">&rarr;</span>
+            </button>
+            <a href="#land-features" class="land-cta-secondary">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Decouvrir
+            </a>
+          </div>
 
         {# Formulaire inscription #}
         <form action="/api/subscribe" method="post" class="land-hero-subscribe" id="heroSubForm">
@@ -226,62 +232,96 @@
           {% endif %}
         </p>
       </div>
-    </div>
+    </div>{# end .land-hero-left #}
 
-    {# Mockup du dashboard — perspective 3D #}
-    <div class="land-mockup-wrap land-reveal">
-      <div class="land-mockup-glow"></div>
-      <div class="land-mockup" id="landMockup">
-        <div class="land-mockup-window">
-          <div class="land-mockup-bar">
+    {# Right column — 3D scene with floating widgets #}
+    <div class="land-hero-right" id="landHeroRight">
+      {# Central orb overlay (HTML dashboard inside the 3D orb) #}
+      <div class="land-orb" id="landOrb">
+        <div class="land-orb-glow"></div>
+        <div class="land-orb-inner">
+          <div class="land-orb-bar">
             <span class="land-dot land-dot-r"></span>
             <span class="land-dot land-dot-y"></span>
             <span class="land-dot land-dot-g"></span>
-            <span class="land-mockup-url">scribe-app.onrender.com</span>
+            <span class="land-orb-url">scribe-app.onrender.com</span>
           </div>
-          <div class="land-mockup-body">
-            <div class="land-mock-sidebar">
-              <div class="land-mock-logo">S</div>
-              <div class="land-mock-nav-item land-mock-active"></div>
-              <div class="land-mock-nav-item"></div>
-              <div class="land-mock-nav-item"></div>
-              <div class="land-mock-nav-item"></div>
-              <div class="land-mock-nav-item"></div>
+          <div class="land-orb-stats">
+            <div class="land-orb-stat">
+              <span class="land-orb-val land-green" data-count="78">0</span>
+              <span class="land-orb-lbl">Assets</span>
             </div>
-            <div class="land-mock-content">
-              <div class="land-mock-stats">
-                <div class="land-mock-stat">
-                  <div class="land-mock-stat-val land-green" data-count="78">0</div>
-                  <div class="land-mock-stat-lbl">Score</div>
-                </div>
-                <div class="land-mock-stat">
-                  <div class="land-mock-stat-val" data-count="1544" data-suffix=" EUR">0</div>
-                  <div class="land-mock-stat-lbl">Depenses</div>
-                </div>
-                <div class="land-mock-stat">
-                  <div class="land-mock-stat-val" data-count="13">0</div>
-                  <div class="land-mock-stat-lbl">Abonnements</div>
-                </div>
-                <div class="land-mock-stat">
-                  <div class="land-mock-stat-val land-orange" data-count="4">0</div>
-                  <div class="land-mock-stat-lbl">Alertes</div>
-                </div>
-              </div>
-              <div class="land-mock-chart">
-                <div class="land-mock-bar-group"><div class="land-mock-bar" style="--h:45%"></div><div class="land-mock-bar-lbl">Fev</div></div>
-                <div class="land-mock-bar-group"><div class="land-mock-bar" style="--h:60%"></div><div class="land-mock-bar-lbl">Mar</div></div>
-                <div class="land-mock-bar-group"><div class="land-mock-bar" style="--h:38%"></div><div class="land-mock-bar-lbl">Avr</div></div>
-                <div class="land-mock-bar-group"><div class="land-mock-bar" style="--h:72%"></div><div class="land-mock-bar-lbl">Mai</div></div>
-                <div class="land-mock-bar-group"><div class="land-mock-bar" style="--h:55%"></div><div class="land-mock-bar-lbl">Jun</div></div>
-                <div class="land-mock-bar-group"><div class="land-mock-bar land-mock-bar-current" style="--h:65%"></div><div class="land-mock-bar-lbl">Jul</div></div>
-              </div>
-              <div class="land-mock-alert">
-                <svg style="width:14px;height:14px;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Netflix : hausse de +18% detectee
-              </div>
+            <div class="land-orb-stat land-orb-stat-main">
+              <span class="land-orb-val" data-count="1544" data-suffix=" EUR">0</span>
+              <span class="land-orb-lbl">Comptes</span>
             </div>
+            <div class="land-orb-stat">
+              <span class="land-orb-val" data-count="13">0</span>
+              <span class="land-orb-lbl">Missions</span>
+            </div>
+            <div class="land-orb-stat">
+              <span class="land-orb-val land-orange" data-count="4">0</span>
+              <span class="land-orb-lbl">Alertes</span>
+            </div>
+          </div>
+          <div class="land-orb-chart">
+            <div class="land-orb-bar-col"><div class="land-orb-bar-fill" style="--h:45%"></div></div>
+            <div class="land-orb-bar-col"><div class="land-orb-bar-fill" style="--h:60%"></div></div>
+            <div class="land-orb-bar-col"><div class="land-orb-bar-fill" style="--h:38%"></div></div>
+            <div class="land-orb-bar-col"><div class="land-orb-bar-fill land-orb-bar-active" style="--h:72%"></div></div>
+            <div class="land-orb-bar-col"><div class="land-orb-bar-fill" style="--h:55%"></div></div>
+            <div class="land-orb-bar-col"><div class="land-orb-bar-fill land-orb-bar-active" style="--h:65%"></div></div>
           </div>
         </div>
       </div>
+
+      {# Floating widget: Spending (bottom-left) #}
+      <div class="land-fw land-fw-spending" id="fwSpending">
+        <div class="land-fw-head">
+          <div class="land-fw-mini-stats">
+            <div><strong>78</strong><br><small>Assets</small></div>
+            <div><strong>1544 EUR</strong><br><small>Comptes</small></div>
+            <div><strong>13</strong><br><small>Missions</small></div>
+            <div><strong>4</strong><br><small>Alertes</small></div>
+          </div>
+        </div>
+        <h4 class="land-fw-title">Spending</h4>
+        <div class="land-fw-row"><span class="land-fw-dot" style="background:#a78bfa"></span> Alimentation <span class="land-fw-amount">1544 EUR</span></div>
+        <div class="land-fw-row"><span class="land-fw-dot" style="background:#22d3ee"></span> Constellation <span class="land-fw-amount">500 EUR</span></div>
+        <div class="land-fw-row"><span class="land-fw-dot" style="background:#34d399"></span> Sortie <span class="land-fw-amount">224 EUR</span></div>
+        <div class="land-fw-row"><span class="land-fw-dot" style="background:#fbbf24"></span> Factures <span class="land-fw-amount">100 EUR</span></div>
+      </div>
+
+      {# Floating widget: Right tablet (top-right) #}
+      <div class="land-fw land-fw-tablet" id="fwTablet">
+        <div class="land-fw-mini-stats land-fw-mini-stats-sm">
+          <div><strong>1544 EUR</strong><br><small>Comptes</small></div>
+          <div><strong>13</strong><br><small>Missions</small></div>
+        </div>
+        <div class="land-fw-bars-h">
+          <div class="land-fw-bar-h" style="width:70%"></div>
+          <div class="land-fw-bar-h" style="width:45%"></div>
+          <div class="land-fw-bar-h" style="width:85%"></div>
+        </div>
+      </div>
+
+      {# Floating alert badge #}
+      <div class="land-fw land-fw-alert" id="fwAlert">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Netflix : hausse de +70% detectee
+      </div>
+    </div>{# end .land-hero-right #}
+    </div>{# end .land-hero-split #}
+
+    {# Bottom CTA row #}
+    <div class="land-hero-bottom land-reveal">
+      <button type="button" class="land-cta-primary land-glow-btn land-cta-bottom" onclick="document.getElementById('heroCtaBtn').click()">
+        Commencer gratuitement <span class="land-cta-arrow">&rarr;</span>
+      </button>
+      <a href="#land-features" class="land-cta-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Decouvrir
+      </a>
     </div>
   </section>
 
@@ -2027,7 +2067,7 @@
   'use strict';
 
   /* ================================================================
-     THREE.JS — PREMIUM GLASS/CHROME 3D SCENE
+     THREE.JS — GLASS ORB + ORBITING OBJECTS + LIGHTNING
      ================================================================ */
   (function initPremiumScene() {
     var canvas = document.getElementById('landCanvas');
@@ -2038,350 +2078,313 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.2;
+    renderer.toneMappingExposure = 1.4;
 
     /* ---------- scene & camera ---------- */
     var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
-    camera.position.set(0, 0, 22);
+    var camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(2, 1, 20);
 
     /* ---------- colors ---------- */
-    var CYAN    = new THREE.Color('#22d3ee');
-    var PURPLE  = new THREE.Color('#a78bfa');
-    var NAVY    = new THREE.Color('#060b18');
-    var PINK    = new THREE.Color('#f472b6');
-    var WHITE   = new THREE.Color('#ffffff');
+    var CYAN   = new THREE.Color('#22d3ee');
+    var PURPLE = new THREE.Color('#a78bfa');
+    var PINK   = new THREE.Color('#f472b6');
 
     /* ---------- studio lighting ---------- */
-    var ambLight = new THREE.AmbientLight(0x1a1a2e, 0.5);
-    scene.add(ambLight);
-
-    // Key light — cyan
-    var keyLight = new THREE.DirectionalLight(CYAN, 1.8);
+    scene.add(new THREE.AmbientLight(0x1a1a2e, 0.6));
+    var keyLight = new THREE.DirectionalLight(CYAN, 2.0);
     keyLight.position.set(5, 8, 10);
     scene.add(keyLight);
-
-    // Fill light — purple
-    var fillLight = new THREE.DirectionalLight(PURPLE, 1.2);
+    var fillLight = new THREE.DirectionalLight(PURPLE, 1.4);
     fillLight.position.set(-6, 3, 8);
     scene.add(fillLight);
-
-    // Rim light — pink from behind
-    var rimLight = new THREE.DirectionalLight(PINK, 0.9);
+    var rimLight = new THREE.DirectionalLight(PINK, 0.8);
     rimLight.position.set(0, -4, -10);
     scene.add(rimLight);
-
-    // Top accent
-    var topLight = new THREE.PointLight(CYAN, 1.4, 50);
+    var topLight = new THREE.PointLight(CYAN, 1.6, 50);
     topLight.position.set(0, 12, 5);
     scene.add(topLight);
-
-    // Bottom accent
-    var botLight = new THREE.PointLight(PURPLE, 1.0, 50);
+    var botLight = new THREE.PointLight(PURPLE, 1.2, 50);
     botLight.position.set(0, -10, 5);
     scene.add(botLight);
 
-    /* ---------- env map (fake studio HDR via cube render) ---------- */
+    /* ---------- env map ---------- */
     var cubeRT = new THREE.WebGLCubeRenderTarget(256);
     var cubeCamera = new THREE.CubeCamera(0.1, 100, cubeRT);
-    // Build a gradient env scene
     var envScene = new THREE.Scene();
-    var envGeo = new THREE.SphereGeometry(40, 32, 32);
     var envMat = new THREE.ShaderMaterial({
       side: THREE.BackSide,
       uniforms: {
-        colorTop:    { value: new THREE.Color('#0e1630') },
-        colorMid:    { value: new THREE.Color('#1a103a') },
-        colorBottom: { value: new THREE.Color('#060b18') }
+        cTop: { value: new THREE.Color('#0e1630') },
+        cMid: { value: new THREE.Color('#1a103a') },
+        cBot: { value: new THREE.Color('#060b18') }
       },
-      vertexShader: [
-        'varying vec3 vWorldPos;',
-        'void main() {',
-        '  vec4 wp = modelMatrix * vec4(position, 1.0);',
-        '  vWorldPos = wp.xyz;',
-        '  gl_Position = projectionMatrix * viewMatrix * wp;',
-        '}'
-      ].join('\n'),
-      fragmentShader: [
-        'uniform vec3 colorTop;',
-        'uniform vec3 colorMid;',
-        'uniform vec3 colorBottom;',
-        'varying vec3 vWorldPos;',
-        'void main() {',
-        '  float y = normalize(vWorldPos).y;',
-        '  vec3 col = mix(colorBottom, colorMid, smoothstep(-0.5, 0.0, y));',
-        '  col = mix(col, colorTop, smoothstep(0.0, 0.8, y));',
-        '  gl_FragColor = vec4(col, 1.0);',
-        '}'
-      ].join('\n')
+      vertexShader: 'varying vec3 vP;void main(){vec4 w=modelMatrix*vec4(position,1.);vP=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
+      fragmentShader: 'uniform vec3 cTop,cMid,cBot;varying vec3 vP;void main(){float y=normalize(vP).y;vec3 c=mix(cBot,cMid,smoothstep(-.5,.0,y));c=mix(c,cTop,smoothstep(.0,.8,y));gl_FragColor=vec4(c,1.);}'
     });
-    envScene.add(new THREE.Mesh(envGeo, envMat));
-    // Add glowing orbs to env for reflections
-    var orbGeo = new THREE.SphereGeometry(3, 16, 16);
-    var orbCyan = new THREE.Mesh(orbGeo, new THREE.MeshBasicMaterial({ color: CYAN }));
-    orbCyan.position.set(15, 10, -20);
-    envScene.add(orbCyan);
-    var orbPurple = new THREE.Mesh(orbGeo, new THREE.MeshBasicMaterial({ color: PURPLE }));
-    orbPurple.position.set(-15, -5, -20);
-    envScene.add(orbPurple);
-    var orbPink = new THREE.Mesh(orbGeo, new THREE.MeshBasicMaterial({ color: PINK }));
-    orbPink.position.set(0, -12, -15);
-    envScene.add(orbPink);
+    envScene.add(new THREE.Mesh(new THREE.SphereGeometry(40,32,32), envMat));
+    var oG = new THREE.SphereGeometry(3,16,16);
+    var o1 = new THREE.Mesh(oG, new THREE.MeshBasicMaterial({color:CYAN})); o1.position.set(15,10,-20); envScene.add(o1);
+    var o2 = new THREE.Mesh(oG, new THREE.MeshBasicMaterial({color:PURPLE})); o2.position.set(-15,-5,-20); envScene.add(o2);
+    var o3 = new THREE.Mesh(oG, new THREE.MeshBasicMaterial({color:PINK})); o3.position.set(0,-12,-15); envScene.add(o3);
     cubeCamera.update(renderer, envScene);
     var envMap = cubeRT.texture;
 
     /* ---------- materials ---------- */
     var glassMat = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#88ccff'),
-      metalness: 0.1,
-      roughness: 0.05,
-      transmission: 0.92,
-      thickness: 1.5,
-      transparent: true,
-      opacity: 0.7,
-      envMap: envMap,
-      envMapIntensity: 2.5,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.05,
-      side: THREE.DoubleSide
+      color: 0x88ccff, metalness: 0.1, roughness: 0.05,
+      transmission: 0.9, thickness: 2, transparent: true, opacity: 0.55,
+      envMap: envMap, envMapIntensity: 2.8,
+      clearcoat: 1.0, clearcoatRoughness: 0.05, side: THREE.DoubleSide
     });
-
     var chromeMat = new THREE.MeshPhysicalMaterial({
-      color: new THREE.Color('#c0d0e8'),
-      metalness: 0.95,
-      roughness: 0.08,
-      envMap: envMap,
-      envMapIntensity: 3.0,
-      clearcoat: 0.5,
-      clearcoatRoughness: 0.1
+      color: 0xc0d0e8, metalness: 0.95, roughness: 0.08,
+      envMap: envMap, envMapIntensity: 3.5,
+      clearcoat: 0.5, clearcoatRoughness: 0.1
+    });
+    var glowCyan = new THREE.MeshPhysicalMaterial({
+      color: CYAN, emissive: CYAN, emissiveIntensity: 0.7,
+      metalness: 0.3, roughness: 0.15, envMap: envMap, envMapIntensity: 1.5,
+      transparent: true, opacity: 0.85
+    });
+    var glowPurple = new THREE.MeshPhysicalMaterial({
+      color: PURPLE, emissive: PURPLE, emissiveIntensity: 0.7,
+      metalness: 0.3, roughness: 0.15, envMap: envMap, envMapIntensity: 1.5,
+      transparent: true, opacity: 0.85
     });
 
-    var glowCyanMat = new THREE.MeshPhysicalMaterial({
-      color: CYAN,
-      emissive: CYAN,
-      emissiveIntensity: 0.6,
-      metalness: 0.3,
-      roughness: 0.15,
-      envMap: envMap,
-      envMapIntensity: 1.5,
-      transparent: true,
-      opacity: 0.85
+    /* ---------- CENTRAL ORB (glass dome) ---------- */
+    var orbGroup = new THREE.Group();
+    scene.add(orbGroup);
+
+    // Main glass sphere
+    var orbGeo = new THREE.SphereGeometry(3.5, 64, 64);
+    var orbMesh = new THREE.Mesh(orbGeo, glassMat);
+    orbGroup.add(orbMesh);
+
+    // Chrome ring/rim around the equator
+    var ringGeo = new THREE.TorusGeometry(3.6, 0.12, 16, 64);
+    var ringMesh = new THREE.Mesh(ringGeo, chromeMat.clone());
+    ringMesh.rotation.x = Math.PI / 2;
+    orbGroup.add(ringMesh);
+
+    // Top cap (chrome dome lid)
+    var capGeo = new THREE.CylinderGeometry(2.2, 2.5, 0.25, 32);
+    var capMesh = new THREE.Mesh(capGeo, chromeMat.clone());
+    capMesh.position.y = 3.2;
+    orbGroup.add(capMesh);
+
+    // Wireframe overlay on orb
+    var wireOrb = new THREE.Mesh(orbGeo, new THREE.MeshBasicMaterial({
+      color: CYAN, wireframe: true, transparent: true, opacity: 0.04
+    }));
+    orbGroup.add(wireOrb);
+
+    orbGroup.position.set(3, 0.5, 0);
+
+    /* ---------- ORBITING OBJECTS ---------- */
+    var orbiters = [];
+
+    // Coins (flat metallic cylinders)
+    function makeCoin(radius, color, dist, speed, tilt, phase) {
+      var geo = new THREE.CylinderGeometry(radius, radius, radius * 0.15, 32);
+      var mat = chromeMat.clone();
+      mat.color = new THREE.Color(color);
+      var mesh = new THREE.Mesh(geo, mat);
+      // Edge ring
+      var edgeGeo = new THREE.TorusGeometry(radius, radius * 0.06, 8, 32);
+      var edge = new THREE.Mesh(edgeGeo, mat.clone());
+      edge.rotation.x = Math.PI / 2;
+      mesh.add(edge);
+      scene.add(mesh);
+      orbiters.push({ mesh: mesh, dist: dist, speed: speed, tilt: tilt, phase: phase, type: 'coin' });
+      return mesh;
+    }
+    makeCoin(0.5, '#c0c0c0', 6.5, 0.3, 0.2, 0);
+    makeCoin(0.4, '#d4af37', 7.5, 0.25, -0.3, 2.1);
+    makeCoin(0.35, '#c0c0c0', 8, 0.35, 0.15, 4.2);
+    makeCoin(0.45, '#e8d5a0', 5.5, 0.4, -0.1, 1.0);
+
+    // Geometric shapes orbiting
+    function makeOrbiter(geo, mat, dist, speed, tilt, phase, rotSpd) {
+      var mesh = new THREE.Mesh(geo, mat);
+      scene.add(mesh);
+      orbiters.push({ mesh: mesh, dist: dist, speed: speed, tilt: tilt, phase: phase, type: 'shape', rotSpd: rotSpd || 0.01 });
+      return mesh;
+    }
+    makeOrbiter(new THREE.OctahedronGeometry(0.7, 0), glowCyan, 6, 0.2, 0.4, 0.5, 0.015);
+    makeOrbiter(new THREE.TorusKnotGeometry(0.5, 0.15, 64, 8, 2, 3), chromeMat.clone(), 7, 0.18, -0.25, 3.3, 0.008);
+    makeOrbiter(new THREE.IcosahedronGeometry(0.6, 0), glowPurple, 8.5, 0.15, 0.35, 5.0, 0.012);
+    makeOrbiter(new THREE.DodecahedronGeometry(0.5, 0), glassMat.clone(), 5.8, 0.28, -0.4, 1.7, 0.02);
+    makeOrbiter(new THREE.TetrahedronGeometry(0.55, 0), glowCyan.clone(), 7.2, 0.22, 0.1, 4.5, 0.018);
+
+    /* ---------- LIGHTNING / ELECTRIC ARCS ---------- */
+    var lightningGroup = new THREE.Group();
+    scene.add(lightningGroup);
+    var boltMat = new THREE.LineBasicMaterial({
+      color: CYAN, transparent: true, opacity: 0.7,
+      blending: THREE.AdditiveBlending
+    });
+    var boltMat2 = new THREE.LineBasicMaterial({
+      color: 0x88ddff, transparent: true, opacity: 0.3,
+      blending: THREE.AdditiveBlending
     });
 
-    var glowPurpleMat = new THREE.MeshPhysicalMaterial({
-      color: PURPLE,
-      emissive: PURPLE,
-      emissiveIntensity: 0.6,
-      metalness: 0.3,
-      roughness: 0.15,
-      envMap: envMap,
-      envMapIntensity: 1.5,
-      transparent: true,
-      opacity: 0.85
-    });
+    function generateBolt(start, end, segments, spread) {
+      var pts = [];
+      for (var i = 0; i <= segments; i++) {
+        var t = i / segments;
+        var px = start.x + (end.x - start.x) * t;
+        var py = start.y + (end.y - start.y) * t;
+        var pz = start.z + (end.z - start.z) * t;
+        if (i > 0 && i < segments) {
+          px += (Math.random() - 0.5) * spread;
+          py += (Math.random() - 0.5) * spread;
+          pz += (Math.random() - 0.5) * spread * 0.5;
+        }
+        pts.push(new THREE.Vector3(px, py, pz));
+      }
+      return pts;
+    }
 
-    /* wireframe overlay for glass shapes */
-    var wireMat = new THREE.MeshBasicMaterial({
-      color: CYAN,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.08
-    });
+    var bolts = [];
+    function refreshBolts() {
+      // Remove old
+      while (lightningGroup.children.length) lightningGroup.remove(lightningGroup.children[0]);
+      bolts = [];
+      // Generate 4-6 bolts from orb center toward orbiting objects
+      var count = 3 + Math.floor(Math.random() * 3);
+      for (var i = 0; i < count; i++) {
+        var target = orbiters[i % orbiters.length];
+        var start = orbGroup.position.clone();
+        // Offset start from orb surface
+        var dir = target.mesh.position.clone().sub(start).normalize();
+        start.add(dir.multiplyScalar(3.5));
+        var pts = generateBolt(start, target.mesh.position, 8 + Math.floor(Math.random() * 6), 0.8);
+        var geo = new THREE.BufferGeometry().setFromPoints(pts);
+        var line = new THREE.Line(geo, Math.random() > 0.4 ? boltMat : boltMat2);
+        lightningGroup.add(line);
+        bolts.push(line);
+        // Branch
+        if (Math.random() > 0.5 && pts.length > 3) {
+          var branchStart = pts[Math.floor(pts.length * 0.4)];
+          var branchEnd = branchStart.clone().add(
+            new THREE.Vector3((Math.random()-.5)*3, (Math.random()-.5)*3, (Math.random()-.5)*1.5)
+          );
+          var bPts = generateBolt(branchStart, branchEnd, 4, 0.4);
+          var bGeo = new THREE.BufferGeometry().setFromPoints(bPts);
+          var bLine = new THREE.Line(bGeo, boltMat2);
+          lightningGroup.add(bLine);
+        }
+      }
+    }
+    refreshBolts();
 
-    /* ---------- geometric shapes ---------- */
-    var shapes = [];
-
-    // Central icosahedron — glass
-    var icoGeo = new THREE.IcosahedronGeometry(3.2, 1);
-    var icoMesh = new THREE.Mesh(icoGeo, glassMat);
-    var icoWire = new THREE.Mesh(icoGeo, wireMat.clone());
-    icoMesh.add(icoWire);
-    scene.add(icoMesh);
-    shapes.push({
-      mesh: icoMesh,
-      basePos: new THREE.Vector3(0, 0.5, 0),
-      floatAmp: new THREE.Vector3(0, 0.8, 0),
-      floatSpeed: 0.6,
-      rotSpeed: new THREE.Vector3(0.15, 0.25, 0.05),
-      phase: 0
-    });
-
-    // Torus knot — chrome, top-right
-    var tkGeo = new THREE.TorusKnotGeometry(1.2, 0.35, 100, 16, 2, 3);
-    var tkMesh = new THREE.Mesh(tkGeo, chromeMat);
-    scene.add(tkMesh);
-    shapes.push({
-      mesh: tkMesh,
-      basePos: new THREE.Vector3(7, 3.5, -4),
-      floatAmp: new THREE.Vector3(0.3, 0.6, 0.2),
-      floatSpeed: 0.4,
-      rotSpeed: new THREE.Vector3(0.1, 0.3, 0.08),
-      phase: 1.2
-    });
-
-    // Octahedron — glowing cyan, left
-    var octGeo = new THREE.OctahedronGeometry(1.8, 0);
-    var octMesh = new THREE.Mesh(octGeo, glowCyanMat);
-    var octWire = new THREE.Mesh(octGeo, wireMat.clone());
-    octWire.material.opacity = 0.12;
-    octMesh.add(octWire);
-    scene.add(octMesh);
-    shapes.push({
-      mesh: octMesh,
-      basePos: new THREE.Vector3(-7, -1, -2),
-      floatAmp: new THREE.Vector3(0.4, 0.5, 0.3),
-      floatSpeed: 0.5,
-      rotSpeed: new THREE.Vector3(0.2, 0.15, 0.1),
-      phase: 2.5
-    });
-
-    // Torus — glass, bottom-right
-    var torGeo = new THREE.TorusGeometry(1.5, 0.45, 24, 48);
-    var torMesh = new THREE.Mesh(torGeo, glassMat.clone());
-    torMesh.material.color = new THREE.Color('#bb99ff');
-    scene.add(torMesh);
-    shapes.push({
-      mesh: torMesh,
-      basePos: new THREE.Vector3(5.5, -4, -3),
-      floatAmp: new THREE.Vector3(0.3, 0.7, 0.15),
-      floatSpeed: 0.45,
-      rotSpeed: new THREE.Vector3(0.3, 0.1, 0.2),
-      phase: 3.8
-    });
-
-    // Dodecahedron — glowing purple, top-left
-    var dodGeo = new THREE.DodecahedronGeometry(1.4, 0);
-    var dodMesh = new THREE.Mesh(dodGeo, glowPurpleMat);
-    scene.add(dodMesh);
-    shapes.push({
-      mesh: dodMesh,
-      basePos: new THREE.Vector3(-6, 4, -5),
-      floatAmp: new THREE.Vector3(0.35, 0.5, 0.25),
-      floatSpeed: 0.55,
-      rotSpeed: new THREE.Vector3(0.12, 0.18, 0.25),
-      phase: 5.1
-    });
-
-    // Small sphere — chrome accent, center-right
-    var sphGeo = new THREE.SphereGeometry(0.8, 32, 32);
-    var sphMesh = new THREE.Mesh(sphGeo, chromeMat.clone());
-    scene.add(sphMesh);
-    shapes.push({
-      mesh: sphMesh,
-      basePos: new THREE.Vector3(3, 5, -6),
-      floatAmp: new THREE.Vector3(0.5, 0.4, 0.3),
-      floatSpeed: 0.65,
-      rotSpeed: new THREE.Vector3(0.3, 0.2, 0.1),
-      phase: 0.7
-    });
-
-    // Cone — glass accent, bottom-left
-    var coneGeo = new THREE.ConeGeometry(1.0, 2.2, 6);
-    var coneMesh = new THREE.Mesh(coneGeo, glassMat.clone());
-    coneMesh.material.color = new THREE.Color('#66eedd');
-    scene.add(coneMesh);
-    shapes.push({
-      mesh: coneMesh,
-      basePos: new THREE.Vector3(-4, -5, -4),
-      floatAmp: new THREE.Vector3(0.25, 0.55, 0.2),
-      floatSpeed: 0.5,
-      rotSpeed: new THREE.Vector3(0.08, 0.3, 0.15),
-      phase: 4.2
-    });
-
-    /* ---------- floating particles (subtle, behind shapes) ---------- */
-    var pCount = 200;
+    /* ---------- floating particles ---------- */
+    var pCount = 150;
     var pPositions = new Float32Array(pCount * 3);
     var pColors = new Float32Array(pCount * 3);
     for (var i = 0; i < pCount; i++) {
-      pPositions[i*3]   = (Math.random() - 0.5) * 50;
-      pPositions[i*3+1] = (Math.random() - 0.5) * 40;
-      pPositions[i*3+2] = (Math.random() - 0.5) * 30 - 10;
+      pPositions[i*3]   = (Math.random() - 0.5) * 40;
+      pPositions[i*3+1] = (Math.random() - 0.5) * 30;
+      pPositions[i*3+2] = (Math.random() - 0.5) * 20 - 8;
       var c = CYAN.clone().lerp(PURPLE, Math.random());
       pColors[i*3] = c.r; pColors[i*3+1] = c.g; pColors[i*3+2] = c.b;
     }
     var pGeo = new THREE.BufferGeometry();
     pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
     pGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
-    var pMat = new THREE.PointsMaterial({
-      size: 0.08, vertexColors: true, transparent: true, opacity: 0.4, sizeAttenuation: true
-    });
-    scene.add(new THREE.Points(pGeo, pMat));
+    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
+      size: 0.06, vertexColors: true, transparent: true, opacity: 0.35, sizeAttenuation: true
+    })));
 
-    /* ---------- mouse tracking with inertia ---------- */
-    var mouse = { x: 0, y: 0 };
-    var smoothMouse = { x: 0, y: 0 };
-    var INERTIA = 0.04;
+    /* ---------- mouse + scroll ---------- */
+    var mouse = { x: 0, y: 0 }, sm = { x: 0, y: 0 };
     document.addEventListener('mousemove', function(e) {
       mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
       mouse.y = (e.clientY / window.innerHeight - 0.5) * 2;
     });
+    var scrollY = 0, sScroll = 0;
+    window.addEventListener('scroll', function() { scrollY = window.pageYOffset || 0; });
 
-    /* ---------- scroll tracking ---------- */
-    var scrollY = 0;
-    var smoothScroll = 0;
-    window.addEventListener('scroll', function() {
-      scrollY = window.pageYOffset || document.documentElement.scrollTop;
-    });
+    /* ---------- DOM parallax for floating widgets ---------- */
+    var orbEl = document.getElementById('landOrb');
+    var fwSpend = document.getElementById('fwSpending');
+    var fwTab = document.getElementById('fwTablet');
+    var fwAlert = document.getElementById('fwAlert');
 
-    /* ---------- animation loop ---------- */
+    /* ---------- animation ---------- */
     var clock = new THREE.Clock();
+    var boltTimer = 0;
 
     function animate() {
       requestAnimationFrame(animate);
       var t = clock.getElapsedTime();
+      var dt = clock.getDelta();
 
-      // Smooth mouse with inertia
-      smoothMouse.x += (mouse.x - smoothMouse.x) * INERTIA;
-      smoothMouse.y += (mouse.y - smoothMouse.y) * INERTIA;
-      smoothScroll += (scrollY - smoothScroll) * 0.05;
+      sm.x += (mouse.x - sm.x) * 0.04;
+      sm.y += (mouse.y - sm.y) * 0.04;
+      sScroll += (scrollY - sScroll) * 0.05;
 
-      // Animate each shape
-      for (var i = 0; i < shapes.length; i++) {
-        var s = shapes[i];
-        var phase = t * s.floatSpeed + s.phase;
+      // Orb rotation with mouse inertia
+      orbGroup.rotation.y = t * 0.15 + sm.x * 0.3;
+      orbGroup.rotation.x = Math.sin(t * 0.2) * 0.05 + sm.y * 0.15;
 
-        // Float movement
-        s.mesh.position.x = s.basePos.x + Math.sin(phase) * s.floatAmp.x;
-        s.mesh.position.y = s.basePos.y + Math.sin(phase * 1.3 + 0.5) * s.floatAmp.y;
-        s.mesh.position.z = s.basePos.z + Math.cos(phase * 0.7) * s.floatAmp.z;
-
-        // Self rotation
-        s.mesh.rotation.x += s.rotSpeed.x * 0.01;
-        s.mesh.rotation.y += s.rotSpeed.y * 0.01;
-        s.mesh.rotation.z += s.rotSpeed.z * 0.01;
-
-        // Mouse reaction — shapes tilt toward cursor
-        s.mesh.rotation.x += smoothMouse.y * 0.003 * (i % 2 === 0 ? 1 : -1);
-        s.mesh.rotation.y += smoothMouse.x * 0.003 * (i % 2 === 0 ? 1 : -1);
-
-        // Scroll parallax — shapes drift as you scroll
-        var scrollFactor = (i % 3 === 0) ? -0.003 : (i % 3 === 1) ? 0.002 : -0.001;
-        s.mesh.position.y += smoothScroll * scrollFactor;
+      // Orbiting objects
+      for (var i = 0; i < orbiters.length; i++) {
+        var o = orbiters[i];
+        var angle = t * o.speed + o.phase;
+        o.mesh.position.x = orbGroup.position.x + Math.cos(angle) * o.dist;
+        o.mesh.position.y = orbGroup.position.y + Math.sin(angle * 1.3 + o.tilt) * o.dist * 0.35;
+        o.mesh.position.z = orbGroup.position.z + Math.sin(angle) * o.dist * 0.4;
+        if (o.type === 'coin') {
+          o.mesh.rotation.x = Math.sin(t * 0.5 + o.phase) * 0.3;
+          o.mesh.rotation.z = Math.cos(t * 0.3 + o.phase) * 0.2;
+          o.mesh.rotation.y += 0.02;
+        } else {
+          o.mesh.rotation.x += o.rotSpd;
+          o.mesh.rotation.y += o.rotSpd * 1.3;
+        }
+        // Scroll parallax per object
+        o.mesh.position.y -= sScroll * (i % 2 === 0 ? 0.002 : -0.001);
       }
 
-      // Camera responds to mouse with inertia
-      camera.position.x += (smoothMouse.x * 1.8 - camera.position.x) * 0.02;
-      camera.position.y += (-smoothMouse.y * 1.2 - camera.position.y) * 0.02;
-      camera.lookAt(0, 0, 0);
+      // Refresh lightning every ~120ms
+      boltTimer += dt;
+      if (boltTimer > 0.12) {
+        boltTimer = 0;
+        refreshBolts();
+      }
 
-      // Subtle particle drift
+      // Camera
+      camera.position.x = 2 + sm.x * 1.5;
+      camera.position.y = 1 - sm.y * 1.0;
+      camera.lookAt(orbGroup.position);
+
+      // Particles
       var pp = pGeo.attributes.position.array;
       for (var j = 0; j < pCount; j++) {
-        pp[j*3+1] += Math.sin(t * 0.3 + j * 0.2) * 0.002;
-        pp[j*3]   += Math.cos(t * 0.2 + j * 0.15) * 0.001;
+        pp[j*3+1] += Math.sin(t*0.3+j*0.2)*0.002;
+        pp[j*3]   += Math.cos(t*0.2+j*0.15)*0.001;
       }
       pGeo.attributes.position.needsUpdate = true;
 
-      // Animate lights subtly
-      topLight.intensity = 1.4 + Math.sin(t * 0.8) * 0.3;
-      botLight.intensity = 1.0 + Math.cos(t * 0.6) * 0.2;
+      // Pulsing lights
+      topLight.intensity = 1.6 + Math.sin(t * 0.8) * 0.4;
+      botLight.intensity = 1.2 + Math.cos(t * 0.6) * 0.3;
 
       renderer.render(scene, camera);
+
+      // DOM widget parallax (inverse mouse)
+      var px = sm.x * -20;
+      var py = sm.y * -15;
+      if (orbEl) orbEl.style.transform = 'translate(' + (sm.x*8) + 'px,' + (sm.y*6) + 'px) rotateY(' + (sm.x*5) + 'deg) rotateX(' + (-sm.y*3) + 'deg)';
+      if (fwSpend) fwSpend.style.transform = 'translate(' + (px*1.2) + 'px,' + (py*1.1) + 'px) rotateY(' + (sm.x*-3) + 'deg)';
+      if (fwTab) fwTab.style.transform = 'translate(' + (px*0.8) + 'px,' + (py*0.9) + 'px) rotateY(' + (sm.x*-4) + 'deg)';
+      if (fwAlert) fwAlert.style.transform = 'translate(' + (px*1.5) + 'px,' + (py*1.3) + 'px)';
     }
     animate();
 
-    /* ---------- resize ---------- */
     window.addEventListener('resize', function() {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
@@ -2390,18 +2393,57 @@
   })();
 
   /* ================================================================
-     GSAP SCROLL ANIMATIONS
+     GSAP SCROLL ANIMATIONS + TEXT REVEAL
      ================================================================ */
-  // GSAP — wrapped in safety check
   if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
     gsap.registerPlugin(ScrollTrigger);
 
-    // Hero content — staggered entrance (from invisible to visible)
+    // Text reveal — split h1 and subtitle into lines/words
+    document.querySelectorAll('.land-text-reveal').forEach(function(el) {
+      var html = el.innerHTML;
+      // Wrap each line (split by <br>) in a span, then wrap words
+      var lines = html.split(/<br\s*\/?>/gi);
+      el.innerHTML = lines.map(function(line) {
+        var words = line.trim().split(/\s+/).map(function(word) {
+          return '<span class="land-word" style="display:inline-block;opacity:0;transform:translateY(30px) rotateX(-10deg);filter:blur(4px)">' + word + '</span>';
+        }).join(' ');
+        return '<span class="land-line" style="display:block;overflow:hidden">' + words + '</span>';
+      }).join('');
+      // Animate each word with stagger
+      var words = el.querySelectorAll('.land-word');
+      gsap.to(words, {
+        opacity: 1, y: 0, rotateX: 0, filter: 'blur(0px)',
+        duration: 0.8, stagger: 0.04,
+        ease: 'power3.out', delay: 0.5,
+        clearProps: 'all'
+      });
+    });
+
+    // Hero other elements — staggered entrance
     gsap.from('.land-hero .land-reveal', {
-      y: 50, opacity: 0, duration: 1,
-      stagger: 0.15,
+      y: 40, opacity: 0, duration: 0.9,
+      stagger: 0.12,
       ease: 'power3.out',
-      delay: 0.3,
+      delay: 1.2,
+      clearProps: 'all'
+    });
+
+    // Floating widgets entrance
+    gsap.from('.land-orb', {
+      scale: 0.5, opacity: 0, duration: 1.2,
+      ease: 'power3.out', delay: 0.8,
+      clearProps: 'all'
+    });
+    gsap.from('.land-fw', {
+      y: 60, opacity: 0, scale: 0.8, duration: 1,
+      stagger: 0.2, ease: 'power3.out', delay: 1.5,
+      clearProps: 'all'
+    });
+
+    // Bottom CTA
+    gsap.from('.land-hero-bottom', {
+      y: 30, opacity: 0, duration: 0.8,
+      ease: 'power2.out', delay: 2.0,
       clearProps: 'all'
     });
 
@@ -2423,7 +2465,7 @@
     });
   }
 
-  // Feature cards — hover tilt effect (works with or without GSAP)
+  // Feature cards — hover tilt effect
   if (typeof gsap !== 'undefined') {
     document.querySelectorAll('.land-feat-card').forEach(function(card) {
       card.addEventListener('mousemove', function(e) {
@@ -2440,28 +2482,27 @@
         gsap.to(card, { rotateY: 0, rotateX: 0, duration: 0.5, ease: 'elastic.out(1, 0.4)' });
       });
     });
-
-    // Mockup parallax on scroll
-    var mockup = document.getElementById('landMockup');
-    if (mockup) {
-      gsap.to(mockup, {
-        scrollTrigger: {
-          trigger: '.land-hero',
-          start: 'top top',
-          end: 'bottom top',
-          scrub: 1
-        },
-        y: -60,
-        rotateX: 0,
-        rotateY: 0,
-        scale: 0.92,
-        ease: 'none'
-      });
-    }
   }
 
   // Counter animations — use IntersectionObserver (no GSAP dependency)
   if ('IntersectionObserver' in window) {
+    // Orb stats counter
+    var orbEl = document.querySelector('.land-orb');
+    if (orbEl) {
+      var orbObs = new IntersectionObserver(function(entries) {
+        if (entries[0].isIntersecting) {
+          animateCounters('.land-orb-val[data-count]');
+          // Animate orb bars
+          document.querySelectorAll('.land-orb-bar-fill').forEach(function(bar, i) {
+            bar.style.height = '0%';
+            setTimeout(function() { bar.style.height = bar.style.getPropertyValue('--h'); }, 400 + i * 100);
+          });
+          orbObs.unobserve(orbEl);
+        }
+      }, { threshold: 0.2 });
+      orbObs.observe(orbEl);
+    }
+
     var statsRow = document.querySelector('.land-stats-row');
     if (statsRow) {
       var sObs = new IntersectionObserver(function(entries) {
@@ -2473,22 +2514,7 @@
       sObs.observe(statsRow);
     }
 
-    var mockupEl = document.querySelector('.land-mockup');
-    if (mockupEl) {
-      var mObs = new IntersectionObserver(function(entries) {
-        if (entries[0].isIntersecting) {
-          animateCounters('.land-mock-stat-val[data-count]');
-          document.querySelectorAll('.land-mock-bar').forEach(function(bar, i) {
-            bar.style.height = '0%';
-            setTimeout(function() {
-              bar.style.height = bar.style.getPropertyValue('--h');
-            }, 400 + i * 120);
-          });
-          mObs.unobserve(mockupEl);
-        }
-      }, { threshold: 0.2 });
-      mObs.observe(mockupEl);
-    }
+    /* old mockup observer removed — replaced by orb stats observer above */
   } else {
     setTimeout(function() {
       animateCounters('[data-count]');
