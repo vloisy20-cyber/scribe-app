@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=27">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=28">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -118,8 +118,8 @@
 {# ================================================================ #}
 <div class="landing" id="onboardingScreen">
 
-  {# 3D Particle canvas — rendered by Three.js #}
-  <canvas id="landCanvas"></canvas>
+  {# Spline 3D Web Component #}
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@splinetool/viewer@1.9.82/build/spline-viewer.js"></script>
 
   {# ========== STICKY NAV ========== #}
   <nav class="land-nav">
@@ -234,9 +234,17 @@
       </div>
     </div>{# end .land-hero-left #}
 
-    {# Right column — 3D scene with floating widgets #}
+    {# Right column — Spline 3D scene with floating widgets #}
     <div class="land-hero-right" id="landHeroRight">
-      {# Central orb overlay (HTML dashboard inside the 3D orb) #}
+      {# Spline 3D viewer — replace URL with your own Spline export #}
+      <div class="land-spline-container" id="splineContainer">
+        <spline-viewer
+          url="https://prod.spline.design/6Wq1Q7YGyM-uBjlS/scene.splinecode"
+          loading-anim-type="spinner-big-dark"
+        ></spline-viewer>
+      </div>
+
+      {# Central orb overlay (HTML dashboard) #}
       <div class="land-orb" id="landOrb">
         <div class="land-orb-glow"></div>
         <div class="land-orb-inner">
@@ -2060,338 +2068,39 @@
 {# GSAP + ScrollTrigger CDN #}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-{# Three.js + GLTFLoader for 3D premium background #}
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
+
 <script>
 (function() {
   'use strict';
 
   /* ================================================================
-     THREE.JS — GOLDEN PIGGY BANK GLB + ORBITING COINS + LIGHTNING
+     FLOATING WIDGETS — MOUSE PARALLAX (standalone, no Three.js)
      ================================================================ */
-  (function initPremiumScene() {
-    var canvas = document.getElementById('landCanvas');
-    if (!canvas || typeof THREE === 'undefined' || typeof THREE.GLTFLoader === 'undefined') return;
+  (function initWidgetParallax() {
+    var orbEl = document.getElementById('landOrb');
+    var fwSpend = document.getElementById('fwSpending');
+    var fwTab = document.getElementById('fwTablet');
+    var fwAlert = document.getElementById('fwAlert');
+    if (!orbEl && !fwSpend && !fwTab && !fwAlert) return;
 
-    /* ---------- renderer ---------- */
-    var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.6;
-    renderer.outputEncoding = THREE.sRGBEncoding;
-
-    /* ---------- scene & camera ---------- */
-    var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 200);
-    camera.position.set(3, 2, 14);
-
-    /* ---------- colors ---------- */
-    var CYAN   = new THREE.Color('#22d3ee');
-    var PURPLE = new THREE.Color('#a78bfa');
-    var PINK   = new THREE.Color('#f472b6');
-    var GOLD   = new THREE.Color('#d4af37');
-
-    /* ---------- studio lighting (warm for gold) ---------- */
-    scene.add(new THREE.AmbientLight(0xfff5e6, 0.5));
-    var keyLight = new THREE.DirectionalLight(0xfff0d4, 2.5);
-    keyLight.position.set(5, 8, 10);
-    scene.add(keyLight);
-    var fillLight = new THREE.DirectionalLight(CYAN, 1.2);
-    fillLight.position.set(-6, 3, 8);
-    scene.add(fillLight);
-    var rimLight = new THREE.DirectionalLight(PURPLE, 1.0);
-    rimLight.position.set(0, -2, -10);
-    scene.add(rimLight);
-    var topLight = new THREE.PointLight(CYAN, 1.4, 50);
-    topLight.position.set(0, 12, 5);
-    scene.add(topLight);
-    var botLight = new THREE.PointLight(GOLD, 1.0, 50);
-    botLight.position.set(0, -10, 5);
-    scene.add(botLight);
-    // Warm spot from above-right for golden highlights
-    var goldSpot = new THREE.SpotLight(0xffd700, 2.0, 30, Math.PI/6, 0.5);
-    goldSpot.position.set(6, 10, 8);
-    goldSpot.target.position.set(2, 0, 0);
-    scene.add(goldSpot);
-    scene.add(goldSpot.target);
-
-    /* ---------- env map ---------- */
-    var cubeRT = new THREE.WebGLCubeRenderTarget(256);
-    var cubeCamera = new THREE.CubeCamera(0.1, 100, cubeRT);
-    var envScene = new THREE.Scene();
-    var envMat = new THREE.ShaderMaterial({
-      side: THREE.BackSide,
-      uniforms: {
-        cTop: { value: new THREE.Color('#1a1830') },
-        cMid: { value: new THREE.Color('#1a103a') },
-        cBot: { value: new THREE.Color('#060b18') }
-      },
-      vertexShader: 'varying vec3 vP;void main(){vec4 w=modelMatrix*vec4(position,1.);vP=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
-      fragmentShader: 'uniform vec3 cTop,cMid,cBot;varying vec3 vP;void main(){float y=normalize(vP).y;vec3 c=mix(cBot,cMid,smoothstep(-.5,.0,y));c=mix(c,cTop,smoothstep(.0,.8,y));gl_FragColor=vec4(c,1.);}'
-    });
-    envScene.add(new THREE.Mesh(new THREE.SphereGeometry(40,32,32), envMat));
-    var oG = new THREE.SphereGeometry(3,16,16);
-    envScene.add(new THREE.Mesh(oG, new THREE.MeshBasicMaterial({color:CYAN})));
-    envScene.children[1].position.set(15,10,-20);
-    envScene.add(new THREE.Mesh(oG.clone(), new THREE.MeshBasicMaterial({color:GOLD})));
-    envScene.children[2].position.set(-15,5,-15);
-    cubeCamera.update(renderer, envScene);
-    var envMap = cubeRT.texture;
-
-    /* ---------- materials for orbiters ---------- */
-    var chromeMat = new THREE.MeshPhysicalMaterial({
-      color: 0xc0d0e8, metalness: 0.95, roughness: 0.08,
-      envMap: envMap, envMapIntensity: 3.5,
-      clearcoat: 0.5, clearcoatRoughness: 0.1
-    });
-    var goldMat = new THREE.MeshPhysicalMaterial({
-      color: 0xd4af37, metalness: 0.9, roughness: 0.15,
-      envMap: envMap, envMapIntensity: 2.5,
-      clearcoat: 0.3
-    });
-    var glowCyan = new THREE.MeshPhysicalMaterial({
-      color: CYAN, emissive: CYAN, emissiveIntensity: 0.7,
-      metalness: 0.3, roughness: 0.15, envMap: envMap, envMapIntensity: 1.5,
-      transparent: true, opacity: 0.85
-    });
-    var glowPurple = new THREE.MeshPhysicalMaterial({
-      color: PURPLE, emissive: PURPLE, emissiveIntensity: 0.7,
-      metalness: 0.3, roughness: 0.15, envMap: envMap, envMapIntensity: 1.5,
-      transparent: true, opacity: 0.85
-    });
-
-    /* ---------- CENTRAL MODEL (Golden Piggy Bank) ---------- */
-    var modelGroup = new THREE.Group();
-    scene.add(modelGroup);
-    modelGroup.position.set(3, 0, 0);
-
-    var loader = new THREE.GLTFLoader();
-    loader.load('{{ url_for("static", filename="models/goldenpiggybank.glb") }}', function(gltf) {
-      var model = gltf.scene;
-
-      // Auto-center and scale the model
-      var box = new THREE.Box3().setFromObject(model);
-      var size = box.getSize(new THREE.Vector3());
-      var center = box.getCenter(new THREE.Vector3());
-      var maxDim = Math.max(size.x, size.y, size.z);
-      var targetSize = 6; // desired size in scene units
-      var scale = targetSize / maxDim;
-      model.scale.setScalar(scale);
-      model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
-
-      // Enhance materials with env map for premium reflections
-      model.traverse(function(child) {
-        if (child.isMesh && child.material) {
-          child.material.envMap = envMap;
-          child.material.envMapIntensity = 2.0;
-          child.material.needsUpdate = true;
-        }
-      });
-
-      modelGroup.add(model);
-    });
-
-    /* ---------- ORBITING COINS ---------- */
-    var orbiters = [];
-
-    function makeCoin(radius, color, dist, speed, tilt, phase) {
-      var geo = new THREE.CylinderGeometry(radius, radius, radius * 0.15, 32);
-      var mat = goldMat.clone();
-      mat.color = new THREE.Color(color);
-      var mesh = new THREE.Mesh(geo, mat);
-      var edgeGeo = new THREE.TorusGeometry(radius, radius * 0.06, 8, 32);
-      var edge = new THREE.Mesh(edgeGeo, mat.clone());
-      edge.rotation.x = Math.PI / 2;
-      mesh.add(edge);
-      scene.add(mesh);
-      orbiters.push({ mesh: mesh, dist: dist, speed: speed, tilt: tilt, phase: phase, type: 'coin' });
-      return mesh;
-    }
-    makeCoin(0.5, '#d4af37', 6, 0.3, 0.2, 0);
-    makeCoin(0.4, '#e8c252', 7, 0.25, -0.3, 2.1);
-    makeCoin(0.35, '#c0a030', 7.5, 0.35, 0.15, 4.2);
-    makeCoin(0.45, '#f0d060', 5.2, 0.4, -0.1, 1.0);
-
-    // Geometric shapes orbiting
-    function makeOrbiter(geo, mat, dist, speed, tilt, phase, rotSpd) {
-      var mesh = new THREE.Mesh(geo, mat);
-      scene.add(mesh);
-      orbiters.push({ mesh: mesh, dist: dist, speed: speed, tilt: tilt, phase: phase, type: 'shape', rotSpd: rotSpd || 0.01 });
-      return mesh;
-    }
-    makeOrbiter(new THREE.OctahedronGeometry(0.6, 0), glowCyan, 5.5, 0.2, 0.4, 0.5, 0.015);
-    makeOrbiter(new THREE.IcosahedronGeometry(0.5, 0), glowPurple, 8, 0.15, 0.35, 5.0, 0.012);
-    makeOrbiter(new THREE.TetrahedronGeometry(0.45, 0), glowCyan.clone(), 6.8, 0.22, 0.1, 4.5, 0.018);
-
-    /* ---------- LIGHTNING / ELECTRIC ARCS ---------- */
-    var lightningGroup = new THREE.Group();
-    scene.add(lightningGroup);
-    var boltMat = new THREE.LineBasicMaterial({
-      color: CYAN, transparent: true, opacity: 0.7,
-      blending: THREE.AdditiveBlending
-    });
-    var boltMat2 = new THREE.LineBasicMaterial({
-      color: 0x88ddff, transparent: true, opacity: 0.3,
-      blending: THREE.AdditiveBlending
-    });
-
-    function generateBolt(start, end, segments, spread) {
-      var pts = [];
-      for (var i = 0; i <= segments; i++) {
-        var frac = i / segments;
-        var px = start.x + (end.x - start.x) * frac;
-        var py = start.y + (end.y - start.y) * frac;
-        var pz = start.z + (end.z - start.z) * frac;
-        if (i > 0 && i < segments) {
-          px += (Math.random() - 0.5) * spread;
-          py += (Math.random() - 0.5) * spread;
-          pz += (Math.random() - 0.5) * spread * 0.5;
-        }
-        pts.push(new THREE.Vector3(px, py, pz));
-      }
-      return pts;
-    }
-
-    var bolts = [];
-    function refreshBolts() {
-      while (lightningGroup.children.length) lightningGroup.remove(lightningGroup.children[0]);
-      bolts = [];
-      var count = 3 + Math.floor(Math.random() * 3);
-      for (var i = 0; i < count; i++) {
-        var target = orbiters[i % orbiters.length];
-        var start = modelGroup.position.clone();
-        var dir = target.mesh.position.clone().sub(start).normalize();
-        start.add(dir.multiplyScalar(3));
-        var pts = generateBolt(start, target.mesh.position, 8 + Math.floor(Math.random() * 6), 0.8);
-        var geo = new THREE.BufferGeometry().setFromPoints(pts);
-        var line = new THREE.Line(geo, Math.random() > 0.4 ? boltMat : boltMat2);
-        lightningGroup.add(line);
-        bolts.push(line);
-        if (Math.random() > 0.5 && pts.length > 3) {
-          var branchStart = pts[Math.floor(pts.length * 0.4)];
-          var branchEnd = branchStart.clone().add(
-            new THREE.Vector3((Math.random()-.5)*3, (Math.random()-.5)*3, (Math.random()-.5)*1.5)
-          );
-          var bPts = generateBolt(branchStart, branchEnd, 4, 0.4);
-          var bGeo = new THREE.BufferGeometry().setFromPoints(bPts);
-          lightningGroup.add(new THREE.Line(bGeo, boltMat2));
-        }
-      }
-    }
-    refreshBolts();
-
-    /* ---------- floating particles ---------- */
-    var pCount = 150;
-    var pPositions = new Float32Array(pCount * 3);
-    var pColors = new Float32Array(pCount * 3);
-    for (var i = 0; i < pCount; i++) {
-      pPositions[i*3]   = (Math.random() - 0.5) * 40;
-      pPositions[i*3+1] = (Math.random() - 0.5) * 30;
-      pPositions[i*3+2] = (Math.random() - 0.5) * 20 - 8;
-      var c = CYAN.clone().lerp(GOLD, Math.random());
-      pColors[i*3] = c.r; pColors[i*3+1] = c.g; pColors[i*3+2] = c.b;
-    }
-    var pGeo = new THREE.BufferGeometry();
-    pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
-    pGeo.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
-    scene.add(new THREE.Points(pGeo, new THREE.PointsMaterial({
-      size: 0.06, vertexColors: true, transparent: true, opacity: 0.35, sizeAttenuation: true
-    })));
-
-    /* ---------- mouse + scroll ---------- */
     var mouse = { x: 0, y: 0 }, sm = { x: 0, y: 0 };
     document.addEventListener('mousemove', function(e) {
       mouse.x = (e.clientX / window.innerWidth - 0.5) * 2;
       mouse.y = (e.clientY / window.innerHeight - 0.5) * 2;
     });
-    var scrollY = 0, sScroll = 0;
-    window.addEventListener('scroll', function() { scrollY = window.pageYOffset || 0; });
 
-    /* ---------- DOM parallax for floating widgets ---------- */
-    var orbEl = document.getElementById('landOrb');
-    var fwSpend = document.getElementById('fwSpending');
-    var fwTab = document.getElementById('fwTablet');
-    var fwAlert = document.getElementById('fwAlert');
-
-    /* ---------- animation ---------- */
-    var clock = new THREE.Clock();
-    var boltTimer = 0;
-
-    function animate() {
-      requestAnimationFrame(animate);
-      var dt = clock.getDelta();
-      var t = clock.elapsedTime;
-
+    function tick() {
+      requestAnimationFrame(tick);
       sm.x += (mouse.x - sm.x) * 0.04;
       sm.y += (mouse.y - sm.y) * 0.04;
-      sScroll += (scrollY - sScroll) * 0.05;
-
-      // Model slow rotation with mouse inertia
-      modelGroup.rotation.y = t * 0.12 + sm.x * 0.3;
-      modelGroup.rotation.x = Math.sin(t * 0.15) * 0.04 + sm.y * 0.1;
-
-      // Orbiting objects
-      for (var i = 0; i < orbiters.length; i++) {
-        var o = orbiters[i];
-        var angle = t * o.speed + o.phase;
-        o.mesh.position.x = modelGroup.position.x + Math.cos(angle) * o.dist;
-        o.mesh.position.y = modelGroup.position.y + Math.sin(angle * 1.3 + o.tilt) * o.dist * 0.35;
-        o.mesh.position.z = modelGroup.position.z + Math.sin(angle) * o.dist * 0.4;
-        if (o.type === 'coin') {
-          o.mesh.rotation.x = Math.sin(t * 0.5 + o.phase) * 0.3;
-          o.mesh.rotation.z = Math.cos(t * 0.3 + o.phase) * 0.2;
-          o.mesh.rotation.y += 0.02;
-        } else {
-          o.mesh.rotation.x += o.rotSpd;
-          o.mesh.rotation.y += o.rotSpd * 1.3;
-        }
-        o.mesh.position.y -= sScroll * (i % 2 === 0 ? 0.002 : -0.001);
-      }
-
-      // Refresh lightning every ~150ms
-      boltTimer += dt;
-      if (boltTimer > 0.15) {
-        boltTimer = 0;
-        refreshBolts();
-      }
-
-      // Camera with mouse + slight offset right
-      camera.position.x = 3 + sm.x * 1.5;
-      camera.position.y = 2 - sm.y * 1.0;
-      camera.lookAt(modelGroup.position);
-
-      // Particles drift
-      var pp = pGeo.attributes.position.array;
-      for (var j = 0; j < pCount; j++) {
-        pp[j*3+1] += Math.sin(t*0.3+j*0.2)*0.002;
-        pp[j*3]   += Math.cos(t*0.2+j*0.15)*0.001;
-      }
-      pGeo.attributes.position.needsUpdate = true;
-
-      // Pulsing lights
-      topLight.intensity = 1.4 + Math.sin(t * 0.8) * 0.4;
-      botLight.intensity = 1.0 + Math.cos(t * 0.6) * 0.3;
-      goldSpot.intensity = 2.0 + Math.sin(t * 0.5) * 0.5;
-
-      renderer.render(scene, camera);
-
-      // DOM widget parallax (inverse mouse)
       var px = sm.x * -20;
       var py = sm.y * -15;
-      if (orbEl) orbEl.style.transform = 'translate(' + (sm.x*8) + 'px,' + (sm.y*6) + 'px) rotateY(' + (sm.x*5) + 'deg) rotateX(' + (-sm.y*3) + 'deg)';
+      if (orbEl) orbEl.style.transform = 'translate(-50%,-50%) translate(' + (sm.x*8) + 'px,' + (sm.y*6) + 'px) rotateY(' + (sm.x*5) + 'deg) rotateX(' + (-sm.y*3) + 'deg)';
       if (fwSpend) fwSpend.style.transform = 'translate(' + (px*1.2) + 'px,' + (py*1.1) + 'px) rotateY(' + (sm.x*-3) + 'deg)';
       if (fwTab) fwTab.style.transform = 'translate(' + (px*0.8) + 'px,' + (py*0.9) + 'px) rotateY(' + (sm.x*-4) + 'deg)';
       if (fwAlert) fwAlert.style.transform = 'translate(' + (px*1.5) + 'px,' + (py*1.3) + 'px)';
     }
-    animate();
-
-    window.addEventListener('resize', function() {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
+    tick();
   })();
 
   /* ================================================================
