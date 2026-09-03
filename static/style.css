@@ -333,7 +333,7 @@ a:hover { color: var(--accent-light); }
    ================================================================ */
 .landing {
   width: 100%; overflow-x: hidden;
-  background: #060b18;
+  background: transparent;
   color: #e2e8f0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   scroll-behavior: smooth;
@@ -383,6 +383,7 @@ a:hover { color: var(--accent-light); }
   position: fixed; top: 0; left: 0;
   width: 100%; height: 100%;
   z-index: 0; pointer-events: none;
+  background: #060b18;
 }
 
 /* --- NOISE + FOG OVERLAYS --- */
@@ -425,7 +426,7 @@ a:hover { color: var(--accent-light); }
   background:
     radial-gradient(ellipse 70% 50% at 30% 20%, var(--land-glow-cyan) 0%, transparent 70%),
     radial-gradient(ellipse 60% 60% at 70% 70%, var(--land-glow-purple) 0%, transparent 70%),
-    linear-gradient(180deg, #060b18 0%, #0c1425 100%);
+    linear-gradient(180deg, rgba(6,11,24,.55) 0%, rgba(12,20,37,.55) 100%);
 }
 
 /* --- HERO SPLIT LAYOUT --- */

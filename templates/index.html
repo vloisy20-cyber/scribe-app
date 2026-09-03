@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:wght@600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=26">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=27">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
   <style>
     :root {
@@ -2060,53 +2060,62 @@
 {# GSAP + ScrollTrigger CDN #}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-{# Three.js for 3D premium background #}
+{# Three.js + GLTFLoader for 3D premium background #}
 <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
 <script>
 (function() {
   'use strict';
 
   /* ================================================================
-     THREE.JS — GLASS ORB + ORBITING OBJECTS + LIGHTNING
+     THREE.JS — GOLDEN PIGGY BANK GLB + ORBITING COINS + LIGHTNING
      ================================================================ */
   (function initPremiumScene() {
     var canvas = document.getElementById('landCanvas');
-    if (!canvas || typeof THREE === 'undefined') return;
+    if (!canvas || typeof THREE === 'undefined' || typeof THREE.GLTFLoader === 'undefined') return;
 
     /* ---------- renderer ---------- */
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.4;
+    renderer.toneMappingExposure = 1.6;
+    renderer.outputEncoding = THREE.sRGBEncoding;
 
     /* ---------- scene & camera ---------- */
     var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 200);
-    camera.position.set(2, 1, 20);
+    var camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(3, 2, 14);
 
     /* ---------- colors ---------- */
     var CYAN   = new THREE.Color('#22d3ee');
     var PURPLE = new THREE.Color('#a78bfa');
     var PINK   = new THREE.Color('#f472b6');
+    var GOLD   = new THREE.Color('#d4af37');
 
-    /* ---------- studio lighting ---------- */
-    scene.add(new THREE.AmbientLight(0x1a1a2e, 0.6));
-    var keyLight = new THREE.DirectionalLight(CYAN, 2.0);
+    /* ---------- studio lighting (warm for gold) ---------- */
+    scene.add(new THREE.AmbientLight(0xfff5e6, 0.5));
+    var keyLight = new THREE.DirectionalLight(0xfff0d4, 2.5);
     keyLight.position.set(5, 8, 10);
     scene.add(keyLight);
-    var fillLight = new THREE.DirectionalLight(PURPLE, 1.4);
+    var fillLight = new THREE.DirectionalLight(CYAN, 1.2);
     fillLight.position.set(-6, 3, 8);
     scene.add(fillLight);
-    var rimLight = new THREE.DirectionalLight(PINK, 0.8);
-    rimLight.position.set(0, -4, -10);
+    var rimLight = new THREE.DirectionalLight(PURPLE, 1.0);
+    rimLight.position.set(0, -2, -10);
     scene.add(rimLight);
-    var topLight = new THREE.PointLight(CYAN, 1.6, 50);
+    var topLight = new THREE.PointLight(CYAN, 1.4, 50);
     topLight.position.set(0, 12, 5);
     scene.add(topLight);
-    var botLight = new THREE.PointLight(PURPLE, 1.2, 50);
+    var botLight = new THREE.PointLight(GOLD, 1.0, 50);
     botLight.position.set(0, -10, 5);
     scene.add(botLight);
+    // Warm spot from above-right for golden highlights
+    var goldSpot = new THREE.SpotLight(0xffd700, 2.0, 30, Math.PI/6, 0.5);
+    goldSpot.position.set(6, 10, 8);
+    goldSpot.target.position.set(2, 0, 0);
+    scene.add(goldSpot);
+    scene.add(goldSpot.target);
 
     /* ---------- env map ---------- */
     var cubeRT = new THREE.WebGLCubeRenderTarget(256);
@@ -2115,7 +2124,7 @@
     var envMat = new THREE.ShaderMaterial({
       side: THREE.BackSide,
       uniforms: {
-        cTop: { value: new THREE.Color('#0e1630') },
+        cTop: { value: new THREE.Color('#1a1830') },
         cMid: { value: new THREE.Color('#1a103a') },
         cBot: { value: new THREE.Color('#060b18') }
       },
@@ -2124,23 +2133,23 @@
     });
     envScene.add(new THREE.Mesh(new THREE.SphereGeometry(40,32,32), envMat));
     var oG = new THREE.SphereGeometry(3,16,16);
-    var o1 = new THREE.Mesh(oG, new THREE.MeshBasicMaterial({color:CYAN})); o1.position.set(15,10,-20); envScene.add(o1);
-    var o2 = new THREE.Mesh(oG, new THREE.MeshBasicMaterial({color:PURPLE})); o2.position.set(-15,-5,-20); envScene.add(o2);
-    var o3 = new THREE.Mesh(oG, new THREE.MeshBasicMaterial({color:PINK})); o3.position.set(0,-12,-15); envScene.add(o3);
+    envScene.add(new THREE.Mesh(oG, new THREE.MeshBasicMaterial({color:CYAN})));
+    envScene.children[1].position.set(15,10,-20);
+    envScene.add(new THREE.Mesh(oG.clone(), new THREE.MeshBasicMaterial({color:GOLD})));
+    envScene.children[2].position.set(-15,5,-15);
     cubeCamera.update(renderer, envScene);
     var envMap = cubeRT.texture;
 
-    /* ---------- materials ---------- */
-    var glassMat = new THREE.MeshPhysicalMaterial({
-      color: 0x88ccff, metalness: 0.1, roughness: 0.05,
-      transmission: 0.9, thickness: 2, transparent: true, opacity: 0.55,
-      envMap: envMap, envMapIntensity: 2.8,
-      clearcoat: 1.0, clearcoatRoughness: 0.05, side: THREE.DoubleSide
-    });
+    /* ---------- materials for orbiters ---------- */
     var chromeMat = new THREE.MeshPhysicalMaterial({
       color: 0xc0d0e8, metalness: 0.95, roughness: 0.08,
       envMap: envMap, envMapIntensity: 3.5,
       clearcoat: 0.5, clearcoatRoughness: 0.1
+    });
+    var goldMat = new THREE.MeshPhysicalMaterial({
+      color: 0xd4af37, metalness: 0.9, roughness: 0.15,
+      envMap: envMap, envMapIntensity: 2.5,
+      clearcoat: 0.3
     });
     var glowCyan = new THREE.MeshPhysicalMaterial({
       color: CYAN, emissive: CYAN, emissiveIntensity: 0.7,
@@ -2153,45 +2162,45 @@
       transparent: true, opacity: 0.85
     });
 
-    /* ---------- CENTRAL ORB (glass dome) ---------- */
-    var orbGroup = new THREE.Group();
-    scene.add(orbGroup);
+    /* ---------- CENTRAL MODEL (Golden Piggy Bank) ---------- */
+    var modelGroup = new THREE.Group();
+    scene.add(modelGroup);
+    modelGroup.position.set(3, 0, 0);
 
-    // Main glass sphere
-    var orbGeo = new THREE.SphereGeometry(3.5, 64, 64);
-    var orbMesh = new THREE.Mesh(orbGeo, glassMat);
-    orbGroup.add(orbMesh);
+    var loader = new THREE.GLTFLoader();
+    loader.load('{{ url_for("static", filename="models/goldenpiggybank.glb") }}', function(gltf) {
+      var model = gltf.scene;
 
-    // Chrome ring/rim around the equator
-    var ringGeo = new THREE.TorusGeometry(3.6, 0.12, 16, 64);
-    var ringMesh = new THREE.Mesh(ringGeo, chromeMat.clone());
-    ringMesh.rotation.x = Math.PI / 2;
-    orbGroup.add(ringMesh);
+      // Auto-center and scale the model
+      var box = new THREE.Box3().setFromObject(model);
+      var size = box.getSize(new THREE.Vector3());
+      var center = box.getCenter(new THREE.Vector3());
+      var maxDim = Math.max(size.x, size.y, size.z);
+      var targetSize = 6; // desired size in scene units
+      var scale = targetSize / maxDim;
+      model.scale.setScalar(scale);
+      model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
 
-    // Top cap (chrome dome lid)
-    var capGeo = new THREE.CylinderGeometry(2.2, 2.5, 0.25, 32);
-    var capMesh = new THREE.Mesh(capGeo, chromeMat.clone());
-    capMesh.position.y = 3.2;
-    orbGroup.add(capMesh);
+      // Enhance materials with env map for premium reflections
+      model.traverse(function(child) {
+        if (child.isMesh && child.material) {
+          child.material.envMap = envMap;
+          child.material.envMapIntensity = 2.0;
+          child.material.needsUpdate = true;
+        }
+      });
 
-    // Wireframe overlay on orb
-    var wireOrb = new THREE.Mesh(orbGeo, new THREE.MeshBasicMaterial({
-      color: CYAN, wireframe: true, transparent: true, opacity: 0.04
-    }));
-    orbGroup.add(wireOrb);
+      modelGroup.add(model);
+    });
 
-    orbGroup.position.set(3, 0.5, 0);
-
-    /* ---------- ORBITING OBJECTS ---------- */
+    /* ---------- ORBITING COINS ---------- */
     var orbiters = [];
 
-    // Coins (flat metallic cylinders)
     function makeCoin(radius, color, dist, speed, tilt, phase) {
       var geo = new THREE.CylinderGeometry(radius, radius, radius * 0.15, 32);
-      var mat = chromeMat.clone();
+      var mat = goldMat.clone();
       mat.color = new THREE.Color(color);
       var mesh = new THREE.Mesh(geo, mat);
-      // Edge ring
       var edgeGeo = new THREE.TorusGeometry(radius, radius * 0.06, 8, 32);
       var edge = new THREE.Mesh(edgeGeo, mat.clone());
       edge.rotation.x = Math.PI / 2;
@@ -2200,10 +2209,10 @@
       orbiters.push({ mesh: mesh, dist: dist, speed: speed, tilt: tilt, phase: phase, type: 'coin' });
       return mesh;
     }
-    makeCoin(0.5, '#c0c0c0', 6.5, 0.3, 0.2, 0);
-    makeCoin(0.4, '#d4af37', 7.5, 0.25, -0.3, 2.1);
-    makeCoin(0.35, '#c0c0c0', 8, 0.35, 0.15, 4.2);
-    makeCoin(0.45, '#e8d5a0', 5.5, 0.4, -0.1, 1.0);
+    makeCoin(0.5, '#d4af37', 6, 0.3, 0.2, 0);
+    makeCoin(0.4, '#e8c252', 7, 0.25, -0.3, 2.1);
+    makeCoin(0.35, '#c0a030', 7.5, 0.35, 0.15, 4.2);
+    makeCoin(0.45, '#f0d060', 5.2, 0.4, -0.1, 1.0);
 
     // Geometric shapes orbiting
     function makeOrbiter(geo, mat, dist, speed, tilt, phase, rotSpd) {
@@ -2212,11 +2221,9 @@
       orbiters.push({ mesh: mesh, dist: dist, speed: speed, tilt: tilt, phase: phase, type: 'shape', rotSpd: rotSpd || 0.01 });
       return mesh;
     }
-    makeOrbiter(new THREE.OctahedronGeometry(0.7, 0), glowCyan, 6, 0.2, 0.4, 0.5, 0.015);
-    makeOrbiter(new THREE.TorusKnotGeometry(0.5, 0.15, 64, 8, 2, 3), chromeMat.clone(), 7, 0.18, -0.25, 3.3, 0.008);
-    makeOrbiter(new THREE.IcosahedronGeometry(0.6, 0), glowPurple, 8.5, 0.15, 0.35, 5.0, 0.012);
-    makeOrbiter(new THREE.DodecahedronGeometry(0.5, 0), glassMat.clone(), 5.8, 0.28, -0.4, 1.7, 0.02);
-    makeOrbiter(new THREE.TetrahedronGeometry(0.55, 0), glowCyan.clone(), 7.2, 0.22, 0.1, 4.5, 0.018);
+    makeOrbiter(new THREE.OctahedronGeometry(0.6, 0), glowCyan, 5.5, 0.2, 0.4, 0.5, 0.015);
+    makeOrbiter(new THREE.IcosahedronGeometry(0.5, 0), glowPurple, 8, 0.15, 0.35, 5.0, 0.012);
+    makeOrbiter(new THREE.TetrahedronGeometry(0.45, 0), glowCyan.clone(), 6.8, 0.22, 0.1, 4.5, 0.018);
 
     /* ---------- LIGHTNING / ELECTRIC ARCS ---------- */
     var lightningGroup = new THREE.Group();
@@ -2233,10 +2240,10 @@
     function generateBolt(start, end, segments, spread) {
       var pts = [];
       for (var i = 0; i <= segments; i++) {
-        var t = i / segments;
-        var px = start.x + (end.x - start.x) * t;
-        var py = start.y + (end.y - start.y) * t;
-        var pz = start.z + (end.z - start.z) * t;
+        var frac = i / segments;
+        var px = start.x + (end.x - start.x) * frac;
+        var py = start.y + (end.y - start.y) * frac;
+        var pz = start.z + (end.z - start.z) * frac;
         if (i > 0 && i < segments) {
           px += (Math.random() - 0.5) * spread;
           py += (Math.random() - 0.5) * spread;
@@ -2249,23 +2256,19 @@
 
     var bolts = [];
     function refreshBolts() {
-      // Remove old
       while (lightningGroup.children.length) lightningGroup.remove(lightningGroup.children[0]);
       bolts = [];
-      // Generate 4-6 bolts from orb center toward orbiting objects
       var count = 3 + Math.floor(Math.random() * 3);
       for (var i = 0; i < count; i++) {
         var target = orbiters[i % orbiters.length];
-        var start = orbGroup.position.clone();
-        // Offset start from orb surface
+        var start = modelGroup.position.clone();
         var dir = target.mesh.position.clone().sub(start).normalize();
-        start.add(dir.multiplyScalar(3.5));
+        start.add(dir.multiplyScalar(3));
         var pts = generateBolt(start, target.mesh.position, 8 + Math.floor(Math.random() * 6), 0.8);
         var geo = new THREE.BufferGeometry().setFromPoints(pts);
         var line = new THREE.Line(geo, Math.random() > 0.4 ? boltMat : boltMat2);
         lightningGroup.add(line);
         bolts.push(line);
-        // Branch
         if (Math.random() > 0.5 && pts.length > 3) {
           var branchStart = pts[Math.floor(pts.length * 0.4)];
           var branchEnd = branchStart.clone().add(
@@ -2273,8 +2276,7 @@
           );
           var bPts = generateBolt(branchStart, branchEnd, 4, 0.4);
           var bGeo = new THREE.BufferGeometry().setFromPoints(bPts);
-          var bLine = new THREE.Line(bGeo, boltMat2);
-          lightningGroup.add(bLine);
+          lightningGroup.add(new THREE.Line(bGeo, boltMat2));
         }
       }
     }
@@ -2288,7 +2290,7 @@
       pPositions[i*3]   = (Math.random() - 0.5) * 40;
       pPositions[i*3+1] = (Math.random() - 0.5) * 30;
       pPositions[i*3+2] = (Math.random() - 0.5) * 20 - 8;
-      var c = CYAN.clone().lerp(PURPLE, Math.random());
+      var c = CYAN.clone().lerp(GOLD, Math.random());
       pColors[i*3] = c.r; pColors[i*3+1] = c.g; pColors[i*3+2] = c.b;
     }
     var pGeo = new THREE.BufferGeometry();
@@ -2326,17 +2328,17 @@
       sm.y += (mouse.y - sm.y) * 0.04;
       sScroll += (scrollY - sScroll) * 0.05;
 
-      // Orb rotation with mouse inertia
-      orbGroup.rotation.y = t * 0.15 + sm.x * 0.3;
-      orbGroup.rotation.x = Math.sin(t * 0.2) * 0.05 + sm.y * 0.15;
+      // Model slow rotation with mouse inertia
+      modelGroup.rotation.y = t * 0.12 + sm.x * 0.3;
+      modelGroup.rotation.x = Math.sin(t * 0.15) * 0.04 + sm.y * 0.1;
 
       // Orbiting objects
       for (var i = 0; i < orbiters.length; i++) {
         var o = orbiters[i];
         var angle = t * o.speed + o.phase;
-        o.mesh.position.x = orbGroup.position.x + Math.cos(angle) * o.dist;
-        o.mesh.position.y = orbGroup.position.y + Math.sin(angle * 1.3 + o.tilt) * o.dist * 0.35;
-        o.mesh.position.z = orbGroup.position.z + Math.sin(angle) * o.dist * 0.4;
+        o.mesh.position.x = modelGroup.position.x + Math.cos(angle) * o.dist;
+        o.mesh.position.y = modelGroup.position.y + Math.sin(angle * 1.3 + o.tilt) * o.dist * 0.35;
+        o.mesh.position.z = modelGroup.position.z + Math.sin(angle) * o.dist * 0.4;
         if (o.type === 'coin') {
           o.mesh.rotation.x = Math.sin(t * 0.5 + o.phase) * 0.3;
           o.mesh.rotation.z = Math.cos(t * 0.3 + o.phase) * 0.2;
@@ -2345,23 +2347,22 @@
           o.mesh.rotation.x += o.rotSpd;
           o.mesh.rotation.y += o.rotSpd * 1.3;
         }
-        // Scroll parallax per object
         o.mesh.position.y -= sScroll * (i % 2 === 0 ? 0.002 : -0.001);
       }
 
-      // Refresh lightning every ~120ms
+      // Refresh lightning every ~150ms
       boltTimer += dt;
-      if (boltTimer > 0.12) {
+      if (boltTimer > 0.15) {
         boltTimer = 0;
         refreshBolts();
       }
 
-      // Camera
-      camera.position.x = 2 + sm.x * 1.5;
-      camera.position.y = 1 - sm.y * 1.0;
-      camera.lookAt(orbGroup.position);
+      // Camera with mouse + slight offset right
+      camera.position.x = 3 + sm.x * 1.5;
+      camera.position.y = 2 - sm.y * 1.0;
+      camera.lookAt(modelGroup.position);
 
-      // Particles
+      // Particles drift
       var pp = pGeo.attributes.position.array;
       for (var j = 0; j < pCount; j++) {
         pp[j*3+1] += Math.sin(t*0.3+j*0.2)*0.002;
@@ -2370,8 +2371,9 @@
       pGeo.attributes.position.needsUpdate = true;
 
       // Pulsing lights
-      topLight.intensity = 1.6 + Math.sin(t * 0.8) * 0.4;
-      botLight.intensity = 1.2 + Math.cos(t * 0.6) * 0.3;
+      topLight.intensity = 1.4 + Math.sin(t * 0.8) * 0.4;
+      botLight.intensity = 1.0 + Math.cos(t * 0.6) * 0.3;
+      goldSpot.intensity = 2.0 + Math.sin(t * 0.5) * 0.5;
 
       renderer.render(scene, camera);
 
